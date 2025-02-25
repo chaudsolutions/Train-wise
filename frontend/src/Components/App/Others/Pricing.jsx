@@ -1,20 +1,37 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import { useAuthContext } from "../../Context/AuthContext";
-import { useReactRouter } from "../../Hooks/useReactRouter";
 import toast from "react-hot-toast";
 import { redirectSessionKey } from "../../Hooks/useVariable";
+import Auth from "../../Custom/Auth/Auth";
 
 const Pricing = () => {
     useEffect(() => {
         window.scroll(0, 0); // scroll to top on component mount
     }, []);
-
-    const { useNavigate } = useReactRouter();
-
-    const navigate = useNavigate();
+    const [authContain, setAuthContain] = useState(false);
 
     const { user } = useAuthContext();
+
+    useEffect(() => {
+        const closeAuth = (e) => {
+            if (
+                authContain &&
+                !e.target.closest(".auth") &&
+                !e.target.closest(".btn-a") &&
+                !e.target.closest(".btn-b")
+            ) {
+                setAuthContain(false);
+            }
+        };
+
+        window.addEventListener("click", closeAuth);
+
+        // Cleanup function to remove the event listener
+        return () => {
+            window.removeEventListener("click", closeAuth);
+        };
+    }, [authContain]); // Add dependencies to effect
 
     const features = [
         `1 group`,
@@ -32,7 +49,7 @@ const Pricing = () => {
             // save pricing page to session and redirect once user logs in
             sessionStorage.setItem(redirectSessionKey, location.pathname);
 
-            navigate("/login");
+            setAuthContain(true);
         } else {
             // run subscription function
         }
@@ -69,6 +86,9 @@ const Pricing = () => {
                     Subscribe
                 </button>
             </div>
+
+            {/* auth container */}
+            {authContain && <Auth setAuthContain={setAuthContain} />}
         </div>
     );
 };
