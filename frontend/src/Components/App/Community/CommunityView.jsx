@@ -38,7 +38,7 @@ const CommunityView = () => {
         features,
         members,
         price,
-    } = oneCommunity[0] || {};
+    } = oneCommunity || {};
 
     useEffect(() => {
         const closeAuth = (e) => {

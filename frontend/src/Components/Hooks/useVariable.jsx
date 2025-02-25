@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 export const localStorageToken = import.meta.env.VITE_LOCALSTORAGE_TOKEN;
 
 // company name
-export const companyName = "NAME";
+export const companyName = "Train Wise";
 
 // redirect session key name
 export const redirectSessionKey = `${companyName}PricingRedirectAfterLogin`;
