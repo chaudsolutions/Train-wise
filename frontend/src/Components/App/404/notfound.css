@@ -1,0 +1,39 @@
+.not-found {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--white);
+    padding: 1rem;
+    border-radius: 1rem;
+    width: 100%;
+    max-width: 20rem;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.not-found > div {
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    gap: 1rem;
+
+    > h1 {
+        font-size: 1.7rem;
+    }
+    > p {
+        font-size: 1rem;
+    }
+}
+.not-found > button {
+    padding: 1rem;
+    background-color: var(--accent-color);
+    color: var(--white);
+    width: 100%;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-top: 2rem;
+    border-radius: 0.5rem;
+}

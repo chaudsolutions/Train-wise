@@ -1,0 +1,89 @@
+.paginated {
+    display: flex;
+    flex-flow: column;
+    gap: 3rem;
+}
+
+.paginated .categories {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    overflow-x: scroll;
+
+    button {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 1rem;
+        border: 1px solid var(--trans-more-black);
+        background-color: var(--white);
+
+        span {
+            white-space: nowrap;
+            color: var(--trans-black);
+        }
+
+        &:hover {
+            background-color: var(--trans-black);
+            color: var(--white);
+            font-weight: 600;
+
+            span {
+                color: var(--white);
+            }
+        }
+    }
+    .activeCategory {
+        background-color: var(--trans-black);
+        color: var(--white);
+        font-weight: 600;
+
+        span {
+            color: var(--white);
+        }
+    }
+}
+
+.communitiesUl {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 2rem;
+}
+
+/* styling pagination */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.pagination .page-num {
+    padding: 0.2rem 0.4rem;
+    cursor: pointer;
+    font-weight: 400;
+    border-radius: 0.5rem;
+
+    &:hover {
+        background-color: var(--trans-more-black);
+        color: var(--white);
+    }
+}
+.pagination .page-link {
+    border: 1px solid var(--trans-more-black);
+    padding: 0.5rem;
+    display: flex;
+    min-width: 6rem;
+    justify-content: center;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+}
+.pagination .active {
+    background-color: var(--trans-black);
+    color: var(--white);
+    padding: 0.2rem 0.2rem;
+    cursor: pointer;
+    font-weight: 400;
+    border-radius: 0.5rem;
+}

@@ -1,0 +1,26 @@
+.footer {
+    margin: 2rem 0;
+    width: 100%;
+    padding: 1rem;
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+}
+.footer li {
+    font-size: 1.1rem;
+
+    > a {
+        color: var(--trans-black);
+        font-weight: 600;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    .active {
+        text-decoration: underline;
+    }
+}

@@ -1,0 +1,195 @@
+.communityNav {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+
+    > img {
+        height: 2rem;
+        width: 2rem;
+        border-radius: 0.5rem;
+    }
+
+    > span {
+        font-size: 1.1rem !important;
+    }
+
+    .icon {
+        color: var(--trans-black);
+    }
+}
+
+.mobileView {
+    background-color: var(--white);
+    padding: 1rem;
+    display: flex;
+    flex-flow: column;
+    gap: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 0.2rem 0.5rem var(--trans-black);
+
+    > h1 {
+        font-size: 1.4rem;
+    }
+
+    .communityInfo {
+        display: flex;
+        flex-flow: row wrap;
+        justify-content: space-between;
+        gap: 1rem;
+
+        > li {
+            width: 40%;
+            max-width: 13rem;
+            flex-grow: 0.5;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+
+            .star {
+                color: yellowgreen;
+            }
+        }
+    }
+
+    .communityMore {
+        display: flex;
+        flex-flow: column;
+        gap: 1rem;
+
+        > p {
+            font-size: 1rem;
+        }
+
+        > div {
+            display: flex;
+            flex-flow: column;
+            gap: 0.5rem;
+
+            > h4 {
+                font-size: 1.1rem;
+            }
+
+            > ul {
+                display: flex;
+                flex-flow: column;
+                gap: 0.4rem;
+
+                > li {
+                    font-size: 0.9rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                }
+            }
+        }
+    }
+}
+
+.desktopView {
+    padding: 2rem var(--padding-clamp);
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+
+    > :nth-child(1) {
+        width: 70%;
+    }
+
+    > :nth-child(2) {
+        width: 25%;
+    }
+}
+
+.community-card {
+    display: flex;
+    flex-flow: column;
+    gap: 0.5rem;
+    border: 1px solid var(--trans-more-more-black);
+    border-radius: 1rem;
+    background-color: var(--white);
+    height: fit-content;
+    box-shadow: 0 0.2rem 0.5rem var(--trans-black);
+    overflow: hidden;
+
+    > img {
+        width: 100%;
+        object-fit: scale-down;
+        object-position: center;
+        height: 15rem;
+    }
+
+    > div {
+        padding: 1rem 0.5rem;
+        display: flex;
+        flex-flow: column;
+        gap: 0.5rem;
+
+        > h4 {
+            font-size: 1.2rem;
+        }
+
+        > p {
+            font-size: 0.9rem;
+        }
+
+        > div {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+
+            > * {
+                border: 1px solid var(--trans-more-black);
+                padding: 0.5rem;
+                border-radius: 0.5rem;
+                font-size: 0.9rem;
+            }
+        }
+    }
+}
+
+.mediaContainer {
+    display: flex;
+    flex-flow: column;
+    gap: 0.7rem;
+
+    .mediaDisplay {
+        height: 15rem;
+        border: 1px solid var(--trans-more-more-black);
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+
+    .desktopMediaDisplay {
+        height: 25rem;
+        border: 1px solid var(--trans-more-more-black);
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.thumbNails {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: calc(100vw - 2rem);
+    max-width: 500px;
+    overflow-x: scroll;
+
+    img,
+    video {
+        height: 4rem;
+        width: 4rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        object-fit: cover;
+    }
+}
