@@ -6,7 +6,7 @@ import { useAuthContext } from "../../Context/AuthContext";
 import { useUserData } from "../../Hooks/useQueryFetch/useQueryData";
 import { FaUserCircle } from "react-icons/fa";
 import useResponsive from "../../Hooks/useResponsive";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Auth from "../Auth/Auth";
 
 const NavSlide = ({ isNavActive }) => {
@@ -29,25 +29,6 @@ export const AuthContainer = () => {
     const { user } = useAuthContext();
     const [authContain, setAuthContain] = useState(false);
 
-    useEffect(() => {
-        const closeAuth = (e) => {
-            if (
-                authContain &&
-                !e.target.closest(".auth") &&
-                !e.target.closest(".btn-b")
-            ) {
-                setAuthContain(false);
-            }
-        };
-
-        window.addEventListener("click", closeAuth);
-
-        // Cleanup function to remove the event listener
-        return () => {
-            window.removeEventListener("click", closeAuth);
-        };
-    }, [authContain]); // Add dependencies to effect
-
     return (
         <>
             {user ? (
@@ -61,7 +42,12 @@ export const AuthContainer = () => {
             )}
 
             {/* auth container */}
-            {authContain && <Auth setAuthContain={setAuthContain} />}
+            {authContain && (
+                <Auth
+                    setAuthContain={setAuthContain}
+                    authContain={authContain}
+                />
+            )}
         </>
     );
 };

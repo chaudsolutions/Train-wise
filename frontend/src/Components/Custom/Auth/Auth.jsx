@@ -1,11 +1,33 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Logo } from "../Nav/Nav";
 import "./auth.css";
 import { companyName } from "../../Hooks/useVariable";
 import { LoginForm, RegisterForm } from "../Forms/Forms";
 
-const Auth = ({ setAuthContain }) => {
+const Auth = ({ setAuthContain, authContain }) => {
     const [view, setView] = useState("login");
+
+    useEffect(() => {
+        const closeAuth = (e) => {
+            if (
+                authContain &&
+                !e.target.closest(".auth") &&
+                !e.target.closest(".btn-b") &&
+                !e.target.closest(".btn-a") &&
+                !e.target.closest(".toggle") &&
+                !e.target.closest("button")
+            ) {
+                setAuthContain(false);
+            }
+        };
+
+        window.addEventListener("click", closeAuth);
+
+        // Cleanup function to remove the event listener
+        return () => {
+            window.removeEventListener("click", closeAuth);
+        };
+    }, [authContain, setAuthContain]); // Add dependencies to effect
 
     return (
         <div className="auth">

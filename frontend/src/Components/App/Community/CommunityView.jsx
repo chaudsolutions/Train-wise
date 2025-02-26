@@ -12,6 +12,7 @@ import { FaRegCircleUser, FaStar } from "react-icons/fa6";
 import { useAuthContext } from "../../Context/AuthContext";
 import toast from "react-hot-toast";
 import Auth from "../../Custom/Auth/Auth";
+import { redirectSessionKey } from "../../Hooks/useVariable";
 
 const CommunityView = () => {
     useEffect(() => {
@@ -39,26 +40,6 @@ const CommunityView = () => {
         members,
         price,
     } = oneCommunity || {};
-
-    useEffect(() => {
-        const closeAuth = (e) => {
-            if (
-                authContain &&
-                !e.target.closest(".auth") &&
-                !e.target.closest(".btn-a") &&
-                !e.target.closest(".btn-b")
-            ) {
-                setAuthContain(false);
-            }
-        };
-
-        window.addEventListener("click", closeAuth);
-
-        // Cleanup function to remove the event listener
-        return () => {
-            window.removeEventListener("click", closeAuth);
-        };
-    }, [authContain]); // Add dependencies to effect
 
     const mediaImages = [imgLink, imgLink, imgLink, logoLink];
 
@@ -118,6 +99,9 @@ const CommunityView = () => {
     const joinCommunity = async () => {
         if (!user) {
             toast.error("You need to login to join a community");
+
+            // save community page to session and redirect once user logs in
+            sessionStorage.setItem(redirectSessionKey, location.pathname);
 
             setAuthContain(true);
         }
@@ -229,7 +213,12 @@ const CommunityView = () => {
             )}
 
             {/* auth container */}
-            {authContain && <Auth setAuthContain={setAuthContain} />}
+            {authContain && (
+                <Auth
+                    setAuthContain={setAuthContain}
+                    authContain={authContain}
+                />
+            )}
         </div>
     );
 };

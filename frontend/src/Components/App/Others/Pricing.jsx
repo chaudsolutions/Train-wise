@@ -13,26 +13,6 @@ const Pricing = () => {
 
     const { user } = useAuthContext();
 
-    useEffect(() => {
-        const closeAuth = (e) => {
-            if (
-                authContain &&
-                !e.target.closest(".auth") &&
-                !e.target.closest(".btn-a") &&
-                !e.target.closest(".btn-b")
-            ) {
-                setAuthContain(false);
-            }
-        };
-
-        window.addEventListener("click", closeAuth);
-
-        // Cleanup function to remove the event listener
-        return () => {
-            window.removeEventListener("click", closeAuth);
-        };
-    }, [authContain]); // Add dependencies to effect
-
     const features = [
         `1 group`,
         `All features`,
@@ -88,7 +68,12 @@ const Pricing = () => {
             </div>
 
             {/* auth container */}
-            {authContain && <Auth setAuthContain={setAuthContain} />}
+            {authContain && (
+                <Auth
+                    setAuthContain={setAuthContain}
+                    authContain={authContain}
+                />
+            )}
         </div>
     );
 };

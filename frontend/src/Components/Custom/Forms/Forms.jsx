@@ -1,6 +1,4 @@
-import { useState } from "react";
 import toast from "react-hot-toast";
-import { FaEye, FaRegEyeSlash } from "react-icons/fa";
 import { useForm } from "react-hook-form";
 import "./forms.css";
 import {
@@ -64,12 +62,6 @@ export const LoginForm = ({ setAuthContainer }) => {
         toast.error("Failed to submit, check inputs and try again");
     };
 
-    //password
-    const [passwordVisible, setPasswordVisible] = useState(false);
-    const togglePasswordVisibility = () => {
-        setPasswordVisible(!passwordVisible);
-    };
-
     return (
         <form
             className="auth-form"
@@ -91,22 +83,15 @@ export const LoginForm = ({ setAuthContainer }) => {
                 <input
                     placeholder="Password"
                     required
-                    type={passwordVisible ? "text" : "password"}
+                    type="password"
                     {...register("password", {
                         required: "Password is required",
                     })}
                 />
-                {/* Toggle password visibility button */}
-                <div
-                    className="toggle"
-                    type="button"
-                    onClick={togglePasswordVisibility}>
-                    {passwordVisible ? <FaRegEyeSlash /> : <FaEye />}
-                </div>
-                <p>{errors.password?.message}</p>
 
-                <button className="forgotPassBtn">forgot Password?</button>
+                <p>{errors.password?.message}</p>
             </div>
+            <button className="forgotPassBtn">forgot Password?</button>
 
             <button className="btn-a" type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "" : <>LOGIN</>}
@@ -167,12 +152,6 @@ export const RegisterForm = ({ setAuthContainer }) => {
         toast.error("Failed to submit, check inputs and try again");
     };
 
-    //password
-    const [passwordVisible, setPasswordVisible] = useState(false);
-    const togglePasswordVisibility = () => {
-        setPasswordVisible(!passwordVisible);
-    };
-
     return (
         <form
             className="auth-form"
@@ -206,18 +185,12 @@ export const RegisterForm = ({ setAuthContainer }) => {
                 <input
                     placeholder="Password"
                     required
-                    type={passwordVisible ? "text" : "password"}
+                    type="password"
                     {...register("password", {
                         required: "Password is required",
                     })}
                 />
-                {/* Toggle password visibility button */}
-                <div
-                    className="toggle"
-                    type="button"
-                    onClick={togglePasswordVisibility}>
-                    {passwordVisible ? <FaRegEyeSlash /> : <FaEye />}
-                </div>
+
                 <p>{errors.password?.message}</p>
             </div>
 
