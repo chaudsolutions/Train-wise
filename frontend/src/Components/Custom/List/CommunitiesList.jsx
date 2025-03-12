@@ -20,11 +20,7 @@ const CommunitiesList = ({ community }) => {
 
                 <div className="cBody">
                     <div>
-                        <img
-                            src={community?.logo || logoLink}
-                            height={50}
-                            alt="logo"
-                        />
+                        <img src={community?.logo || logoLink} alt="logo" />
                         <h3>{community?.name}</h3>
                     </div>
                     <p>{community?.description.slice(0, 100)}...</p>

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { generateCommunities } from "../../Hooks/useMockData";
 import "./community.css";
 import useResponsive from "../../Hooks/useResponsive";
 import { IoArrowBackCircleSharp } from "react-icons/io5";
@@ -13,33 +12,39 @@ import { useAuthContext } from "../../Context/AuthContext";
 import toast from "react-hot-toast";
 import Auth from "../../Custom/Auth/Auth";
 import { redirectSessionKey } from "../../Hooks/useVariable";
+import { useCommunityByIdData } from "../../Hooks/useQueryFetch/useQueryData";
+import PageLoader from "../../Animations/PageLoader";
+import ButtonLoad from "../../Animations/ButtonLoad";
 
 const CommunityView = () => {
-    useEffect(() => {
-        window.scroll(0, 0); // scroll to top on component mount
-    }, []);
-
     const [selectedMedia, setSelectedMedia] = useState({ url: "", type: "" });
     const [authContain, setAuthContain] = useState(false);
 
     const { user } = useAuthContext();
 
+    const { useParams } = useReactRouter();
+
+    const { communityId } = useParams();
+
     const { isMobile } = useResponsive();
 
-    const { oneCommunity } = generateCommunities();
+    const { community, isCommunityLoading } = useCommunityByIdData({
+        id: communityId,
+    });
 
     const {
-        title,
-        category,
-        communityBg,
-        creatorName,
+        name,
         description,
+        category,
         rules,
-        reasons,
-        features,
+        visions,
+        subscriptionFee,
+        bannerImage,
+        logo,
         members,
-        price,
-    } = oneCommunity || {};
+    } = community?.community || {};
+
+    console.log({ community });
 
     const mediaImages = [imgLink, imgLink, imgLink, logoLink];
 
@@ -79,13 +84,7 @@ const CommunityView = () => {
             {i + 1}. {r}
         </li>
     ));
-    const reasonsList = reasons?.map((r, i) => (
-        <li key={i}>
-            <GoDotFill size={10} />
-            <span>{r}</span>
-        </li>
-    ));
-    const featuresList = features?.map((r, i) => (
+    const reasonsList = visions?.map((r, i) => (
         <li key={i}>
             <GoDotFill size={10} />
             <span>{r}</span>
@@ -107,10 +106,14 @@ const CommunityView = () => {
         }
     };
 
+    if (isCommunityLoading) {
+        return <PageLoader />;
+    }
+
     return (
         <div className={`community ${isMobile ? "" : "desktopView"}`}>
             <div className="mobileView">
-                <h1>{title}</h1>
+                <h1>{name}</h1>
 
                 <div className="mediaContainer">
                     <div
@@ -143,15 +146,15 @@ const CommunityView = () => {
                         </li>
                         <li>
                             <HiOutlineUsers size={20} />
-                            <span>{members} members</span>
+                            <span>{members?.length} members</span>
                         </li>
                         <li>
                             <GoTag size={20} />
-                            <span>{price}</span>
+                            <span>{subscriptionFee}</span>
                         </li>
                         <li>
                             <FaRegCircleUser size={20} />
-                            <span>{creatorName}</span>
+                            <span>{community.creatorName}</span>
                             <FaStar size={20} className="star" />
                         </li>
                     </ul>
@@ -165,7 +168,7 @@ const CommunityView = () => {
 
                 <div className="communityMore">
                     <p>Click the Join Group button to join this community</p>
-                    <p>This group is created by {creatorName}</p>
+                    <p>This group is created by {community?.creatorName}</p>
 
                     {/* community rules */}
                     <div>
@@ -178,23 +181,17 @@ const CommunityView = () => {
                         <h4>REASONS TO JOIN:</h4>
                         <ul>{reasonsList}</ul>
                     </div>
-
-                    {/* community features */}
-                    <div>
-                        <h4>COMMUNITY FEATURES:</h4>
-                        <ul>{featuresList}</ul>
-                    </div>
                 </div>
             </div>
 
             {!isMobile && (
                 <div className="community-card">
-                    <img src={communityBg} />
+                    <img src={bannerImage} />
 
                     <div>
-                        <h4>{title}</h4>
+                        <h4>{name}</h4>
                         <p>{description}</p>
-                        <strong>{category}</strong>
+                        <strong>{category || ""}</strong>
 
                         <div>
                             <div>
@@ -224,11 +221,13 @@ const CommunityView = () => {
 };
 
 export const CommunityName = () => {
-    const { useNavigate } = useReactRouter();
+    const { useNavigate, useParams } = useReactRouter();
 
-    const { oneCommunity } = generateCommunities();
+    const { community, isCommunityLoading } = useCommunityByIdData({
+        id: "",
+    });
 
-    const { communityLogo, title } = oneCommunity || {};
+    const { name, logo } = community?.community || {};
 
     const navigate = useNavigate();
 
@@ -242,8 +241,14 @@ export const CommunityName = () => {
                 <IoArrowBackCircleSharp size={30} className="icon" />
             </button>
 
-            <img src={communityLogo} alt="community logo" />
-            <span>{title}</span>
+            {isCommunityLoading ? (
+                <ButtonLoad />
+            ) : (
+                <>
+                    <img src={logo} alt="community logo" />
+                    <span>{name}</span>
+                </>
+            )}
         </div>
     );
 };

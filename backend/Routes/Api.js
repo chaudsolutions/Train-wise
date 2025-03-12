@@ -1,5 +1,6 @@
 const express = require("express");
 const Community = require("../Models/Community.js");
+const UsersModel = require("../Models/Users.js");
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.get("/communities", async (req, res) => {
 });
 
 // server get community by id
-router.get("/communities/:id", async (req, res) => {
+router.get("/community/:id", async (req, res) => {
     const { id } = req.params;
     try {
         //   get community by id
@@ -27,7 +28,14 @@ router.get("/communities/:id", async (req, res) => {
 
         if (!community) return res.status(404).json("Community not found.");
 
-        res.status(200).json(community);
+        // find creator name
+        const creator = await UsersModel.findById(community.createdBy);
+
+        // Send response with community and creator name
+        res.status(200).json({
+            community,
+            creatorName: creator.name,
+        });
     } catch (error) {
         res.status(400).json("Community not found.");
         console.error(error);
