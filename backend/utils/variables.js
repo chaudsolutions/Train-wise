@@ -10,8 +10,6 @@ const serverPort = process.env.port;
 // db
 const mongoUrl = process.env.mongodbLive;
 
-console.log("server: " + serverPort);
-
 module.exports = {
     appUrl,
     fromMail,

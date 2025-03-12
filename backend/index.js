@@ -19,6 +19,7 @@ const requireAuth = require("./Models/requireAuth");
 const { Authentication } = require("./Routes/Authentication");
 const { User } = require("./Routes/User");
 const { Creator } = require("./Routes/Creator");
+const { Api } = require("./Routes/Api");
 
 //connect to DB
 mongoose.connect(mongoUrl);
@@ -26,6 +27,9 @@ mongoose.connect(mongoUrl);
 app.get("/", (req, res) => {
     res.send("Hello, World! This is the root route for TRAIN-WISE SERVERS.");
 });
+
+// authentication route
+app.use("/api", Api);
 
 // authentication route
 app.use("/auth", Authentication);
