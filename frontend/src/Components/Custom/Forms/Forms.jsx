@@ -9,6 +9,7 @@ import {
 import { useAuthContext } from "../../Context/AuthContext";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import axios from "axios";
+import ButtonLoad from "../../Animations/ButtonLoad";
 
 export const LoginForm = ({ setAuthContainer }) => {
     const { login } = useAuthContext();
@@ -194,8 +195,11 @@ export const RegisterForm = ({ setAuthContainer }) => {
                 <p>{errors.password?.message}</p>
             </div>
 
-            <button className="btn-a" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "" : <>LOGIN</>}
+            <button
+                className="btn-a d-flex justify-content-center"
+                type="submit"
+                disabled={isSubmitting}>
+                {isSubmitting ? <ButtonLoad /> : <>REGISTER</>}
             </button>
         </form>
     );

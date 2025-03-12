@@ -13,7 +13,7 @@ const Nav = () => {
     // responsive hook
     const { isMobile } = useResponsive();
 
-    const { useMatch } = useReactRouter();
+    const { useMatch, Link } = useReactRouter();
 
     // states
     const [isNavActive, setIsNavActive] = useState(false);
@@ -85,13 +85,18 @@ const Nav = () => {
                     )}
                 </div>
 
-                <AuthContainer />
+                <div className="d-flex align-items-center gap-2">
+                    <Link to="/profile" className="text-dark">
+                        Profile
+                    </Link>
+                    <AuthContainer />
+                </div>
+
+                {/* desktop nav */}
+                {!isMobile && <DesktopNav isDesktopNav={isDesktopNav} />}
             </div>
             {/* nav slider */}
             {isMobile && <NavSlide isNavActive={isNavActive} />}
-
-            {/* desktop nav */}
-            {!isMobile && <DesktopNav isDesktopNav={isDesktopNav} />}
         </>
     );
 };

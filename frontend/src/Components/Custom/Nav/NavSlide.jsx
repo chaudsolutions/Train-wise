@@ -54,23 +54,26 @@ export const AuthContainer = () => {
 
 export const UserProfile = () => {
     // responsive hook
-    const isMobile = useResponsive();
+    const { isMobile } = useResponsive();
 
     const profileLink = location.pathname === "/profile";
 
     const { userData, isUserDataLoading } = useUserData();
 
-    const { name } = userData || {};
+    const { name, role } = userData || {};
 
     return (
-        <div className="profile-DP">
-            <FaUserCircle size={isMobile ? 70 : 40} />
+        <div className="profile-DP d-flex flex-column gap-2 align-items-center">
+            <FaUserCircle size={isMobile ? 70 : 90} />
 
             {profileLink ? (
-                <strong>{isUserDataLoading ? "" : name}</strong>
+                <>
+                    <strong>{isUserDataLoading ? "" : name}</strong>
+                    <span>@{role}</span>
+                </>
             ) : (
-                <Link to="/profile">
-                    <span>My Profile</span>
+                <Link to="/profile" className="fs-6">
+                    <span className="text-black">My Profile</span>
                     <IoIosArrowForward size={20} />
                 </Link>
             )}

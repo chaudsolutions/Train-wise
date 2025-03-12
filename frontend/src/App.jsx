@@ -1,6 +1,7 @@
 import ScrollToTop from "react-scroll-to-top";
 import { Toaster } from "react-hot-toast";
 import { useReactRouter } from "./Components/Hooks/useReactRouter";
+import { useAuthContext } from "./Components/Context/AuthContext";
 
 // components
 import Footer from "./Components/Custom/Footer/Footer";
@@ -15,9 +16,13 @@ import Privacy from "./Components/App/Others/Privacy";
 import Pricing from "./Components/App/Others/Pricing";
 import ContactUs from "./Components/App/Others/ContactUs";
 import CommunityView from "./Components/App/Community/CommunityView";
+import Profile from "./Components/App/Profile/Profile";
+import CreateCommunity from "./Components/App/Community/CreateCommunity";
 
 function App() {
-    const { Routes, Route } = useReactRouter();
+    const { user } = useAuthContext();
+
+    const { Routes, Route, Navigate } = useReactRouter();
 
     return (
         <ErrorBoundary>
@@ -57,6 +62,19 @@ function App() {
                         <Route
                             path="/community/:communityId"
                             element={<CommunityView />}
+                        />
+
+                        {/* profile */}
+                        <Route
+                            path="/profile"
+                            element={user ? <Profile /> : <Navigate to="/" />}
+                        />
+                        {/* create a community */}
+                        <Route
+                            path="/create-a-community"
+                            element={
+                                user ? <CreateCommunity /> : <Navigate to="/" />
+                            }
                         />
 
                         {/* catch all route */}

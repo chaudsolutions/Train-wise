@@ -79,7 +79,6 @@
     transform: translateX(100vw);
     display: flex;
     flex-flow: column;
-    justify-content: space-around;
     align-items: center;
     gap: 1.5rem;
     z-index: 1000;
@@ -131,19 +130,10 @@
     transform: translateX(0);
 }
 
-/* active nav menu */
-.nav-menu-ul {
-    li {
-        .active {
-            color: var(--black) !important;
-            font-size: 110% !important;
-        }
-    }
-}
-
 /* desktop nav */
 .desktopNav {
     position: absolute;
+    top: 6rem;
     left: 10rem;
     background-color: var(--white);
     width: fit-content;

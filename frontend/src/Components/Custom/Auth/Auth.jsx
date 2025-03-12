@@ -32,7 +32,7 @@ const Auth = ({ setAuthContain, authContain }) => {
     return (
         <div className="auth">
             <Logo />
-            <h2>
+            <h2 className="fs-5">
                 {view === "login" && <>Log in to {companyName}</>}
                 {view === "register" && <>Create your {companyName} account</>}
             </h2>
@@ -44,8 +44,8 @@ const Auth = ({ setAuthContain, authContain }) => {
                 <RegisterForm setAuthContainer={setAuthContain} />
             )}
 
-            <p>
-                Don&apos;t have an account?{" "}
+            <div className="d-flex flex-column align-items-center">
+                <span>Don&apos;t have an account? </span>
                 {view === "login" && (
                     <button
                         className="btn-b"
@@ -58,7 +58,7 @@ const Auth = ({ setAuthContain, authContain }) => {
                         Login
                     </button>
                 )}
-            </p>
+            </div>
         </div>
     );
 };

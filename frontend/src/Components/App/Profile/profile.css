@@ -1,0 +1,10 @@
+.profile {
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.profileCon,
+.profileAct {
+    background-color: var(--white);
+    width: 100%;
+}

@@ -35,5 +35,5 @@ export const useAuthContext = () => {
 
     const { user, login, logout } = context;
 
-    return { user: JSON.parse(user), login, logout };
+    return { user, login, logout };
 };

@@ -2,19 +2,19 @@ import { useQueryClient } from "@tanstack/react-query"; // Import useQueryClient
 import { useLogout } from "../../Hooks/useLogout";
 
 const Logout = () => {
-  const { logout } = useLogout();
-  const queryClient = useQueryClient(); // Get the query client
+    const { logout } = useLogout();
+    const queryClient = useQueryClient(); // Get the query client
 
-  const logOut = async () => {
-    logout();
-    queryClient.clear(); // Invalidate all queries
-  };
+    const logOut = async () => {
+        logout();
+        queryClient.clear(); // Invalidate all queries
+    };
 
-  return (
-    <button className="log-out" onClick={logOut}>
-      Log Out
-    </button>
-  );
+    return (
+        <button className="log-out btn btn-info" onClick={logOut}>
+            Log Out
+        </button>
+    );
 };
 
 export default Logout;
