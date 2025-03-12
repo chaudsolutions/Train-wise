@@ -7,26 +7,34 @@ export const imgLink =
 export const logoLink =
     "https://png.pngtree.com/png-clipart/20190611/original/pngtree-wolf-logo-png-image_2306634.jpg";
 
-const CommunitiesList = ({ community, index }) => {
+const CommunitiesList = ({ community }) => {
     const { Link } = useReactRouter();
 
     return (
         <li className="communityLi">
-            <Link to={`/community/${community.title}`}>
+            <Link to={`/community/${community?._id}`}>
                 <div className="cHead">
-                    <div>#{index + 1}</div>
-                    <img src={imgLink} alt="image" />
+                    <div>#{community?.SN}</div>
+                    <img src={community?.bannerImage || imgLink} alt="image" />
                 </div>
 
                 <div className="cBody">
                     <div>
-                        <img src={logoLink} height={50} alt="logo" />
-                        <h3>{community.title}</h3>
+                        <img
+                            src={community?.logo || logoLink}
+                            height={50}
+                            alt="logo"
+                        />
+                        <h3>{community?.name}</h3>
                     </div>
-                    <p>{community.description.slice(0, 100)}...</p>
+                    <p>{community?.description.slice(0, 100)}...</p>
 
                     <div>
-                        {community.members} Members • {community?.price}
+                        {community?.members?.length || 0} Members •{" "}
+                        {community?.subscriptionFee &&
+                        community?.subscriptionFee === 0
+                            ? "Free"
+                            : `$${community?.subscriptionFee}/Month`}
                     </div>
                 </div>
             </Link>

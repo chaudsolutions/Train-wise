@@ -1,8 +1,23 @@
 const mongoose = require("mongoose");
 
+const communityMembersSchema = new mongoose.Schema(
+    {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+        },
+        membershipExpiration: { type: Date }, // field if community requires monthly subscription
+    },
+    {
+        timestamps: true,
+    }
+);
+
 // Define the Community Schema
 const communitySchema = new mongoose.Schema(
     {
+        SN: { type: Number, required: true },
         name: {
             type: String,
             required: [true, "Community name is required"],
@@ -31,6 +46,11 @@ const communitySchema = new mongoose.Schema(
                 message: "Exactly 3 visions are required",
             },
         },
+        subscriptionFee: {
+            type: Number,
+            required: [true, "Subscription fee is required"],
+            min: [0, "Subscription fee cannot be negative"],
+        },
         bannerImage: {
             type: String, // Store the file path or URL
             required: [true, "Banner image is required"],
@@ -44,6 +64,7 @@ const communitySchema = new mongoose.Schema(
             ref: "User", // Reference to the User model (if you have one)
             required: [true, "Creator ID is required"],
         },
+        members: [communityMembersSchema], // Array of members in the community
     },
     {
         timestamps: true, // Automatically add createdAt and updatedAt fields

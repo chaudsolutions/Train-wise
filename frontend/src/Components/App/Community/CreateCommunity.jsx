@@ -29,6 +29,7 @@ const CreateCommunity = () => {
             const formData = new FormData();
             formData.append("name", data.name);
             formData.append("description", data.description);
+            formData.append("subscriptionFee", data.subscriptionFee);
             rules.forEach((rule, index) =>
                 formData.append(`rules[${index}]`, rule)
             );
@@ -106,6 +107,28 @@ const CreateCommunity = () => {
                     {errors.description && (
                         <div className="invalid-feedback">
                             {errors.description.message}
+                        </div>
+                    )}
+                </div>
+
+                <div className="mb-3">
+                    <label htmlFor="subscriptionFee" className="form-label">
+                        Monthly Subscription Fee
+                    </label>
+                    <input
+                        placeholder="0 if free"
+                        type="number"
+                        id="subscriptionFee"
+                        {...register("subscriptionFee", {
+                            required: "Subscription Fee is required",
+                        })}
+                        className={`form-control ${
+                            errors.subscriptionFee ? "is-invalid" : ""
+                        }`}
+                    />
+                    {errors.subscriptionFee && (
+                        <div className="invalid-feedback">
+                            {errors.subscriptionFee.message}
                         </div>
                     )}
                 </div>

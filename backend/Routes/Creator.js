@@ -61,7 +61,7 @@ router.post(
     async (req, res) => {
         const userId = req.userId;
         // Extract fields from the request body
-        const { name, description, rules, visions } = req.body;
+        const { name, description, subscriptionFee, rules, visions } = req.body;
 
         try {
             // find user
@@ -70,6 +70,8 @@ router.post(
             if (!creator) {
                 return res.status(404).json("User not found");
             }
+
+            const communities = await Community.find({});
 
             // Upload banner image to Cloudinary
             const bannerImageBuffer = req.files["bannerImage"][0].buffer;
@@ -86,10 +88,12 @@ router.post(
 
             // Create the community
             const community = await Community.create({
+                SN: communities.length + 1,
                 name,
                 description,
                 rules,
                 visions,
+                subscriptionFee,
                 bannerImage: bannerImageResult.secure_url, // Store Cloudinary URL
                 logo: logoResult.secure_url, // Store Cloudinary URL
                 createdBy: creator._id,

@@ -21,7 +21,7 @@ export const useUserData = () => {
 };
 
 // use communities data
-export const useCommunities = () => {
+export const useCommunitiesData = () => {
     const {
         data: communities,
         isLoading: isCommunitiesLoading,
@@ -41,7 +41,7 @@ export const useCommunities = () => {
 };
 
 // use single community data by id
-export const useCommunityById = ({ id }) => {
+export const useCommunityByIdData = ({ id }) => {
     const {
         data: community,
         isLoading: isCommunityLoading,

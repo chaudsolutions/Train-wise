@@ -1,6 +1,7 @@
+import PageLoader from "../../Animations/PageLoader";
 import PaginatedData from "../../Custom/PaginatedData/PaginatedData";
 import Search from "../../Custom/Search/Search";
-import { generateCommunities } from "../../Hooks/useMockData";
+import { useCommunitiesData } from "../../Hooks/useQueryFetch/useQueryData";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import "./home.css";
 import { useEffect } from "react";
@@ -12,7 +13,11 @@ const Home = () => {
 
     const { Link } = useReactRouter();
 
-    const { communities } = generateCommunities();
+    const { communities, isCommunitiesLoading } = useCommunitiesData();
+
+    if (isCommunitiesLoading) {
+        return <PageLoader />;
+    }
 
     return (
         <main className="home">

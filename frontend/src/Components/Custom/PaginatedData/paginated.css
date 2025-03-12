@@ -64,11 +64,8 @@
     cursor: pointer;
     font-weight: 400;
     border-radius: 0.5rem;
-
-    &:hover {
-        background-color: var(--trans-more-black);
-        color: var(--white);
-    }
+    color: var(--white);
+    background-color: var(--trans-more-black);
 }
 .pagination .page-link {
     border: 1px solid var(--trans-more-black);
