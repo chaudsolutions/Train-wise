@@ -10,6 +10,8 @@ import { useAuthContext } from "../../Context/AuthContext";
 import { CommunityName } from "../../App/Community/CommunityView";
 
 const Nav = () => {
+    const { user } = useAuthContext();
+
     // responsive hook
     const { isMobile } = useResponsive();
 
@@ -45,9 +47,10 @@ const Nav = () => {
         };
     }, [isNavActive, isDesktopNav]); // Add dependencies to effect
 
-    const match = useMatch("/community/:communityId");
+    const matchOne = useMatch("/community/:communityId");
+    const matchTwo = useMatch("/community/access/:communityId");
 
-    const isCommunity = !!match;
+    const isCommunity = !!matchOne || !!matchTwo;
 
     return (
         <>
@@ -86,9 +89,11 @@ const Nav = () => {
                 </div>
 
                 <div className="d-flex align-items-center gap-2">
-                    <Link to="/profile" className="text-dark">
-                        Profile
-                    </Link>
+                    {!isCommunity && user && (
+                        <Link to="/profile" className="text-dark">
+                            Profile
+                        </Link>
+                    )}
                     <AuthContainer />
                 </div>
 

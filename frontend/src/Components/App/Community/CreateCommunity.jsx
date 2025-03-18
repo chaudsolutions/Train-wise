@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import ButtonLoad from "../../Animations/ButtonLoad";
 import toast from "react-hot-toast";
-import { serVer, useToken } from "../../Hooks/useVariable";
+import { categories, serVer, useToken } from "../../Hooks/useVariable";
 
 const CreateCommunity = () => {
     const { useNavigate } = useReactRouter();
@@ -129,6 +129,35 @@ const CreateCommunity = () => {
                     {errors.subscriptionFee && (
                         <div className="invalid-feedback">
                             {errors.subscriptionFee.message}
+                        </div>
+                    )}
+                </div>
+
+                {/* category select */}
+                <div className="mb-3">
+                    <label htmlFor="category" className="form-label">
+                        Select Category
+                    </label>
+                    <select
+                        id="category"
+                        {...register("category", {
+                            required: "Category Fee is required",
+                        })}
+                        className={`form-control ${
+                            errors.category ? "is-invalid" : ""
+                        }`}>
+                        <option value="">Select a category</option>
+                        {categories.map((category, i) => (
+                            <li key={i}>
+                                <option value={category.name}>
+                                    {category.name}
+                                </option>
+                            </li>
+                        ))}
+                    </select>
+                    {errors.category && (
+                        <div className="invalid-feedback">
+                            {errors.category.message}
                         </div>
                     )}
                 </div>

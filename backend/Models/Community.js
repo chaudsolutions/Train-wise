@@ -14,6 +14,15 @@ const communityMembersSchema = new mongoose.Schema(
     }
 );
 
+const notificationsSchema = new mongoose.Schema(
+    {
+        message: { type: String, required: true },
+    },
+    {
+        timestamps: true,
+    }
+);
+
 // Define the Community Schema
 const communitySchema = new mongoose.Schema(
     {
@@ -65,6 +74,7 @@ const communitySchema = new mongoose.Schema(
             required: [true, "Creator ID is required"],
         },
         members: [communityMembersSchema], // Array of members in the community
+        notifications: [notificationsSchema], // Array of notifications
     },
     {
         timestamps: true, // Automatically add createdAt and updatedAt fields

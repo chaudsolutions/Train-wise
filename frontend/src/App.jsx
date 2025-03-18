@@ -18,6 +18,8 @@ import ContactUs from "./Components/App/Others/ContactUs";
 import CommunityView from "./Components/App/Community/CommunityView";
 import Profile from "./Components/App/Profile/Profile";
 import CreateCommunity from "./Components/App/Community/CreateCommunity";
+import EnterCommunity from "./Components/App/Community/EnterCommunity";
+import CreateCourse from "./Components/App/Community/CreateCourse";
 
 function App() {
     const { user } = useAuthContext();
@@ -62,6 +64,16 @@ function App() {
                         <Route
                             path="/community/:communityId"
                             element={<CommunityView />}
+                        />
+                        {/* Enter a community */}
+                        <Route
+                            path="/community/access/:communityId"
+                            element={<EnterCommunity />}
+                        />
+                        {/* Create a community course */}
+                        <Route
+                            path="/admin/add-course/:communityId"
+                            element={<CreateCourse />}
                         />
 
                         {/* profile */}

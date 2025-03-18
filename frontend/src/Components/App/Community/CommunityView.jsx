@@ -11,26 +11,38 @@ import { FaRegCircleUser, FaStar } from "react-icons/fa6";
 import { useAuthContext } from "../../Context/AuthContext";
 import toast from "react-hot-toast";
 import Auth from "../../Custom/Auth/Auth";
-import { redirectSessionKey } from "../../Hooks/useVariable";
-import { useCommunityByIdData } from "../../Hooks/useQueryFetch/useQueryData";
+import { redirectSessionKey, serVer, useToken } from "../../Hooks/useVariable";
+import {
+    useCommunityByIdData,
+    useUserData,
+} from "../../Hooks/useQueryFetch/useQueryData";
 import PageLoader from "../../Animations/PageLoader";
 import ButtonLoad from "../../Animations/ButtonLoad";
+import axios from "axios";
 
 const CommunityView = () => {
     const [selectedMedia, setSelectedMedia] = useState({ url: "", type: "" });
     const [authContain, setAuthContain] = useState(false);
+    const [isBtn, setIsBtn] = useState(false);
 
     const { user } = useAuthContext();
 
-    const { useParams } = useReactRouter();
+    const { token } = useToken();
+
+    const { useParams, useNavigate } = useReactRouter();
+
+    const navigate = useNavigate();
 
     const { communityId } = useParams();
 
     const { isMobile } = useResponsive();
 
-    const { community, isCommunityLoading } = useCommunityByIdData({
-        id: communityId,
-    });
+    const { community, isCommunityLoading, refetchCommunity } =
+        useCommunityByIdData({
+            id: communityId,
+        });
+
+    const { userData, isUserDataLoading } = useUserData();
 
     const {
         name,
@@ -40,11 +52,15 @@ const CommunityView = () => {
         visions,
         subscriptionFee,
         bannerImage,
-        logo,
         members,
+        createdBy,
     } = community?.community || {};
 
-    console.log({ community });
+    const { _id } = userData || {};
+
+    // check if user is part of community
+    const isUserMember =
+        members?.some((member) => member.userId === _id) || createdBy === _id;
 
     const mediaImages = [imgLink, imgLink, imgLink, logoLink];
 
@@ -102,11 +118,80 @@ const CommunityView = () => {
             // save community page to session and redirect once user logs in
             sessionStorage.setItem(redirectSessionKey, location.pathname);
 
-            setAuthContain(true);
+            return setAuthContain(true);
+        }
+
+        // enter group direct if user is a member
+        if (isUserMember) {
+            return navigate(`/community/access/${communityId}`);
+        }
+
+        setIsBtn(true);
+
+        if (subscriptionFee === 0) {
+            // join directly
+            try {
+                const res = await axios.put(
+                    `${serVer}/user/joinCommunity/${communityId}`,
+                    {},
+                    {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }
+                );
+
+                toast.success(res.data);
+
+                refetchCommunity();
+
+                navigate(`/community/${communityId}/${user}`);
+            } catch (error) {
+                toast.error("Failed to join community. Please try again.");
+                console.error("Error joining community:", error);
+            } finally {
+                setIsBtn(false);
+            }
+        } else {
+            // handle payment if joining community is not free
+            try {
+                toast.error("Payment method coming soon");
+            } catch (error) {
+                toast.error("Failed to handle payment. Please try again.");
+                console.error("Error handling payment:", error);
+            } finally {
+                setIsBtn(false);
+            }
         }
     };
 
-    if (isCommunityLoading) {
+    // delete community
+    const handleDeleteCom = async () => {
+        if (
+            !window.confirm("Are you sure you want to delete this community?")
+        ) {
+            return;
+        }
+
+        setIsBtn(true);
+        try {
+            const res = await axios.delete(
+                `${serVer}/creator/delete-community/${communityId}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+
+            toast.success(res.data);
+
+            navigate("/");
+        } catch (error) {
+            toast.error("Failed to delete community. Please try again.");
+            console.error("Error deleting community:", error);
+        } finally {
+            setIsBtn(false);
+        }
+    };
+
+    if (isCommunityLoading || isUserDataLoading) {
         return <PageLoader />;
     }
 
@@ -150,19 +235,37 @@ const CommunityView = () => {
                         </li>
                         <li>
                             <GoTag size={20} />
-                            <span>{subscriptionFee}</span>
+                            <span>
+                                {subscriptionFee
+                                    ? `$${subscriptionFee}/Month`
+                                    : "Free"}
+                            </span>
                         </li>
                         <li>
                             <FaRegCircleUser size={20} />
-                            <span>{community.creatorName}</span>
+                            <span>
+                                {createdBy === _id
+                                    ? "You"
+                                    : community.creatorName}
+                            </span>
                             <FaStar size={20} className="star" />
                         </li>
                     </ul>
 
                     {isMobile && (
-                        <button className="btn-a" onClick={joinCommunity}>
-                            JOIN GROUP
-                        </button>
+                        <>
+                            <button className="btn-a" onClick={joinCommunity}>
+                                {isBtn ? (
+                                    <ButtonLoad />
+                                ) : (
+                                    <>
+                                        {isUserMember
+                                            ? "Explore Group"
+                                            : "JOIN GROUP"}
+                                    </>
+                                )}
+                            </button>
+                        </>
                     )}
                 </div>
 
@@ -182,6 +285,14 @@ const CommunityView = () => {
                         <ul>{reasonsList}</ul>
                     </div>
                 </div>
+
+                {createdBy === _id && (
+                    <button
+                        className="btn btn-warning"
+                        onClick={handleDeleteCom}>
+                        {isBtn ? <ButtonLoad /> : <>Delete Community</>}
+                    </button>
+                )}
             </div>
 
             {!isMobile && (
@@ -195,7 +306,7 @@ const CommunityView = () => {
 
                         <div>
                             <div>
-                                <b>{members}</b> members
+                                <b>{members?.length}</b> members
                             </div>
                             <div>
                                 <b>10</b> online
@@ -203,7 +314,15 @@ const CommunityView = () => {
                         </div>
 
                         <button className="btn-a" onClick={joinCommunity}>
-                            JOIN GROUP
+                            {isBtn ? (
+                                <ButtonLoad />
+                            ) : (
+                                <>
+                                    {isUserMember
+                                        ? "Explore Group"
+                                        : "JOIN GROUP"}
+                                </>
+                            )}
                         </button>
                     </div>
                 </div>
@@ -221,10 +340,12 @@ const CommunityView = () => {
 };
 
 export const CommunityName = () => {
-    const { useNavigate, useParams } = useReactRouter();
+    const { useNavigate } = useReactRouter();
+
+    const communityId = location.pathname.split("/")[3];
 
     const { community, isCommunityLoading } = useCommunityByIdData({
-        id: "",
+        id: communityId,
     });
 
     const { name, logo } = community?.community || {};
