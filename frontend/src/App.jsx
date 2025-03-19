@@ -10,7 +10,6 @@ import Nav from "./Components/Custom/Nav/Nav";
 import Home from "./Components/App/Home/Home";
 import SearchResults from "./Components/App/Search/SearchResults";
 import NotFound from "./Components/App/404/NotFound";
-import AffiliatePage from "./Components/App/Others/AffiliatePage";
 import FAQComponent from "./Components/App/Others/FAQComponent";
 import Privacy from "./Components/App/Others/Privacy";
 import Pricing from "./Components/App/Others/Pricing";
@@ -42,9 +41,6 @@ function App() {
                         {/* search results */}
                         <Route path="/search" element={<SearchResults />} />
 
-                        {/* affiliates */}
-                        <Route path="/affiliates" element={<AffiliatePage />} />
-
                         {/* support */}
                         <Route
                             path="/frequently-asked-questions"
@@ -65,16 +61,6 @@ function App() {
                             path="/community/:communityId"
                             element={<CommunityView />}
                         />
-                        {/* Enter a community */}
-                        <Route
-                            path="/community/access/:communityId"
-                            element={<EnterCommunity />}
-                        />
-                        {/* Create a community course */}
-                        <Route
-                            path="/admin/add-course/:communityId"
-                            element={<CreateCourse />}
-                        />
 
                         {/* profile */}
                         <Route
@@ -89,6 +75,28 @@ function App() {
                             }
                         />
 
+                        {/* Enter a community */}
+                        <Route
+                            path="/community/access/:communityId"
+                            element={
+                                user ? <EnterCommunity /> : <Navigate to="/" />
+                            }
+                        />
+                        {/* Create a community course */}
+                        <Route
+                            path="/admin/add-course/:communityId"
+                            element={
+                                user ? <CreateCourse /> : <Navigate to="/" />
+                            }
+                        />
+                        {/* community course classroom */}
+                        <Route
+                            path="/admin/add-course/:communityId"
+                            element={
+                                user ? <CreateCourse /> : <Navigate to="/" />
+                            }
+                        />
+
                         {/* catch all route */}
                         <Route path="*" element={<NotFound />} />
                     </Routes>
@@ -96,7 +104,7 @@ function App() {
 
                 {/* scroll to top BTN */}
                 <ScrollToTop
-                    color="black"
+                    color="blue"
                     smooth
                     width="20"
                     height="20"

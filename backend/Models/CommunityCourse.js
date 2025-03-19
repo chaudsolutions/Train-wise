@@ -5,7 +5,7 @@ const coursesSchema = new mongoose.Schema(
     {
         name: { type: String, required: true },
         duration: { type: Number, required: true },
-        videos: [],
+        videos: [String],
     },
     {
         timestamps: true,
@@ -17,7 +17,7 @@ const communitySchema = new mongoose.Schema(
     {
         communityId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
+            ref: "Community",
             required: true,
         },
         courses: [coursesSchema],

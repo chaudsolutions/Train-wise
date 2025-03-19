@@ -25,7 +25,9 @@ const NotFound = () => {
                 <p>Sorry, this page does not exist.</p>
             </div>
 
-            <button onClick={goHome}>Back to Home</button>
+            <button className="btn btn-info" onClick={goHome}>
+                Back to Home
+            </button>
         </main>
     );
 };

@@ -1,15 +1,24 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const morgan = require("morgan");
+const helmet = require("helmet");
 const cors = require("cors");
 require("dotenv").config();
 const { mongoUrl, serverPort } = require("./utils/variables");
 
 const app = express();
+
+app.use(morgan("tiny"));
+app.use(helmet());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
     cors({
-        origin: "*",
+        origin: "*", // Allow only this origin
+        methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Allowed methods
+        allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+        optionsSuccessStatus: 204,
     })
 );
 

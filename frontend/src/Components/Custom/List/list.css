@@ -1,6 +1,6 @@
 .communityLi {
     flex-grow: 1;
-    min-width: 13rem;
+    min-width: 17rem;
     width: 30%;
     border: 1px solid var(--trans-more-more-black);
     border-radius: 0.5rem;

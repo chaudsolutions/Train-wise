@@ -13,6 +13,15 @@ const UsersSchema = new Schema(
             enum: ["admin", "creator", "user"],
             default: "user",
         },
+        coursesWatched: [
+            {
+                courseId: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "Course",
+                },
+                videos: [String],
+            },
+        ],
     },
     { timestamps: true }
 );

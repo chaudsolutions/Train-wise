@@ -1,3 +1,4 @@
+import { useReactRouter } from "../../Hooks/useReactRouter";
 import { LinkOne } from "../Buttons/LinkBtn";
 
 export const CommunityOverview = ({ notifications, createdAt }) => {
@@ -34,12 +35,93 @@ export const CommunityOverview = ({ notifications, createdAt }) => {
     );
 };
 
-export const CommunityClassroom = ({ isCommunityAdmin, communityId }) => {
+export const CommunityClassroom = ({
+    isCommunityAdmin,
+    communityId,
+    courses,
+    coursesWatched,
+}) => {
+    const { Link } = useReactRouter();
+
+    const getThumbnailUrl = (videos) => {
+        if (videos && videos.length > 0) {
+            const firstVideoUrl = videos[0];
+            // If using Cloudinary, generate a thumbnail URL
+            return firstVideoUrl.replace(/\.mp4$/, ".jpg");
+        }
+        // Fallback placeholder image
+        return "https://via.placeholder.com/300x150";
+    };
+
+    const getProgress = (course) => {
+        if (!coursesWatched || !course?.videos) return 0;
+
+        // Find the course in coursesWatched
+        const courseWatched = coursesWatched.find(
+            (cw) => cw.courseId.toString() === course._id.toString()
+        );
+
+        if (!courseWatched || !courseWatched.videos) return 0;
+
+        // Calculate progress
+        const totalVideos = course.videos.length;
+        const watchedVideos = courseWatched.videos.length;
+        const progress = (watchedVideos / totalVideos) * 100;
+
+        return Math.round(progress); // Round to the nearest integer
+    };
+
     return (
         <div className="classroom-view">
             <p>Here you can access all the courses and learning materials.</p>
 
-            <ul>learning materials</ul>
+            {courses && courses.length > 0 ? (
+                <div className="course-list">
+                    {courses.map((course) => (
+                        <div key={course._id} className="course-card">
+                            {/* Video Placeholder */}
+                            <div className="video-placeholder">
+                                <img
+                                    src={getThumbnailUrl(course?.videos)}
+                                    alt="Course Thumbnail"
+                                />
+                            </div>
+
+                            {/* Course Details */}
+                            <div className="course-details">
+                                <h4 className="course-name">{course.name}</h4>
+                                <p className="course-duration">
+                                    Duration: {course?.duration} weeks
+                                </p>
+                                <div className="progress-container">
+                                    <div className="progress-bar">
+                                        <div
+                                            className="progress"
+                                            style={{
+                                                width: `${getProgress(
+                                                    course
+                                                )}%`,
+                                            }} // Example progress (60%)
+                                        ></div>
+                                    </div>
+                                    <span className="progress-text">
+                                        {getProgress(course)}% Complete
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Link to Course */}
+                            <Link
+                                to={`/community/${communityId}/course/${course._id}`}
+                                className="course-link">
+                                View Course
+                            </Link>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <p>No courses available yet</p>
+            )}
 
             {/* button to add courses */}
             {isCommunityAdmin && (

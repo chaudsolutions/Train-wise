@@ -5,11 +5,15 @@ import { useReactRouter } from "../../Hooks/useReactRouter";
 import ButtonLoad from "../../Animations/ButtonLoad";
 import toast from "react-hot-toast";
 import { categories, serVer, useToken } from "../../Hooks/useVariable";
+import { useCommunitiesData } from "../../Hooks/useQueryFetch/useQueryData";
+import PageLoader from "../../Animations/PageLoader";
 
 const CreateCommunity = () => {
     const { useNavigate } = useReactRouter();
 
     const { token } = useToken();
+
+    const { isCommunitiesLoading, refetchCommunities } = useCommunitiesData();
 
     const {
         register,
@@ -53,6 +57,8 @@ const CreateCommunity = () => {
 
             const communityId = response.data._id;
 
+            refetchCommunities();
+
             // Navigate to the newly created community
             navigate(`/community/${communityId}`);
 
@@ -62,6 +68,10 @@ const CreateCommunity = () => {
             toast.error("Failed to create community. Please try again.");
         }
     };
+
+    if (isCommunitiesLoading) {
+        return <PageLoader />;
+    }
 
     return (
         <div className="create-community-container">

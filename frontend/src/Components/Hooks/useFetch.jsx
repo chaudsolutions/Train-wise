@@ -39,3 +39,20 @@ export const fetchCommunity = async ({ id }) => {
 
     return response.data;
 };
+
+// fetch community courses
+export const fetchCommunityCourses = async ({ id }) => {
+    const token = localStorage.getItem(localStorageToken);
+
+    const response = await axios.get(`${serVer}/user/courses/community/${id}`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (response.status !== 200) {
+        throw new Error("Network response was not ok");
+    }
+
+    return response.data;
+};

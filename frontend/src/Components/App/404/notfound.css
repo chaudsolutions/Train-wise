@@ -27,13 +27,3 @@
         font-size: 1rem;
     }
 }
-.not-found > button {
-    padding: 1rem;
-    background-color: var(--accent-color);
-    color: var(--white);
-    width: 100%;
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin-top: 2rem;
-    border-radius: 0.5rem;
-}

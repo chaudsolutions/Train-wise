@@ -1,5 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchCommunities, fetchCommunity, fetchUser } from "../useFetch";
+import {
+    fetchCommunities,
+    fetchCommunity,
+    fetchCommunityCourses,
+    fetchUser,
+} from "../useFetch";
 import { useAuthContext } from "../../Context/AuthContext";
 
 // fetch user details
@@ -58,5 +63,28 @@ export const useCommunityByIdData = ({ id }) => {
         isCommunityLoading,
         isCommunityError,
         refetchCommunity,
+    };
+};
+
+// use community courses data
+export const useCommunityCoursesData = ({ id }) => {
+    const { user } = useAuthContext();
+
+    const {
+        data: coursesData,
+        isLoading: isCoursesLoading,
+        isError: isCoursesError,
+        refetch: refetchCourses,
+    } = useQuery({
+        queryKey: ["communityCourses", id], // Use the new object-based syntax
+        queryFn: () => fetchCommunityCourses({ id }),
+        enabled: !!id && !!user,
+    });
+
+    return {
+        coursesData,
+        isCoursesLoading,
+        isCoursesError,
+        refetchCourses,
     };
 };

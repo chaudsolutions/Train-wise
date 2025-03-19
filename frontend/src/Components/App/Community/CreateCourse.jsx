@@ -4,6 +4,8 @@ import { serVer, useToken } from "../../Hooks/useVariable";
 import ButtonLoad from "../../Animations/ButtonLoad";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { useCommunityByIdData } from "../../Hooks/useQueryFetch/useQueryData";
+import PageLoader from "../../Animations/PageLoader";
 
 const CreateCourse = () => {
     const { useParams, useNavigate } = useReactRouter();
@@ -13,6 +15,10 @@ const CreateCourse = () => {
     const { communityId } = useParams();
 
     const { token } = useToken();
+
+    const { isCommunityLoading, refetchCommunity } = useCommunityByIdData({
+        id: communityId,
+    });
 
     const {
         register,
@@ -40,6 +46,7 @@ const CreateCourse = () => {
                 formData,
                 {
                     headers: {
+                        "Content-Type": "multipart/form-data",
                         Authorization: `Bearer ${token}`,
                     },
                 }
@@ -49,12 +56,18 @@ const CreateCourse = () => {
 
             toast.success(data);
 
+            refetchCommunity();
+
             navigate(`/community/access/${communityId}`); // Redirect to the new course page
         } catch (error) {
             console.error("Error creating course:", error);
-            alert("Failed to create course. Please try again.");
+            toast.error("Failed to create course. Please try again.");
         }
     };
+
+    if (isCommunityLoading) {
+        return <PageLoader />;
+    }
 
     return (
         <div className="create-community-container">

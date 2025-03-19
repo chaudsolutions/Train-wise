@@ -7,7 +7,6 @@ const Footer = () => {
     const footerLinks = [
         { name: "Contact Us", link: "/contact-us" },
         { name: "FAQs", link: "/frequently-asked-questions" },
-        { name: "Affiliates", link: "/affiliates" },
         { name: "Privacy", link: "/privacy" },
         { name: "Pricing", link: "/pricing" },
     ];

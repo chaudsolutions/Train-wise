@@ -84,7 +84,11 @@ const PaginatedData = ({ communities }) => {
             </ul>
 
             {/* communities list */}
-            <ul className="communitiesUl">{communitiesList}</ul>
+            {communitiesList && communitiesList.length > 0 ? (
+                <ul className="communitiesUl">{communitiesList}</ul>
+            ) : (
+                <div className="text-center">No communities created yet</div>
+            )}
 
             <ReactPaginate
                 breakLabel="..."

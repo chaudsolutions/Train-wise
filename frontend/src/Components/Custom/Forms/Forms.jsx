@@ -94,8 +94,11 @@ export const LoginForm = ({ setAuthContainer }) => {
             </div>
             <button className="forgotPassBtn">forgot Password?</button>
 
-            <button className="btn-a" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "" : <>LOGIN</>}
+            <button
+                className="btn btn-success d-flex justify-content-center"
+                type="submit"
+                disabled={isSubmitting}>
+                {isSubmitting ? <ButtonLoad /> : <>LOGIN</>}
             </button>
         </form>
     );
@@ -196,7 +199,7 @@ export const RegisterForm = ({ setAuthContainer }) => {
             </div>
 
             <button
-                className="btn-a d-flex justify-content-center"
+                className="btn btn-success d-flex justify-content-center"
                 type="submit"
                 disabled={isSubmitting}>
                 {isSubmitting ? <ButtonLoad /> : <>REGISTER</>}

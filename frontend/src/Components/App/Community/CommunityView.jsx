@@ -246,7 +246,7 @@ const CommunityView = () => {
                             <span>
                                 {createdBy === _id
                                     ? "You"
-                                    : community.creatorName}
+                                    : community?.creatorName}
                             </span>
                             <FaStar size={20} className="star" />
                         </li>
@@ -254,7 +254,9 @@ const CommunityView = () => {
 
                     {isMobile && (
                         <>
-                            <button className="btn-a" onClick={joinCommunity}>
+                            <button
+                                className="btn btn-warning"
+                                onClick={joinCommunity}>
                                 {isBtn ? (
                                     <ButtonLoad />
                                 ) : (
@@ -288,7 +290,7 @@ const CommunityView = () => {
 
                 {createdBy === _id && (
                     <button
-                        className="btn btn-warning"
+                        className="btn btn-danger d-flex justify-content-center"
                         onClick={handleDeleteCom}>
                         {isBtn ? <ButtonLoad /> : <>Delete Community</>}
                     </button>
@@ -342,7 +344,8 @@ const CommunityView = () => {
 export const CommunityName = () => {
     const { useNavigate } = useReactRouter();
 
-    const communityId = location.pathname.split("/")[3];
+    const pathnameArr = location.pathname.split("/");
+    const communityId = pathnameArr[pathnameArr?.length - 1];
 
     const { community, isCommunityLoading } = useCommunityByIdData({
         id: communityId,

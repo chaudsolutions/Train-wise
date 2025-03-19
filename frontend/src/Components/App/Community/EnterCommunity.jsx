@@ -3,6 +3,7 @@ import "./enterCommunity.css"; // Custom CSS for additional styling
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import {
     useCommunityByIdData,
+    useCommunityCoursesData,
     useUserData,
 } from "../../Hooks/useQueryFetch/useQueryData";
 import PageLoader from "../../Animations/PageLoader";
@@ -34,21 +35,21 @@ const EnterCommunity = () => {
 
     const { communityId } = useParams();
 
-    const { community, isCommunityLoading, refetchCommunity } =
-        useCommunityByIdData({
-            id: communityId,
-        });
-
     const { userData, isUserDataLoading } = useUserData();
+
+    const { community, isCommunityLoading } = useCommunityByIdData({
+        id: communityId,
+    });
+
+    const { coursesData, isCoursesLoading } = useCommunityCoursesData({
+        id: communityId,
+    });
 
     const {
         name,
         logo,
         category,
         description,
-        rules,
-        visions,
-        subscriptionFee,
         bannerImage,
         members,
         createdBy,
@@ -56,13 +57,13 @@ const EnterCommunity = () => {
         notifications,
     } = community?.community || {};
 
-    const { _id } = userData || {};
+    const { _id, coursesWatched } = userData || {};
+
+    const { courses } = coursesData || {};
 
     const isCommunityAdmin = createdBy === _id;
 
-    console.log({ createdBy, user });
-
-    if (isCommunityLoading || isUserDataLoading) {
+    if (isCommunityLoading || isUserDataLoading || isCoursesLoading) {
         return <PageLoader />;
     }
 
@@ -106,6 +107,8 @@ const EnterCommunity = () => {
                         <CommunityClassroom
                             isCommunityAdmin={isCommunityAdmin}
                             communityId={communityId}
+                            courses={courses}
+                            coursesWatched={coursesWatched}
                         />
                     )}
 

@@ -43,6 +43,7 @@ const uploadToCloudinary = (buffer, originalName, resourceType) => {
             },
             (error, result) => {
                 if (error) {
+                    console.error("Cloudinary upload error:", error);
                     return reject(error);
                 }
                 resolve(result);
@@ -64,6 +65,13 @@ router.post(
         // Extract fields from the request body
         const { name, description, subscriptionFee, rules, visions } = req.body;
 
+        const bannerImage = req.files["bannerImage"]?.[0];
+        const logo = req.files["logo"]?.[0];
+
+        if (!bannerImage || !logo) {
+            return res.status(400).json("Banner image and logo are required");
+        }
+
         try {
             // find user
             const creator = await UsersModel.findById(userId);
@@ -84,7 +92,7 @@ router.post(
             const bannerImageResult = await uploadToCloudinary(
                 bannerImageBuffer,
                 bannerImageName,
-                "png"
+                "image"
             );
 
             // Upload logo to Cloudinary
@@ -93,7 +101,7 @@ router.post(
             const logoResult = await uploadToCloudinary(
                 logoBuffer,
                 logoName,
-                "png"
+                "image"
             );
 
             // Create the community
@@ -139,7 +147,7 @@ router.post(
             const creator = await UsersModel.findById(userId);
             const community = await Community.findById(communityId);
 
-            if (creator.id !== community.id) {
+            if (creator.id !== community.createdBy.toString()) {
                 return res
                     .status(403)
                     .json("Unauthorized to create course in this community");
@@ -178,8 +186,17 @@ router.post(
 
             await communityCourse.courses.push(communityCourseObj);
 
+            // create a community notification
+            const message = `New Course Added: ${communityCourseObj.name}`;
+
+            // add notification to community
+            await community.notifications.push({ message });
+
             // save the updated community course schema
             await communityCourse.save();
+
+            // save the updated community
+            await community.save();
 
             res.status(200).json("Course Created Successfully");
         } catch (error) {
@@ -199,6 +216,31 @@ router.delete("/delete-community/:id", async (req, res) => {
 
         if (!community) {
             return res.status(404).json("Community not found");
+        }
+
+        // get community courses obj and delete and also the videos url
+        const communityCourse = await CommunityCourse.findOne({
+            communityId: community._id,
+        });
+
+        if (communityCourse) {
+            await communityCourse.courses.forEach(async (course) => {
+                const videoUrls = course.videos;
+
+                await Promise.all(
+                    videoUrls.map(async (videoUrl) => {
+                        const publicId = videoUrl
+                            .split("/")
+                            .slice(-2)
+                            .join("/")
+                            .split(".")[0];
+                        await cloudinary.uploader.destroy(publicId);
+                    })
+                );
+            });
+
+            // now delete community course
+            await CommunityCourse.findByIdAndDelete(communityCourse._id);
         }
 
         const imageUrls = [community.logo, community.bannerImage];

@@ -8,7 +8,7 @@ const router = express.Router();
 router.get("/communities", async (req, res) => {
     try {
         //   get communities
-        const communities = await Community.find({});
+        const communities = await Community.find({}).sort({ createdAt: -1 });
 
         if (!communities) return res.status(404).json("Community not found.");
 

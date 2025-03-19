@@ -15,12 +15,12 @@ const CommunitiesList = ({ community }) => {
             <Link to={`/community/${community?._id}`}>
                 <div className="cHead">
                     <div>#{community?.SN}</div>
-                    <img src={community?.bannerImage || imgLink} alt="image" />
+                    <img src={community?.bannerImage} alt="image" />
                 </div>
 
                 <div className="cBody">
                     <div>
-                        <img src={community?.logo || logoLink} alt="logo" />
+                        <img src={community?.logo} alt="logo" />
                         <h3>{community?.name}</h3>
                     </div>
                     <p>{community?.description.slice(0, 100)}...</p>
