@@ -157,12 +157,10 @@ const CreateCommunity = () => {
                             errors.category ? "is-invalid" : ""
                         }`}>
                         <option value="">Select a category</option>
-                        {categories.map((category, i) => (
-                            <li key={i}>
-                                <option value={category.name}>
-                                    {category.name}
-                                </option>
-                            </li>
+                        {categories.map((category) => (
+                            <option key={category.icon} value={category.name}>
+                                {category.name}
+                            </option>
                         ))}
                     </select>
                     {errors.category && (
