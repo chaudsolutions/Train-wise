@@ -12,7 +12,6 @@ import {
     CommunityClassroom,
     CommunityOverview,
 } from "../../Custom/community/EnterCommunity";
-import { useAuthContext } from "../../Context/AuthContext";
 
 const EnterCommunity = () => {
     const [activeTab, setActiveTab] = useState("community"); // State to manage active tab
@@ -25,13 +24,9 @@ const EnterCommunity = () => {
         { id: "members", label: "Members" },
     ];
 
-    const { user } = useAuthContext();
-
     const { isMobile } = useResponsive();
 
-    const { useParams, useNavigate } = useReactRouter();
-
-    const navigate = useNavigate();
+    const { useParams } = useReactRouter();
 
     const { communityId } = useParams();
 

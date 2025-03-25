@@ -22,6 +22,12 @@ const UsersSchema = new Schema(
                 videos: [String],
             },
         ],
+        allAccess: [
+            {
+                startDate: { type: Date },
+                endDate: { type: Date },
+            },
+        ],
     },
     { timestamps: true }
 );

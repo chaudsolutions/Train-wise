@@ -34,6 +34,7 @@ const CreateCommunity = () => {
             formData.append("name", data.name);
             formData.append("description", data.description);
             formData.append("subscriptionFee", data.subscriptionFee);
+            formData.append("category", data.category);
             rules.forEach((rule, index) =>
                 formData.append(`rules[${index}]`, rule)
             );

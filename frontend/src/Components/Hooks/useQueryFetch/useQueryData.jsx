@@ -3,7 +3,9 @@ import {
     fetchCommunities,
     fetchCommunity,
     fetchCommunityCourses,
+    fetchCommunitySingleCourse,
     fetchUser,
+    fetchUserMembership,
 } from "../useFetch";
 import { useAuthContext } from "../../Context/AuthContext";
 
@@ -86,5 +88,51 @@ export const useCommunityCoursesData = ({ id }) => {
         isCoursesLoading,
         isCoursesError,
         refetchCourses,
+    };
+};
+
+// use single course data
+export const useCommunitySingleCourseData = ({ communityId, courseId }) => {
+    const { user } = useAuthContext();
+
+    const {
+        data: singleCourseData,
+        isLoading: isSingleCourseLoading,
+        isError: isSingleCourseError,
+        refetch: refetchSingleCourse,
+    } = useQuery({
+        queryKey: ["communitySingleCourse", communityId, courseId], // Use the new object-based syntax
+        queryFn: () => fetchCommunitySingleCourse({ communityId, courseId }),
+        enabled: !!user && !!communityId && !!courseId,
+    });
+
+    return {
+        singleCourseData,
+        isSingleCourseLoading,
+        isSingleCourseError,
+        refetchSingleCourse,
+    };
+};
+
+// use user membership data
+export const useIsUserMembershipData = (communityId) => {
+    const { user } = useAuthContext();
+
+    const {
+        data: isUserMembership,
+        isLoading: isUserMembershipLoading,
+        isError: isUserMembershipError,
+        refetch: refetchIsUserMembership,
+    } = useQuery({
+        queryKey: ["isUserMembership", communityId], // Use the new object-based syntax
+        queryFn: () => fetchUserMembership(communityId),
+        enabled: !!user && !!communityId,
+    });
+
+    return {
+        isUserMembership,
+        isUserMembershipLoading,
+        isUserMembershipError,
+        refetchIsUserMembership,
     };
 };

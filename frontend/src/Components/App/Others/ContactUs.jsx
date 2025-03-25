@@ -1,15 +1,11 @@
-import { useEffect } from "react";
 import Maps from "../../Custom/Maps/Maps";
 import { FaLocationArrow } from "react-icons/fa";
 import { MdWifiCalling3 } from "react-icons/md";
 import { TbMessages } from "react-icons/tb";
 import { companyName } from "../../Hooks/useVariable";
+import "./others.css";
 
 const ContactUs = () => {
-    useEffect(() => {
-        window.scroll(0, 0); // scroll to top on component mount
-    }, []);
-
     return (
         <div className="home">
             <header>

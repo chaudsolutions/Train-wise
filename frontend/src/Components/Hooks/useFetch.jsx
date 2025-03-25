@@ -56,3 +56,42 @@ export const fetchCommunityCourses = async ({ id }) => {
 
     return response.data;
 };
+
+export const fetchCommunitySingleCourse = async ({ communityId, courseId }) => {
+    const token = localStorage.getItem(localStorageToken);
+
+    const response = await axios.get(
+        `${serVer}/user/course/community/${communityId}/${courseId}`,
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+
+    if (response.status !== 200) {
+        throw new Error("Network response was not ok");
+    }
+
+    return response.data;
+};
+
+// fetch user membership
+export const fetchUserMembership = async (communityId) => {
+    const token = localStorage.getItem(localStorageToken);
+
+    const response = await axios.get(
+        `${serVer}/user/verify-membership/${communityId}`,
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+
+    if (response.status !== 200) {
+        throw new Error("Network response was not ok");
+    }
+
+    return response.data;
+};

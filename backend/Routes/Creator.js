@@ -63,7 +63,8 @@ router.post(
     async (req, res) => {
         const userId = req.userId;
         // Extract fields from the request body
-        const { name, description, subscriptionFee, rules, visions } = req.body;
+        const { name, description, subscriptionFee, category, rules, visions } =
+            req.body;
 
         const bannerImage = req.files["bannerImage"]?.[0];
         const logo = req.files["logo"]?.[0];
@@ -112,6 +113,7 @@ router.post(
                 rules,
                 visions,
                 subscriptionFee,
+                category,
                 bannerImage: bannerImageResult.secure_url, // Store Cloudinary URL
                 logo: logoResult.secure_url, // Store Cloudinary URL
                 createdBy: creator._id,

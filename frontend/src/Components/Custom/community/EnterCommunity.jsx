@@ -112,7 +112,7 @@ export const CommunityClassroom = ({
 
                             {/* Link to Course */}
                             <Link
-                                to={`/community/${communityId}/course/${course._id}`}
+                                to={`/course/${course._id}/community/${communityId}`}
                                 className="course-link">
                                 View Course
                             </Link>

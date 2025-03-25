@@ -51,11 +51,6 @@ const PaginatedData = ({ communities }) => {
         setFilteredCommunities(filtered);
     };
 
-    // Map the current (paginated) communities to list items
-    const communitiesList = currentCommunities?.map((community, i) => (
-        <CommunitiesList key={i} community={community} index={i} />
-    ));
-
     return (
         <section className="paginated">
             <ul className="categories">
@@ -84,11 +79,23 @@ const PaginatedData = ({ communities }) => {
             </ul>
 
             {/* communities list */}
-            {communitiesList && communitiesList.length > 0 ? (
-                <ul className="communitiesUl">{communitiesList}</ul>
-            ) : (
-                <div className="text-center">No communities created yet</div>
-            )}
+            <div className="row g-4">
+                {currentCommunities && currentCommunities.length > 0 ? (
+                    currentCommunities?.map((community) => (
+                        <CommunitiesList
+                            key={community._id}
+                            community={community}
+                        />
+                    ))
+                ) : (
+                    <div className="col-12 text-center py-5">
+                        <h4 className="text-muted">
+                            No communities created yet
+                        </h4>
+                        <p>Be the first to create one!</p>
+                    </div>
+                )}
+            </div>
 
             <ReactPaginate
                 breakLabel="..."

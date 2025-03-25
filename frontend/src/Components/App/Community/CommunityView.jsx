@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import "./community.css";
 import useResponsive from "../../Hooks/useResponsive";
 import { IoArrowBackCircleSharp } from "react-icons/io5";
 import { useReactRouter } from "../../Hooks/useReactRouter";
-import { imgLink, logoLink } from "../../Custom/List/CommunitiesList";
 import { CiLock } from "react-icons/ci";
 import { HiOutlineUsers } from "react-icons/hi2";
 import { GoDotFill, GoTag } from "react-icons/go";
@@ -21,7 +20,6 @@ import ButtonLoad from "../../Animations/ButtonLoad";
 import axios from "axios";
 
 const CommunityView = () => {
-    const [selectedMedia, setSelectedMedia] = useState({ url: "", type: "" });
     const [authContain, setAuthContain] = useState(false);
     const [isBtn, setIsBtn] = useState(false);
 
@@ -62,36 +60,11 @@ const CommunityView = () => {
     const isUserMember =
         members?.some((member) => member.userId === _id) || createdBy === _id;
 
-    const mediaImages = [imgLink, imgLink, imgLink, logoLink];
-
-    const mediaVideos = ["", ""];
-
-    // write use-effect to select first image/video
-    useEffect(() => {
-        if (mediaImages) {
-            setSelectedMedia({ url: mediaImages[0], type: "img" });
-        }
-    }, []);
+    const mediaImages = [bannerImage];
 
     const thumbNailsImage = mediaImages.map((t, i) => (
         <li key={i}>
-            <img
-                src={t}
-                alt="thumbNails"
-                onClick={() => selectMedia({ url: t, type: "img" })}
-            />
-        </li>
-    ));
-
-    const thumbNailsVideo = mediaVideos.map((t, i) => (
-        <li key={i}>
-            <video
-                poster="/poster.png"
-                controls
-                onClick={() => selectMedia({ url: t, type: "video" })}>
-                <source src={selectedMedia.url} type="video/mp4" />
-                Your browser does not support the video tag.
-            </video>
+            <img src={t} alt="thumbNails" />
         </li>
     ));
 
@@ -106,10 +79,6 @@ const CommunityView = () => {
             <span>{r}</span>
         </li>
     ));
-
-    const selectMedia = ({ url, type }) => {
-        setSelectedMedia({ url, type });
-    };
 
     const joinCommunity = async () => {
         if (!user) {
@@ -205,24 +174,10 @@ const CommunityView = () => {
                         className={`${
                             isMobile ? "mediaDisplay" : "desktopMediaDisplay"
                         }`}>
-                        {selectedMedia.type === "img" && (
-                            <img src={selectedMedia.url} />
-                        )}
-                        {selectedMedia.type === "video" && (
-                            <video controls>
-                                <source
-                                    src={selectedMedia.url}
-                                    type="video/mp4"
-                                />
-                                Your browser does not support the video tag.
-                            </video>
-                        )}
+                        <img src={bannerImage} />
                     </div>
 
-                    <ul className="thumbNails">
-                        {thumbNailsImage}
-                        {thumbNailsVideo}
-                    </ul>
+                    <ul className="thumbNails">{thumbNailsImage}</ul>
 
                     <ul className="communityInfo">
                         <li>
@@ -344,6 +299,8 @@ const CommunityView = () => {
 export const CommunityName = () => {
     const { useNavigate } = useReactRouter();
 
+    const { isMobile } = useResponsive();
+
     const pathnameArr = location.pathname.split("/");
     const communityId = pathnameArr[pathnameArr?.length - 1];
 
@@ -356,7 +313,7 @@ export const CommunityName = () => {
     const navigate = useNavigate();
 
     const goBack = () => {
-        navigate("/");
+        navigate(-1);
     };
 
     return (
@@ -370,7 +327,7 @@ export const CommunityName = () => {
             ) : (
                 <>
                     <img src={logo} alt="community logo" />
-                    <span>{name}</span>
+                    <span>{isMobile ? name?.slice(0, 20) : name}</span>
                 </>
             )}
         </div>

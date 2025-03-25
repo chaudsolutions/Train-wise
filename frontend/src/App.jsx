@@ -19,6 +19,8 @@ import Profile from "./Components/App/Profile/Profile";
 import CreateCommunity from "./Components/App/Community/CreateCommunity";
 import EnterCommunity from "./Components/App/Community/EnterCommunity";
 import CreateCourse from "./Components/App/Community/CreateCourse";
+import Classroom from "./Components/App/Community/ClassRoom/Classroom";
+import { CreatorWrapper, UserMembershipWrapper } from "./utils/Wrappers";
 
 function App() {
     const { user } = useAuthContext();
@@ -71,7 +73,13 @@ function App() {
                         <Route
                             path="/create-a-community"
                             element={
-                                user ? <CreateCommunity /> : <Navigate to="/" />
+                                user ? (
+                                    <CreatorWrapper>
+                                        <CreateCommunity />
+                                    </CreatorWrapper>
+                                ) : (
+                                    <Navigate to="/" />
+                                )
                             }
                         />
 
@@ -79,21 +87,41 @@ function App() {
                         <Route
                             path="/community/access/:communityId"
                             element={
-                                user ? <EnterCommunity /> : <Navigate to="/" />
+                                user ? (
+                                    <UserMembershipWrapper>
+                                        <EnterCommunity />
+                                    </UserMembershipWrapper>
+                                ) : (
+                                    <Navigate to="/" />
+                                )
                             }
                         />
+
                         {/* Create a community course */}
                         <Route
                             path="/admin/add-course/:communityId"
                             element={
-                                user ? <CreateCourse /> : <Navigate to="/" />
+                                user ? (
+                                    <CreatorWrapper>
+                                        <CreateCourse />
+                                    </CreatorWrapper>
+                                ) : (
+                                    <Navigate to="/" />
+                                )
                             }
                         />
+
                         {/* community course classroom */}
                         <Route
-                            path="/admin/add-course/:communityId"
+                            path="/course/:courseId/community/:communityId"
                             element={
-                                user ? <CreateCourse /> : <Navigate to="/" />
+                                user ? (
+                                    <UserMembershipWrapper>
+                                        <Classroom />
+                                    </UserMembershipWrapper>
+                                ) : (
+                                    <Navigate to="/" />
+                                )
                             }
                         />
 

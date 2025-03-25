@@ -7,6 +7,7 @@ const communityMembersSchema = new mongoose.Schema(
             ref: "User",
             required: true,
         },
+        membership: { type: Boolean },
         membershipExpiration: { type: Date }, // field if community requires monthly subscription
     },
     {
@@ -59,6 +60,10 @@ const communitySchema = new mongoose.Schema(
             type: Number,
             required: [true, "Subscription fee is required"],
             min: [0, "Subscription fee cannot be negative"],
+        },
+        category: {
+            type: String,
+            required: [true, "Category is required"],
         },
         bannerImage: {
             type: String, // Store the file path or URL

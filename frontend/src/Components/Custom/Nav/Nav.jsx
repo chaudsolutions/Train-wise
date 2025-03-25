@@ -49,8 +49,9 @@ const Nav = () => {
 
     const matchOne = useMatch("/community/:communityId");
     const matchTwo = useMatch("/community/access/:communityId");
+    const matchThree = useMatch("/course/:courseId/community/:communityId");
 
-    const isCommunity = !!matchOne || !!matchTwo;
+    const isCommunity = !!matchOne || !!matchTwo || !!matchThree;
 
     return (
         <>
@@ -107,24 +108,16 @@ const Nav = () => {
 };
 
 export const Logo = () => {
-    const { user } = useAuthContext();
-
     // react router
-    const { useNavigate, useLocation } = useReactRouter();
+    const { useNavigate } = useReactRouter();
 
     // responsive hook
     const { isMobile } = useResponsive();
 
     const navigate = useNavigate();
 
-    const { pathname } = useLocation();
-
     const goHome = () => {
-        if (user) {
-            pathname === "/dashboard" ? navigate("/") : navigate("/dashboard");
-        } else {
-            navigate("/");
-        }
+        navigate("/");
     };
 
     return (
