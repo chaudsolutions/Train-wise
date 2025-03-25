@@ -69,8 +69,6 @@ const Classroom = () => {
         return <PageLoader />;
     }
 
-    console.log({ currentCourse });
-
     return (
         <div className="classroom-container">
             <div className="classroom-header">
