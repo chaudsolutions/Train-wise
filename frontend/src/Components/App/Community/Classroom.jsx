@@ -1,14 +1,14 @@
 import { useState } from "react";
-import PageLoader from "../../../Animations/PageLoader";
+import "./Classroom.css"; // Create this CSS file
+import axios from "axios";
+import toast from "react-hot-toast";
+import { useReactRouter } from "../../Hooks/useReactRouter";
 import {
     useCommunitySingleCourseData,
     useUserData,
-} from "../../../Hooks/useQueryFetch/useQueryData";
-import { useReactRouter } from "../../../Hooks/useReactRouter";
-import "./Classroom.css"; // Create this CSS file
-import axios from "axios";
-import { serVer, useToken } from "../../../Hooks/useVariable";
-import toast from "react-hot-toast";
+} from "../../Hooks/useQueryFetch/useQueryData";
+import { serVer, useToken } from "../../Hooks/useVariable";
+import PageLoader from "../../Animations/PageLoader";
 
 const Classroom = () => {
     const { token } = useToken();

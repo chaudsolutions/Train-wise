@@ -20,7 +20,7 @@ import Profile from "./Components/App/Profile/Profile";
 import CreateCommunity from "./Components/App/Community/CreateCommunity";
 import EnterCommunity from "./Components/App/Community/EnterCommunity";
 import CreateCourse from "./Components/App/Community/CreateCourse";
-import Classroom from "./Components/App/Community/ClassRoom/Classroom";
+import Classroom from "./Components/App/Community/Classroom";
 
 function App() {
     const { user } = useAuthContext();
