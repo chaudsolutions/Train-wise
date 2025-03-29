@@ -1,5 +1,6 @@
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import { LinkOne } from "../Buttons/LinkBtn";
+import CourseStockImg from "../../../assets/courseStock.png";
 
 export const CommunityOverview = ({ notifications, createdAt }) => {
     return (
@@ -46,11 +47,33 @@ export const CommunityClassroom = ({
     const getThumbnailUrl = (videos) => {
         if (videos && videos.length > 0) {
             const firstVideoUrl = videos[0];
-            // If using Cloudinary, generate a thumbnail URL
-            return firstVideoUrl.replace(/\.mp4$/, ".jpg");
+            console.log(firstVideoUrl);
+
+            // List of common video extensions to replace
+            const videoExtensions = [
+                ".mp4",
+                ".mov",
+                ".avi",
+                ".mkv",
+                ".webm",
+                ".flv",
+                ".wmv",
+                ".mpeg",
+                ".mpg",
+                ".3gp",
+            ];
+
+            // Create a regex pattern that matches any of the video extensions
+            const videoPattern = new RegExp(
+                `(${videoExtensions.join("|")})$`,
+                "i" // case insensitive flag
+            );
+
+            // Replace the video extension with .jpg
+            return firstVideoUrl.replace(videoPattern, ".jpg");
         }
         // Fallback placeholder image
-        return "https://via.placeholder.com/300x150";
+        return CourseStockImg;
     };
 
     const getProgress = (course) => {

@@ -62,6 +62,8 @@ const EnterCommunity = () => {
         return <PageLoader />;
     }
 
+    console.log(members);
+
     return (
         <div className="m-2 d-flex gap-5">
             <div className="container enter-community">

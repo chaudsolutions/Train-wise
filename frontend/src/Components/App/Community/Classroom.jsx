@@ -38,8 +38,6 @@ const Classroom = () => {
         // Logic to mark video as watched in backend
         console.log(`Video ${selectedVideo} completed`);
 
-        console.log(currentCourse?.videos?.includes(selectedVideo.toString()));
-
         if (currentCourse?.videos?.includes(selectedVideo.toString())) {
             return console.log("watched");
         }
@@ -126,13 +124,15 @@ const Classroom = () => {
                         {singleCourseData?.videos?.map((video, index) => (
                             <li
                                 key={index}
-                                className={
-                                    selectedVideo === index ? "active" : ""
-                                }
+                                className={`
+                                    ${
+                                        selectedVideo === index ? "active" : ""
+                                    } d-flex justify-content-between`}
                                 onClick={() => setSelectedVideo(index)}>
-                                Video {index + 1}{" "}
+                                <span>Video {index + 1}</span>
+
                                 {currentCourse?.videos?.includes(
-                                    selectedVideo.toString()
+                                    index.toString()
                                 ) && <small>watched</small>}
                             </li>
                         ))}
