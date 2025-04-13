@@ -9,7 +9,6 @@ import {
 } from "@mui/material";
 import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
-import "./forms.css";
 import {
     companyName,
     redirectSessionKey,
@@ -149,8 +148,8 @@ export const LoginForm = ({ setAuthContainer }) => {
                 type="submit"
                 disabled={isSubmitting}
                 sx={{
-                    mt: 3,
-                    py: 1.5,
+                    mt: 2,
+                    py: 1,
                     borderRadius: 2,
                     fontWeight: 600,
                     fontSize: "1rem",
@@ -292,15 +291,6 @@ export const RegisterForm = ({ setAuthContainer }) => {
                 }}
             />
 
-            {/* Password Requirements */}
-            <Typography
-                variant="caption"
-                color="text.secondary"
-                display="block"
-                mt={1}>
-                Password must be at least 6 characters
-            </Typography>
-
             {/* Submit Button */}
             <Button
                 fullWidth
@@ -310,8 +300,8 @@ export const RegisterForm = ({ setAuthContainer }) => {
                 type="submit"
                 disabled={isSubmitting}
                 sx={{
-                    mt: 3,
-                    py: 1.5,
+                    mt: 2,
+                    py: 1,
                     borderRadius: 2,
                     fontWeight: 600,
                     fontSize: "1rem",

@@ -12,8 +12,6 @@ import {
     Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { Logo } from "../Nav/Nav";
-import { companyName } from "../../Hooks/useVariable";
 import { LoginForm, RegisterForm } from "../Forms/Forms";
 
 const Auth = ({ setAuthContain, authContain }) => {
@@ -33,7 +31,7 @@ const Auth = ({ setAuthContain, authContain }) => {
             PaperProps={{
                 sx: {
                     borderRadius: 4,
-                    p: 3,
+                    p: 2,
                     position: "relative",
                 },
             }}>
@@ -50,23 +48,16 @@ const Auth = ({ setAuthContain, authContain }) => {
                 <CloseIcon />
             </IconButton>
 
-            {/* Logo */}
-            <Box display="flex" justifyContent="center" mb={3}>
-                <Logo />
-            </Box>
-
             {/* Title */}
             <DialogTitle
                 textAlign="center"
                 sx={{
                     fontWeight: 600,
-                    fontSize: "1.5rem",
+                    fontSize: "1rem",
                     px: 0,
                     pt: 0,
                 }}>
-                {view === "login"
-                    ? `Log in to ${companyName}`
-                    : `Create your ${companyName} account`}
+                {view === "login" ? `Log in` : `Create a new account`}
             </DialogTitle>
 
             <DialogContent sx={{ px: 0 }}>
@@ -78,7 +69,7 @@ const Auth = ({ setAuthContain, authContain }) => {
                 )}
 
                 {/* Divider */}
-                <Box sx={{ position: "relative", mt: 4, mb: 2 }}>
+                <Box sx={{ position: "relative", mt: 2, mb: 1 }}>
                     <Divider />
                     <Typography
                         variant="body2"
@@ -109,7 +100,6 @@ const Auth = ({ setAuthContain, authContain }) => {
                             setView(view === "login" ? "register" : "login")
                         }
                         sx={{
-                            ml: 1,
                             textTransform: "none",
                             fontWeight: 600,
                         }}>

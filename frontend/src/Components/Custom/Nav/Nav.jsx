@@ -22,6 +22,7 @@ import NavMenu from "./NavMenu";
 import { useAuthContext } from "../../Context/AuthContext";
 import { CommunityName } from "../../App/Community/CommunityView";
 import Auth from "../Auth/Auth";
+import { companyName } from "../../Hooks/useVariable";
 
 const Nav = () => {
     const theme = useTheme();
@@ -234,7 +235,7 @@ export const Logo = () => {
                     variant="h6"
                     component="div"
                     sx={{ fontWeight: 700 }}>
-                    NAME
+                    {companyName}
                 </Typography>
             )}
         </Box>
