@@ -1,28 +1,21 @@
-import ReactPaginate from "react-paginate";
-import CommunitiesList from "../List/CommunitiesList";
+import { Box, Grid, Pagination, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
-import { categories } from "../../Hooks/useVariable";
-import "./paginated.css";
+import CommunitiesList from "../List/CommunitiesList";
+import SelectCategory from "../Buttons/SelectCategory";
 
 const PaginatedData = ({ communities }) => {
-    // State for filtered communities (starts as full list)
     const [filteredCommunities, setFilteredCommunities] = useState(communities);
     const [activeCategory, setActiveCategory] = useState("");
-
-    // State for currently displayed (paginated) communities
     const [currentCommunities, setCurrentCommunities] = useState([]);
     const [pageCount, setPageCount] = useState(0);
     const [itemOffset, setItemOffset] = useState(0);
-
-    // Pagination: number of items per page
+    const [page, setPage] = useState(1);
     const itemsPerPage = 21;
 
-    // Update local state when communities prop changes
     useEffect(() => {
         setFilteredCommunities(communities);
     }, [communities]);
 
-    // Update pagination whenever the filtered communities or offset changes
     useEffect(() => {
         const endOffset = itemOffset + itemsPerPage;
         setCurrentCommunities(
@@ -31,18 +24,18 @@ const PaginatedData = ({ communities }) => {
         setPageCount(Math.ceil(filteredCommunities?.length / itemsPerPage));
     }, [filteredCommunities, itemOffset]);
 
-    // Handle page change from ReactPaginate
-    const handlePageClick = (event) => {
-        // Calculate new offset based on the filtered list's length
+    const handlePageChange = (event, value) => {
+        setPage(value);
         const newOffset =
-            (event.selected * itemsPerPage) % filteredCommunities.length;
+            ((value - 1) * itemsPerPage) % filteredCommunities.length;
         setItemOffset(newOffset);
+        window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    // Filter communities by category and reset pagination offset
     const selectCategory = (category) => {
         setActiveCategory(category);
-        setItemOffset(0); // reset to the first page when filtering
+        setItemOffset(0);
+        setPage(1);
 
         const filtered = category
             ? communities.filter((c) => c.category === category)
@@ -52,34 +45,14 @@ const PaginatedData = ({ communities }) => {
     };
 
     return (
-        <section className="paginated">
-            <ul className="categories">
-                <li>
-                    <button
-                        onClick={() => selectCategory("")}
-                        className={
-                            activeCategory === "" ? "activeCategory" : ""
-                        }>
-                        <span>All</span>
-                    </button>
-                </li>
-                {categories.map((category, i) => (
-                    <li key={i}>
-                        <button
-                            className={
-                                activeCategory === category.name
-                                    ? "activeCategory"
-                                    : ""
-                            }
-                            onClick={() => selectCategory(category.name)}>
-                            {category.icon} <span>{category.name}</span>
-                        </button>
-                    </li>
-                ))}
-            </ul>
+        <Box component="section">
+            {/* select category buttons */}
+            <SelectCategory
+                activeCategory={activeCategory}
+                selectCategory={selectCategory}
+            />
 
-            {/* communities list */}
-            <div className="row g-4">
+            <Grid container spacing={4}>
                 {currentCommunities && currentCommunities.length > 0 ? (
                     currentCommunities?.map((community) => (
                         <CommunitiesList
@@ -88,31 +61,44 @@ const PaginatedData = ({ communities }) => {
                         />
                     ))
                 ) : (
-                    <div className="col-12 text-center py-5">
-                        <h4 className="text-muted">
+                    <Box sx={{ py: 5, width: "100%" }}>
+                        <Typography
+                            variant="h5"
+                            textAlign="center"
+                            color="text.secondary"
+                            gutterBottom>
                             No communities created yet
-                        </h4>
-                        <p>Be the first to create one!</p>
-                    </div>
+                        </Typography>
+                        <Typography
+                            variant="body1"
+                            textAlign="center"
+                            color="text.secondary">
+                            Be the first to create one!
+                        </Typography>
+                    </Box>
                 )}
-            </div>
+            </Grid>
 
-            <ReactPaginate
-                breakLabel="..."
-                nextLabel="Next >"
-                onPageChange={handlePageClick}
-                pageRangeDisplayed={0}
-                marginPagesDisplayed={0}
-                pageCount={pageCount}
-                previousLabel="< Previous"
-                renderOnZeroPageCount={null}
-                containerClassName="pagination"
-                pageLinkClassName="page-num"
-                previousLinkClassName="page-num page-link"
-                nextLinkClassName="page-num page-link"
-                activeClassName="active"
-            />
-        </section>
+            {pageCount > 1 && (
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+                    <Pagination
+                        count={pageCount}
+                        page={page}
+                        onChange={handlePageChange}
+                        color="info"
+                        size="large"
+                        sx={{
+                            "& .MuiPaginationItem-root": {
+                                fontSize: "1rem",
+                            },
+                            "& .Mui-selected": {
+                                fontWeight: "bold",
+                            },
+                        }}
+                    />
+                </Box>
+            )}
+        </Box>
     );
 };
 

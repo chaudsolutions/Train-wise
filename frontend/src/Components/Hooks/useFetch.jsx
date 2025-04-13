@@ -95,3 +95,20 @@ export const fetchUserMembership = async (communityId) => {
 
     return response.data;
 };
+
+// fetch user communities
+export const fetchUserJoinedCommunities = async () => {
+    const token = localStorage.getItem(localStorageToken);
+
+    const response = await axios.get(`${serVer}/user/community-member`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (response.status !== 200) {
+        throw new Error("Network response was not ok");
+    }
+
+    return response.data;
+};

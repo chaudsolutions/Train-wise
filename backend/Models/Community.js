@@ -27,7 +27,6 @@ const notificationsSchema = new mongoose.Schema(
 // Define the Community Schema
 const communitySchema = new mongoose.Schema(
     {
-        SN: { type: Number, required: true },
         name: {
             type: String,
             required: [true, "Community name is required"],

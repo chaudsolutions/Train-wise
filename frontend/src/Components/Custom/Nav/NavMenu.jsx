@@ -1,50 +1,86 @@
-import { FaPlus, FaRegCompass } from "react-icons/fa";
-import { useReactRouter } from "../../Hooks/useReactRouter";
+import {
+    List,
+    ListItem,
+    ListItemIcon,
+    ListItemText,
+    CircularProgress,
+    useTheme,
+    Box,
+} from "@mui/material";
 import { useUserData } from "../../Hooks/useQueryFetch/useQueryData";
-import ButtonLoad from "../../Animations/ButtonLoad";
+import { Link } from "react-router-dom";
+import ExploreIcon from "@mui/icons-material/Explore";
+import AddIcon from "@mui/icons-material/Add";
 
-const NavMenu = () => {
-    const { NavLink } = useReactRouter();
-
+const NavMenu = ({ handleDrawerToggle }) => {
+    const theme = useTheme();
     const { userData, isUserDataLoading } = useUserData();
-
     const { role } = userData || {};
 
-    const navMenuArray = [
+    const menuItems = [
         {
             name: "Discover communities",
             link: "/discovery",
-            icon: <FaRegCompass size={40} />,
+            icon: <ExploreIcon fontSize="large" />,
+            show: true,
+        },
+        {
+            name: "Create a community",
+            link: "/create-a-community",
+            icon: <AddIcon fontSize="large" />,
+            show: role === "creator" || role === "admin" || !role,
         },
     ];
 
-    const navMenuOutput = navMenuArray.map((item, i) => (
-        <li key={i}>
-            <NavLink activeclassname="active" to={item.link}>
-                {item.icon}
-                <span>{item.name}</span>
-            </NavLink>
-        </li>
-    ));
-
     return (
-        <ul className="navMenu">
-            {navMenuOutput}
+        <List sx={{ width: "100%" }}>
             {isUserDataLoading ? (
-                <ButtonLoad />
+                <Box display="flex" justifyContent="center" p={2}>
+                    <CircularProgress color="info" />
+                </Box>
             ) : (
-                <li>
-                    {(role === "creator" || role === "admin" || !role) && (
-                        <NavLink
-                            activeclassname="active"
-                            to="/create-a-community">
-                            <FaPlus size={40} />
-                            <span>Create a community</span>
-                        </NavLink>
-                    )}
-                </li>
+                menuItems.map(
+                    (item, index) =>
+                        item.show && (
+                            <ListItem
+                                button="true"
+                                key={index}
+                                component={Link}
+                                to={item.link}
+                                onClick={handleDrawerToggle}
+                                sx={{
+                                    px: 3,
+                                    py: 2,
+                                    "&.active": {
+                                        backgroundColor:
+                                            theme.palette.action.selected,
+                                        borderLeft: `4px solid ${theme.palette.info.main}`,
+                                        "& .MuiListItemIcon-root": {
+                                            color: theme.palette.info.main,
+                                        },
+                                        "& .MuiListItemText-primary": {
+                                            fontWeight: 600,
+                                        },
+                                    },
+                                    "&:hover": {
+                                        backgroundColor:
+                                            theme.palette.action.hover,
+                                    },
+                                }}>
+                                <ListItemIcon sx={{ minWidth: 48 }}>
+                                    {item.icon}
+                                </ListItemIcon>
+                                <ListItemText
+                                    primary={item.name}
+                                    primaryTypographyProps={{
+                                        variant: "body1",
+                                    }}
+                                />
+                            </ListItem>
+                        )
+                )
             )}
-        </ul>
+        </List>
     );
 };
 

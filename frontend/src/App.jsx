@@ -9,7 +9,6 @@ import Footer from "./Components/Custom/Footer/Footer";
 import ErrorBoundary from "./Components/Error/ErrorBoundary";
 import Nav from "./Components/Custom/Nav/Nav";
 import Home from "./Components/App/Home/Home";
-import SearchResults from "./Components/App/Search/SearchResults";
 import NotFound from "./Components/App/404/NotFound";
 import FAQComponent from "./Components/App/Others/FAQComponent";
 import Privacy from "./Components/App/Others/Privacy";
@@ -40,9 +39,6 @@ function App() {
                         {/* discovery */}
                         <Route path="/discovery" exact element={<Home />} />
 
-                        {/* search results */}
-                        <Route path="/search" element={<SearchResults />} />
-
                         {/* support */}
                         <Route
                             path="/frequently-asked-questions"
@@ -58,17 +54,18 @@ function App() {
                         {/* contact us */}
                         <Route path="/contact-us" element={<ContactUs />} />
 
+                        {/* profile */}
+                        <Route
+                            path="/profile"
+                            element={user ? <Profile /> : <Navigate to="/" />}
+                        />
+
                         {/* view a community */}
                         <Route
                             path="/community/:communityId"
                             element={<CommunityView />}
                         />
 
-                        {/* profile */}
-                        <Route
-                            path="/profile"
-                            element={user ? <Profile /> : <Navigate to="/" />}
-                        />
                         {/* create a community */}
                         <Route
                             path="/create-a-community"

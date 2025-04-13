@@ -13,6 +13,8 @@ const UsersSchema = new Schema(
             enum: ["admin", "creator", "user"],
             default: "user",
         },
+        avatar: { type: String },
+        onlineStatus: { type: Boolean, default: false },
         coursesWatched: [
             {
                 courseId: {

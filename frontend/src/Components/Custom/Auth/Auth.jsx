@@ -1,65 +1,123 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    Button,
+    Box,
+    Divider,
+    useTheme,
+    IconButton,
+    Typography,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { Logo } from "../Nav/Nav";
-import "./auth.css";
 import { companyName } from "../../Hooks/useVariable";
 import { LoginForm, RegisterForm } from "../Forms/Forms";
 
 const Auth = ({ setAuthContain, authContain }) => {
+    const theme = useTheme();
     const [view, setView] = useState("login");
 
-    useEffect(() => {
-        const closeAuth = (e) => {
-            if (
-                authContain &&
-                !e.target.closest(".auth") &&
-                !e.target.closest(".btn-b") &&
-                !e.target.closest(".btn-a") &&
-                !e.target.closest(".toggle") &&
-                !e.target.closest("button")
-            ) {
-                setAuthContain(false);
-            }
-        };
-
-        window.addEventListener("click", closeAuth);
-
-        // Cleanup function to remove the event listener
-        return () => {
-            window.removeEventListener("click", closeAuth);
-        };
-    }, [authContain, setAuthContain]); // Add dependencies to effect
+    const handleClose = () => {
+        setAuthContain(false);
+    };
 
     return (
-        <div className="auth">
-            <Logo />
-            <h2 className="fs-5">
-                {view === "login" && <>Log in to {companyName}</>}
-                {view === "register" && <>Create your {companyName} account</>}
-            </h2>
+        <Dialog
+            open={authContain}
+            onClose={handleClose}
+            maxWidth="sm"
+            fullWidth
+            PaperProps={{
+                sx: {
+                    borderRadius: 4,
+                    p: 3,
+                    position: "relative",
+                },
+            }}>
+            {/* Close Button */}
+            <IconButton
+                aria-label="close"
+                onClick={handleClose}
+                sx={{
+                    position: "absolute",
+                    right: 16,
+                    top: 16,
+                    color: theme.palette.grey[500],
+                }}>
+                <CloseIcon />
+            </IconButton>
 
-            {view === "login" && (
-                <LoginForm setAuthContainer={setAuthContain} />
-            )}
-            {view === "register" && (
-                <RegisterForm setAuthContainer={setAuthContain} />
-            )}
+            {/* Logo */}
+            <Box display="flex" justifyContent="center" mb={3}>
+                <Logo />
+            </Box>
 
-            <div className="d-flex flex-column align-items-center">
-                <span>Don&apos;t have an account? </span>
-                {view === "login" && (
-                    <button
-                        className="btn-b"
-                        onClick={() => setView("register")}>
-                        Sign up for free
-                    </button>
+            {/* Title */}
+            <DialogTitle
+                textAlign="center"
+                sx={{
+                    fontWeight: 600,
+                    fontSize: "1.5rem",
+                    px: 0,
+                    pt: 0,
+                }}>
+                {view === "login"
+                    ? `Log in to ${companyName}`
+                    : `Create your ${companyName} account`}
+            </DialogTitle>
+
+            <DialogContent sx={{ px: 0 }}>
+                {/* Form */}
+                {view === "login" ? (
+                    <LoginForm setAuthContainer={setAuthContain} />
+                ) : (
+                    <RegisterForm setAuthContainer={setAuthContain} />
                 )}
-                {view === "register" && (
-                    <button className="btn-b" onClick={() => setView("login")}>
-                        Login
-                    </button>
-                )}
-            </div>
-        </div>
+
+                {/* Divider */}
+                <Box sx={{ position: "relative", mt: 4, mb: 2 }}>
+                    <Divider />
+                    <Typography
+                        variant="body2"
+                        sx={{
+                            position: "absolute",
+                            top: "50%",
+                            left: "50%",
+                            transform: "translate(-50%, -50%)",
+                            px: 2,
+                            backgroundColor: "background.paper",
+                            color: "text.secondary",
+                        }}>
+                        or
+                    </Typography>
+                </Box>
+
+                {/* Toggle between login/register */}
+                <DialogContentText textAlign="center">
+                    <Box component="div" fontSize=".9rem">
+                        {view === "login"
+                            ? "Don't have an account?"
+                            : "Already have an account?"}
+                    </Box>
+                    <Button
+                        color="warning"
+                        variant="contained"
+                        onClick={() =>
+                            setView(view === "login" ? "register" : "login")
+                        }
+                        sx={{
+                            ml: 1,
+                            textTransform: "none",
+                            fontWeight: 600,
+                        }}>
+                        {view === "login" ? "Sign up for free" : "Login"}
+                    </Button>
+                </DialogContentText>
+            </DialogContent>
+        </Dialog>
     );
 };
 

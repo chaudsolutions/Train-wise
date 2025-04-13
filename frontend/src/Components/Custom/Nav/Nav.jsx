@@ -1,15 +1,31 @@
 import useResponsive from "../../Hooks/useResponsive";
+import {
+    AppBar,
+    Toolbar,
+    IconButton,
+    Drawer,
+    Avatar,
+    Typography,
+    Button,
+    Box,
+    Divider,
+    useTheme,
+    Menu,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import MenuIcon from "@mui/icons-material/Menu";
 import logo from "/logo.png";
-import { RxHamburgerMenu } from "react-icons/rx";
-import "./nav.css";
-import { useEffect, useState } from "react";
-import NavSlide, { AuthContainer } from "./NavSlide";
+import { useState } from "react";
+import { AuthContainer, UserProfile } from "./NavSlide";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import NavMenu from "./NavMenu";
 import { useAuthContext } from "../../Context/AuthContext";
 import { CommunityName } from "../../App/Community/CommunityView";
+import Auth from "../Auth/Auth";
 
 const Nav = () => {
+    const theme = useTheme();
+
     const { user } = useAuthContext();
 
     // responsive hook
@@ -18,91 +34,171 @@ const Nav = () => {
     const { useMatch, Link } = useReactRouter();
 
     // states
-    const [isNavActive, setIsNavActive] = useState(false);
-    const [isDesktopNav, setIsDesktopNav] = useState(false);
-
-    useEffect(() => {
-        const closeNav = (e) => {
-            if (
-                isNavActive &&
-                !e.target.closest(".navBtn") &&
-                !e.target.closest(".dp-toggle")
-            ) {
-                setIsNavActive(false);
-            }
-            if (
-                isDesktopNav &&
-                !e.target.closest(".desktopNavBtn") &&
-                !e.target.closest(".desktopNav")
-            ) {
-                setIsDesktopNav(false);
-            }
-        };
-
-        window.addEventListener("click", closeNav);
-
-        // Cleanup function to remove the event listener
-        return () => {
-            window.removeEventListener("click", closeNav);
-        };
-    }, [isNavActive, isDesktopNav]); // Add dependencies to effect
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const [authOpen, setAuthOpen] = useState(false);
+    const [desktopMenuAnchor, setDesktopMenuAnchor] = useState(null);
+    const desktopMenuOpen = Boolean(desktopMenuAnchor);
 
     const matchOne = useMatch("/community/:communityId");
     const matchTwo = useMatch("/community/access/:communityId");
     const matchThree = useMatch("/course/:courseId/community/:communityId");
-
     const isCommunity = !!matchOne || !!matchTwo || !!matchThree;
+
+    const handleDrawerToggle = () => {
+        setMobileOpen(!mobileOpen);
+    };
+
+    const handleDesktopMenuOpen = (event) => {
+        setDesktopMenuAnchor(event.currentTarget);
+    };
+
+    const handleDesktopMenuClose = () => {
+        setDesktopMenuAnchor(null);
+    };
 
     return (
         <>
-            <div className="nav">
-                <div>
-                    {isCommunity ? (
-                        <CommunityName />
-                    ) : (
-                        <>
-                            {isMobile && (
-                                <button>
-                                    <RxHamburgerMenu
-                                        size={25}
-                                        onClick={() =>
-                                            setIsNavActive(
-                                                (prevView) => !prevView
-                                            )
+            <AppBar
+                position="static"
+                elevation={0}
+                sx={{
+                    backgroundColor: "background.paper",
+                    color: "text.primary",
+                    borderBottom: `1px solid ${theme.palette.divider}`,
+                    py: 1,
+                }}>
+                <Toolbar sx={{ justifyContent: "space-between" }}>
+                    <Box display="flex" alignItems="center">
+                        {isCommunity ? (
+                            <CommunityName />
+                        ) : (
+                            <>
+                                {isMobile && (
+                                    <IconButton
+                                        color="inherit"
+                                        aria-label="open drawer"
+                                        edge="start"
+                                        onClick={handleDrawerToggle}
+                                        sx={{ mr: 2 }}>
+                                        <MenuIcon />
+                                    </IconButton>
+                                )}
+                                <Logo />
+                            </>
+                        )}
+
+                        {/* Desktop Menu Button */}
+                        {!isMobile && (
+                            <>
+                                <IconButton
+                                    onClick={handleDesktopMenuOpen}
+                                    color="info"
+                                    sx={{
+                                        transform: desktopMenuOpen
+                                            ? "rotate(180deg)"
+                                            : "rotate(0)",
+                                        transition: "transform 0.3s ease",
+                                    }}>
+                                    <ExpandMoreIcon />
+                                </IconButton>
+
+                                <Menu
+                                    anchorEl={desktopMenuAnchor}
+                                    open={desktopMenuOpen}
+                                    onClose={handleDesktopMenuClose}
+                                    PaperProps={{
+                                        elevation: 3,
+                                        sx: {
+                                            mt: 1.5,
+                                            minWidth: 200,
+                                            borderRadius: 2,
+                                            overflow: "visible",
+                                            "&:before": {
+                                                content: '""',
+                                                display: "block",
+                                                position: "absolute",
+                                                top: 0,
+                                                right: 14,
+                                                width: 10,
+                                                height: 10,
+                                                bgcolor: "background.paper",
+                                                transform:
+                                                    "translateY(-50%) rotate(45deg)",
+                                                zIndex: 0,
+                                            },
+                                        },
+                                    }}
+                                    transformOrigin={{
+                                        horizontal: "right",
+                                        vertical: "top",
+                                    }}
+                                    anchorOrigin={{
+                                        horizontal: "right",
+                                        vertical: "bottom",
+                                    }}>
+                                    <NavMenu
+                                        isDesktop
+                                        handleDrawerToggle={
+                                            handleDesktopMenuClose
                                         }
-                                        className="navBtn"
                                     />
-                                </button>
-                            )}
-                            <Logo />
+                                </Menu>
+                            </>
+                        )}
+                    </Box>
+
+                    <Box display="flex" alignItems="center" gap={2}>
+                        {!isCommunity && user && (
+                            <Button
+                                component={Link}
+                                to="/profile"
+                                color="inherit"
+                                sx={{ textTransform: "none" }}>
+                                Profile
+                            </Button>
+                        )}
+                        <AuthContainer
+                            authOpen={authOpen}
+                            setAuthOpen={setAuthOpen}
+                        />
+                    </Box>
+                </Toolbar>
+            </AppBar>
+
+            {/* Mobile Drawer */}
+            <Drawer
+                variant="temporary"
+                open={mobileOpen}
+                onClose={handleDrawerToggle}
+                ModalProps={{
+                    keepMounted: true, // Better open performance on mobile
+                }}
+                sx={{
+                    "& .MuiDrawer-paper": {
+                        width: 280,
+                        boxSizing: "border-box",
+                    },
+                }}>
+                <Box
+                    sx={{
+                        width: 280,
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                    }}>
+                    <Toolbar />
+                    {user && (
+                        <>
+                            <UserProfile />
+                            <Divider />
                         </>
                     )}
+                    <NavMenu handleDrawerToggle={handleDrawerToggle} />
+                </Box>
+            </Drawer>
 
-                    {!isMobile && (
-                        <button
-                            className="desktopNavBtn"
-                            onClick={() =>
-                                setIsDesktopNav((prevView) => !prevView)
-                            }>
-                            <SVG1 />
-                        </button>
-                    )}
-                </div>
-
-                <div className="d-flex align-items-center gap-2">
-                    {!isCommunity && user && (
-                        <Link to="/profile" className="text-dark">
-                            Profile
-                        </Link>
-                    )}
-                    <AuthContainer />
-                </div>
-
-                {/* desktop nav */}
-                {!isMobile && <DesktopNav isDesktopNav={isDesktopNav} />}
-            </div>
-            {/* nav slider */}
-            {isMobile && <NavSlide isNavActive={isNavActive} />}
+            {/* Auth Dialog */}
+            <Auth authContain={authOpen} setAuthContain={setAuthOpen} />
         </>
     );
 };
@@ -116,15 +212,32 @@ export const Logo = () => {
 
     const navigate = useNavigate();
 
-    const goHome = () => {
-        navigate("/");
-    };
-
     return (
-        <div className="logo-contain" onClick={goHome}>
-            {!isMobile && <span>NAME</span>}
-            <img src={logo} alt="logo" height={isMobile ? 50 : 70} />
-        </div>
+        <Box
+            sx={{
+                display: "flex",
+                alignItems: "center",
+                cursor: "pointer",
+            }}
+            onClick={() => navigate("/")}>
+            <Avatar
+                src={logo}
+                alt="logo"
+                sx={{
+                    width: 56,
+                    height: 56,
+                    mr: 1,
+                }}
+            />
+            {!isMobile && (
+                <Typography
+                    variant="h6"
+                    component="div"
+                    sx={{ fontWeight: 700 }}>
+                    NAME
+                </Typography>
+            )}
+        </Box>
     );
 };
 

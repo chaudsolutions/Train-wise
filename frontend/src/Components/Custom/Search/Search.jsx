@@ -1,60 +1,66 @@
-import { useState } from "react";
-import "./search.css";
-import { IoSearchOutline } from "react-icons/io5";
-import toast from "react-hot-toast";
-import { generateCommunities } from "../../Hooks/useMockData";
-import { useReactRouter } from "../../Hooks/useReactRouter";
+import {
+    TextField,
+    InputAdornment,
+    IconButton,
+    Box,
+    useTheme,
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 
-const Search = () => {
-    // get all communities data
-    const { communities } = generateCommunities();
-
-    const { useNavigate } = useReactRouter();
-
-    const [searchQuery, setSearchQuery] = useState("");
-
-    const navigate = useNavigate();
+const Search = ({ searchQuery, setSearchQuery }) => {
+    const theme = useTheme();
 
     const handleInputChange = (e) => {
-        const query = e.target.value;
-        setSearchQuery(query);
-    };
-
-    const handleKeyDown = (e) => {
-        if (e.key === "Enter") {
-            handleSearch();
-        }
-    };
-
-    const handleSearch = () => {
-        if (searchQuery.trim() === "") {
-            return toast.error("Search field cannot be empty");
-        }
-
-        // find search query string in communities data
-        const foundCommunities = communities?.filter((community) =>
-            community?.title?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-
-        if (foundCommunities.length === 0) {
-            return toast.error("No communities found matching your search");
-        }
-
-        navigate(`/search?query=${searchQuery}`);
+        setSearchQuery(e.target.value);
     };
 
     return (
-        <div className="searchComponent">
-            <IoSearchOutline size={25} onClick={handleSearch} />
-            <input
-                type="search"
-                name="search"
+        <Box
+            sx={{
+                width: "100%",
+                maxWidth: 500,
+                mx: "auto",
+                mb: 4,
+            }}>
+            <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Search communities, topics, or keywords"
                 value={searchQuery}
                 onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
-                placeholder="Search for anything"
+                InputProps={{
+                    startAdornment: (
+                        <InputAdornment position="start">
+                            <IconButton edge="start" disabled>
+                                <SearchIcon
+                                    size={20}
+                                    color={theme.palette.text.secondary}
+                                />
+                            </IconButton>
+                        </InputAdornment>
+                    ),
+                    sx: {
+                        borderRadius: "50px",
+                        backgroundColor: theme.palette.background.paper,
+                        "& .MuiOutlinedInput-notchedOutline": {
+                            borderColor: theme.palette.divider,
+                        },
+                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                            borderColor: theme.palette.info.light,
+                        },
+                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            borderColor: theme.palette.info.main,
+                            borderWidth: 1,
+                        },
+                    },
+                }}
+                sx={{
+                    "& .MuiOutlinedInput-root": {
+                        paddingLeft: "8px",
+                    },
+                }}
             />
-        </div>
+        </Box>
     );
 };
 

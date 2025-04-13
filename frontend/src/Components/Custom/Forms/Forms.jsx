@@ -1,3 +1,12 @@
+import {
+    Box,
+    TextField,
+    Button,
+    Typography,
+    Link,
+    CircularProgress,
+    useTheme,
+} from "@mui/material";
 import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
 import "./forms.css";
@@ -9,9 +18,9 @@ import {
 import { useAuthContext } from "../../Context/AuthContext";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import axios from "axios";
-import ButtonLoad from "../../Animations/ButtonLoad";
 
 export const LoginForm = ({ setAuthContainer }) => {
+    const theme = useTheme();
     const { login } = useAuthContext();
 
     const { useNavigate } = useReactRouter();
@@ -64,43 +73,96 @@ export const LoginForm = ({ setAuthContainer }) => {
     };
 
     return (
-        <form
-            className="auth-form"
+        <Box
+            component="form"
             onSubmit={handleSubmit(onSubmit, onError)}
-            noValidate>
-            <div className="inputBox">
-                <input
-                    placeholder="Email"
-                    required
-                    type="email"
-                    {...register("email", {
-                        required: "Email is required",
-                    })}
-                />
-                <p>{errors.email?.message}</p>
-            </div>
-            {/* Password input */}
-            <div className="inputBox">
-                <input
-                    placeholder="Password"
-                    required
-                    type="password"
-                    {...register("password", {
-                        required: "Password is required",
-                    })}
-                />
+            noValidate
+            sx={{ width: "100%", mt: 3 }}>
+            {/* Email Field */}
+            <TextField
+                fullWidth
+                margin="normal"
+                label="Email Address"
+                type="email"
+                variant="outlined"
+                {...register("email", {
+                    required: "Email is required",
+                    pattern: {
+                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                        message: "Invalid email address",
+                    },
+                })}
+                error={!!errors.email}
+                helperText={errors.email?.message}
+                sx={{
+                    "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                    },
+                }}
+            />
 
-                <p>{errors.password?.message}</p>
-            </div>
-            <button className="forgotPassBtn">forgot Password?</button>
+            {/* Password Field */}
+            <TextField
+                fullWidth
+                margin="normal"
+                label="Password"
+                type="password"
+                variant="outlined"
+                {...register("password", {
+                    required: "Password is required",
+                    minLength: {
+                        value: 6,
+                        message: "Password must be at least 6 characters",
+                    },
+                })}
+                error={!!errors.password}
+                helperText={errors.password?.message}
+                sx={{
+                    "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                    },
+                }}
+            />
 
-            <button
-                className="btn btn-success d-flex justify-content-center"
+            {/* Forgot Password Link */}
+            <Box textAlign="right" mt={1}>
+                <Link
+                    href="/forgot-password"
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{
+                        textDecoration: "none",
+                        "&:hover": {
+                            color: theme.palette.info.main,
+                        },
+                    }}>
+                    Forgot password?
+                </Link>
+            </Box>
+
+            {/* Submit Button */}
+            <Button
+                fullWidth
+                variant="contained"
+                color="info"
+                size="large"
                 type="submit"
-                disabled={isSubmitting}>
-                {isSubmitting ? <ButtonLoad /> : <>LOGIN</>}
-            </button>
-        </form>
+                disabled={isSubmitting}
+                sx={{
+                    mt: 3,
+                    py: 1.5,
+                    borderRadius: 2,
+                    fontWeight: 600,
+                    fontSize: "1rem",
+                    textTransform: "none",
+                }}>
+                {isSubmitting ? (
+                    <CircularProgress size={24} color="inherit" />
+                ) : (
+                    "Log In"
+                )}
+            </Button>
+        </Box>
     );
 };
 
@@ -157,53 +219,120 @@ export const RegisterForm = ({ setAuthContainer }) => {
     };
 
     return (
-        <form
-            className="auth-form"
+        <Box
+            component="form"
             onSubmit={handleSubmit(onSubmit, onError)}
-            noValidate>
-            <div className="inputBox">
-                <input
-                    placeholder="Full Name"
-                    required
-                    type="text"
-                    {...register("name", {
-                        required: "Full Name is required",
-                    })}
-                />
-                <p>{errors.name?.message}</p>
-            </div>
+            noValidate
+            sx={{ width: "100%", mt: 1 }}>
+            {/* Name Field */}
+            <TextField
+                fullWidth
+                margin="normal"
+                label="Full Name"
+                variant="outlined"
+                {...register("name", {
+                    required: "Full name is required",
+                    minLength: {
+                        value: 2,
+                        message: "Name must be at least 2 characters",
+                    },
+                })}
+                error={!!errors.name}
+                helperText={errors.name?.message}
+                sx={{
+                    "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                    },
+                }}
+            />
 
-            <div className="inputBox">
-                <input
-                    placeholder="Email"
-                    required
-                    type="email"
-                    {...register("email", {
-                        required: "Email is required",
-                    })}
-                />
-                <p>{errors.email?.message}</p>
-            </div>
-            {/* Password input */}
-            <div className="inputBox">
-                <input
-                    placeholder="Password"
-                    required
-                    type="password"
-                    {...register("password", {
-                        required: "Password is required",
-                    })}
-                />
+            {/* Email Field */}
+            <TextField
+                fullWidth
+                margin="normal"
+                label="Email Address"
+                type="email"
+                variant="outlined"
+                {...register("email", {
+                    required: "Email is required",
+                    pattern: {
+                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                        message: "Invalid email address",
+                    },
+                })}
+                error={!!errors.email}
+                helperText={errors.email?.message}
+                sx={{
+                    "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                    },
+                }}
+            />
 
-                <p>{errors.password?.message}</p>
-            </div>
+            {/* Password Field */}
+            <TextField
+                fullWidth
+                margin="normal"
+                label="Password"
+                type="password"
+                variant="outlined"
+                {...register("password", {
+                    required: "Password is required",
+                    minLength: {
+                        value: 6,
+                        message: "Password must be at least 6 characters",
+                    },
+                })}
+                error={!!errors.password}
+                helperText={errors.password?.message}
+                sx={{
+                    "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                    },
+                }}
+            />
 
-            <button
-                className="btn btn-success d-flex justify-content-center"
+            {/* Password Requirements */}
+            <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+                mt={1}>
+                Password must be at least 6 characters
+            </Typography>
+
+            {/* Submit Button */}
+            <Button
+                fullWidth
+                variant="contained"
+                color="info"
+                size="large"
                 type="submit"
-                disabled={isSubmitting}>
-                {isSubmitting ? <ButtonLoad /> : <>REGISTER</>}
-            </button>
-        </form>
+                disabled={isSubmitting}
+                sx={{
+                    mt: 3,
+                    py: 1.5,
+                    borderRadius: 2,
+                    fontWeight: 600,
+                    fontSize: "1rem",
+                    textTransform: "none",
+                }}>
+                {isSubmitting ? (
+                    <CircularProgress size={24} color="inherit" />
+                ) : (
+                    "Create Account"
+                )}
+            </Button>
+
+            {/* Terms and Conditions */}
+            <Typography
+                variant="body2"
+                color="text.secondary"
+                align="center"
+                mt={2}>
+                By registering, you agree to our Terms of Service and Privacy
+                Policy
+            </Typography>
+        </Box>
     );
 };

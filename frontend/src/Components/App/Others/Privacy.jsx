@@ -1,9 +1,18 @@
-import { useEffect } from "react";
+import {
+    Container,
+    Box,
+    Typography,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
+    useTheme,
+    Divider,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { companyName } from "../../Hooks/useVariable";
 
 const Privacy = () => {
-    useEffect(() => {
-        window.scroll(0, 0); // scroll to top on component mount
-    }, []);
+    const theme = useTheme();
 
     const PrivacyPolicies = [
         {
@@ -72,22 +81,88 @@ const Privacy = () => {
         },
     ];
 
-    const faqOutput = PrivacyPolicies.map((faq, i) => (
-        <li key={i}>
-            <h5>{faq.title}</h5>
-            <p>{faq.info}</p>
-        </li>
-    ));
-
     return (
-        <main className="home">
-            <header>
-                <h1>Privacy Policies</h1>
-                <p>Privacy policies you should be aware of</p>
-            </header>
+        <Container maxWidth="md" sx={{ py: 6 }}>
+            {/* Header Section */}
+            <Box textAlign="center" mb={6}>
+                <Typography
+                    variant="h3"
+                    component="h1"
+                    gutterBottom
+                    sx={{
+                        color: theme.palette.info.main,
+                        fontWeight: 700,
+                    }}>
+                    Privacy Policy
+                </Typography>
+                <Typography variant="subtitle1" color="text.secondary">
+                    Last updated: {new Date().toLocaleDateString()}
+                </Typography>
+            </Box>
 
-            <ul className="faqUl">{faqOutput}</ul>
-        </main>
+            {/* Introduction */}
+            <Box mb={4}>
+                <Typography variant="body1" paragraph>
+                    At {companyName}, we take your privacy seriously. This
+                    policy explains how we collect, use, and protect your
+                    personal information when you use our platform.
+                </Typography>
+                <Typography variant="body1" paragraph>
+                    By accessing or using our services, you agree to the terms
+                    outlined in this Privacy Policy.
+                </Typography>
+            </Box>
+
+            <Divider sx={{ my: 4 }} />
+
+            {/* Policies */}
+            <Box
+                sx={{
+                    "& .MuiAccordion-root": {
+                        mb: 2,
+                        borderRadius: "8px !important",
+                        overflow: "hidden",
+                        "&:before": {
+                            display: "none",
+                        },
+                    },
+                }}>
+                {PrivacyPolicies.map((policy, index) => (
+                    <Accordion key={index} elevation={1}>
+                        <AccordionSummary
+                            expandIcon={<ExpandMoreIcon color="info" />}
+                            sx={{
+                                backgroundColor: theme.palette.background.paper,
+                                "&:hover": {
+                                    backgroundColor: theme.palette.action.hover,
+                                },
+                                "&.Mui-expanded": {
+                                    backgroundColor:
+                                        theme.palette.action.selected,
+                                    borderBottom: `1px solid ${theme.palette.divider}`,
+                                },
+                            }}>
+                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                {policy.title}
+                            </Typography>
+                        </AccordionSummary>
+                        <AccordionDetails sx={{ py: 3 }}>
+                            <Typography color="text.secondary">
+                                {policy.info}
+                            </Typography>
+                        </AccordionDetails>
+                    </Accordion>
+                ))}
+            </Box>
+
+            {/* Footer Note */}
+            <Box mt={6} textAlign="center">
+                <Typography variant="body2" color="text.secondary">
+                    For any questions about our privacy practices, please
+                    contact us at privacy@{companyName}.com
+                </Typography>
+            </Box>
+        </Container>
     );
 };
 

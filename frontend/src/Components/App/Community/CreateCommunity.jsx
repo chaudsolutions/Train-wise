@@ -1,14 +1,28 @@
+import {
+    Container,
+    Typography,
+    TextField,
+    Select,
+    MenuItem,
+    InputLabel,
+    FormControl,
+    Button,
+    Box,
+    Paper,
+    useTheme,
+    CircularProgress,
+} from "@mui/material";
 import axios from "axios";
-import "./createCommunity.css";
 import { useForm } from "react-hook-form";
 import { useReactRouter } from "../../Hooks/useReactRouter";
-import ButtonLoad from "../../Animations/ButtonLoad";
 import toast from "react-hot-toast";
 import { categories, serVer, useToken } from "../../Hooks/useVariable";
 import { useCommunitiesData } from "../../Hooks/useQueryFetch/useQueryData";
 import PageLoader from "../../Animations/PageLoader";
 
 const CreateCommunity = () => {
+    const theme = useTheme();
+
     const { useNavigate } = useReactRouter();
 
     const { token } = useToken();
@@ -18,8 +32,15 @@ const CreateCommunity = () => {
     const {
         register,
         handleSubmit,
+        watch,
+        setValue,
         formState: { errors, isSubmitting },
-    } = useForm();
+    } = useForm({
+        defaultValues: {
+            bannerPreview: "",
+            logoPreview: "",
+        },
+    });
 
     const navigate = useNavigate();
 
@@ -75,205 +96,315 @@ const CreateCommunity = () => {
     }
 
     return (
-        <div className="create-community-container">
-            <h1 className="text-center mb-4">Create a New Community</h1>
-            <form onSubmit={handleSubmit(onSubmit)} className="community-form">
-                {/* Community Name */}
-                <div className="mb-3">
-                    <label htmlFor="name" className="form-label">
-                        Community Name
-                    </label>
-                    <input
-                        type="text"
-                        id="name"
+        <Container maxWidth="md" sx={{ py: 4 }}>
+            <Paper elevation={3} sx={{ p: 4, borderRadius: 4 }}>
+                <Typography
+                    variant="h4"
+                    component="h1"
+                    align="center"
+                    gutterBottom
+                    sx={{
+                        fontWeight: 700,
+                        color: theme.palette.info.main,
+                        mb: 4,
+                    }}>
+                    Create a New Community
+                </Typography>
+
+                <Box
+                    component="form"
+                    onSubmit={handleSubmit(onSubmit)}
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 3,
+                    }}>
+                    {/* Community Name */}
+                    <TextField
+                        label="Community Name"
+                        variant="outlined"
+                        fullWidth
                         {...register("name", {
                             required: "Community name is required",
                         })}
-                        className={`form-control ${
-                            errors.name ? "is-invalid" : ""
-                        }`}
+                        error={!!errors.name}
+                        helperText={errors.name?.message}
                     />
-                    {errors.name && (
-                        <div className="invalid-feedback">
-                            {errors.name.message}
-                        </div>
-                    )}
-                </div>
 
-                {/* Community Description */}
-                <div className="mb-3">
-                    <label htmlFor="description" className="form-label">
-                        Description
-                    </label>
-                    <textarea
-                        id="description"
+                    {/* Community Description */}
+                    <TextField
+                        label="Description"
+                        variant="outlined"
+                        fullWidth
+                        multiline
+                        rows={1}
                         {...register("description", {
                             required: "Description is required",
                         })}
-                        className={`form-control ${
-                            errors.description ? "is-invalid" : ""
-                        }`}
-                        rows="4"
+                        error={!!errors.description}
+                        helperText={errors.description?.message}
                     />
-                    {errors.description && (
-                        <div className="invalid-feedback">
-                            {errors.description.message}
-                        </div>
-                    )}
-                </div>
 
-                <div className="mb-3">
-                    <label htmlFor="subscriptionFee" className="form-label">
-                        Monthly Subscription Fee
-                    </label>
-                    <input
-                        placeholder="0 if free"
+                    {/* Subscription Fee */}
+                    <TextField
+                        label="Monthly Subscription Fee"
+                        variant="outlined"
+                        fullWidth
                         type="number"
-                        id="subscriptionFee"
+                        placeholder="0 if free"
                         {...register("subscriptionFee", {
                             required: "Subscription Fee is required",
                         })}
-                        className={`form-control ${
-                            errors.subscriptionFee ? "is-invalid" : ""
-                        }`}
+                        error={!!errors.subscriptionFee}
+                        helperText={errors.subscriptionFee?.message}
                     />
-                    {errors.subscriptionFee && (
-                        <div className="invalid-feedback">
-                            {errors.subscriptionFee.message}
-                        </div>
-                    )}
-                </div>
 
-                {/* category select */}
-                <div className="mb-3">
-                    <label htmlFor="category" className="form-label">
-                        Select Category
-                    </label>
-                    <select
-                        id="category"
-                        {...register("category", {
-                            required: "Category Fee is required",
-                        })}
-                        className={`form-control ${
-                            errors.category ? "is-invalid" : ""
-                        }`}>
-                        <option value="">Select a category</option>
-                        {categories.map((category) => (
-                            <option key={category.icon} value={category.name}>
-                                {category.name}
-                            </option>
-                        ))}
-                    </select>
-                    {errors.category && (
-                        <div className="invalid-feedback">
-                            {errors.category.message}
-                        </div>
-                    )}
-                </div>
+                    {/* Category Select */}
+                    <FormControl fullWidth error={!!errors.category}>
+                        <InputLabel>Select Category</InputLabel>
+                        <Select
+                            label="Select Category"
+                            {...register("category", {
+                                required: "Category is required",
+                            })}
+                            defaultValue="">
+                            <MenuItem value="" disabled>
+                                Select a category
+                            </MenuItem>
+                            {categories.map((category) => (
+                                <MenuItem
+                                    key={category.name}
+                                    value={category.name}>
+                                    {category.name}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                        {errors.category && (
+                            <Typography variant="caption" color="error">
+                                {errors.category.message}
+                            </Typography>
+                        )}
+                    </FormControl>
 
-                {/* Community Rules */}
-                <div className="mb-3">
-                    <label className="form-label">Rules</label>
-                    {[1, 2, 3].map((index) => (
-                        <div key={index} className="mb-2">
-                            <input
-                                type="text"
-                                id={`rule${index}`}
+                    {/* Community Rules */}
+                    <Box
+                        sx={{
+                            border: `1px solid ${theme.palette.divider}`,
+                            borderRadius: 1,
+                            p: 2,
+                        }}>
+                        <Typography variant="subtitle1" gutterBottom>
+                            Community Rules
+                        </Typography>
+                        {[1, 2, 3].map((index) => (
+                            <TextField
+                                key={index}
+                                label={`Rule ${index}`}
+                                variant="outlined"
+                                fullWidth
+                                sx={{ mb: 2 }}
                                 {...register(`rule${index}`, {
                                     required: `Rule ${index} is required`,
                                 })}
-                                className={`form-control ${
-                                    errors[`rule${index}`] ? "is-invalid" : ""
-                                }`}
-                                placeholder={`Rule ${index}`}
+                                error={!!errors[`rule${index}`]}
+                                helperText={errors[`rule${index}`]?.message}
                             />
-                            {errors[`rule${index}`] && (
-                                <div className="invalid-feedback">
-                                    {errors[`rule${index}`].message}
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </Box>
 
-                {/* Community Visions */}
-                <div className="mb-3">
-                    <label className="form-label">Visions</label>
-                    {[1, 2, 3].map((index) => (
-                        <div key={index} className="mb-2">
-                            <input
-                                type="text"
-                                id={`vision${index}`}
+                    {/* Community Visions */}
+                    <Box
+                        sx={{
+                            border: `1px solid ${theme.palette.divider}`,
+                            borderRadius: 1,
+                            p: 2,
+                        }}>
+                        <Typography variant="subtitle1" gutterBottom>
+                            Community Visions
+                        </Typography>
+                        {[1, 2, 3].map((index) => (
+                            <TextField
+                                key={index}
+                                label={`Vision ${index}`}
+                                variant="outlined"
+                                fullWidth
+                                sx={{ mb: 2 }}
                                 {...register(`vision${index}`, {
                                     required: `Vision ${index} is required`,
                                 })}
-                                className={`form-control ${
-                                    errors[`vision${index}`] ? "is-invalid" : ""
-                                }`}
-                                placeholder={`Vision ${index}`}
+                                error={!!errors[`vision${index}`]}
+                                helperText={errors[`vision${index}`]?.message}
                             />
-                            {errors[`vision${index}`] && (
-                                <div className="invalid-feedback">
-                                    {errors[`vision${index}`].message}
-                                </div>
+                        ))}
+                    </Box>
+
+                    {/* Image Uploads with Preview */}
+                    <Box sx={{ display: "flex", gap: 3 }}>
+                        <Box sx={{ flex: 1 }}>
+                            <Typography variant="subtitle1" gutterBottom>
+                                Community Banner Image
+                            </Typography>
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 2,
+                                }}>
+                                <Button
+                                    variant="outlined"
+                                    component="label"
+                                    fullWidth>
+                                    Upload Banner
+                                    <input
+                                        type="file"
+                                        hidden
+                                        accept="image/*"
+                                        {...register("image1", {
+                                            required:
+                                                "Banner image is required",
+                                            onChange: (e) => {
+                                                const file = e.target.files[0];
+                                                if (file) {
+                                                    const reader =
+                                                        new FileReader();
+                                                    reader.onload = (event) => {
+                                                        setValue(
+                                                            "bannerPreview",
+                                                            event.target.result
+                                                        );
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }
+                                            },
+                                        })}
+                                    />
+                                </Button>
+                                {watch("bannerPreview") && (
+                                    <Box
+                                        sx={{
+                                            mt: 1,
+                                            border: `1px solid ${theme.palette.divider}`,
+                                            borderRadius: 1,
+                                            overflow: "hidden",
+                                            maxHeight: 200,
+                                        }}>
+                                        <img
+                                            src={watch("bannerPreview")}
+                                            alt="Banner preview"
+                                            style={{
+                                                width: "100%",
+                                                height: "100%",
+                                                objectFit: "cover",
+                                            }}
+                                        />
+                                    </Box>
+                                )}
+                                {errors.image1 && (
+                                    <Typography variant="caption" color="error">
+                                        {errors.image1.message}
+                                    </Typography>
+                                )}
+                            </Box>
+                        </Box>
+
+                        <Box sx={{ flex: 1 }}>
+                            <Typography variant="subtitle1" gutterBottom>
+                                Community Logo
+                            </Typography>
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 2,
+                                }}>
+                                <Button
+                                    variant="outlined"
+                                    component="label"
+                                    fullWidth>
+                                    Upload Logo
+                                    <input
+                                        type="file"
+                                        hidden
+                                        accept="image/*"
+                                        {...register("image2", {
+                                            required: "Logo is required",
+                                            onChange: (e) => {
+                                                const file = e.target.files[0];
+                                                if (file) {
+                                                    const reader =
+                                                        new FileReader();
+                                                    reader.onload = (event) => {
+                                                        setValue(
+                                                            "logoPreview",
+                                                            event.target.result
+                                                        );
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }
+                                            },
+                                        })}
+                                    />
+                                </Button>
+                                {watch("logoPreview") && (
+                                    <Box
+                                        sx={{
+                                            mt: 1,
+                                            border: `1px solid ${theme.palette.divider}`,
+                                            borderRadius: "50%",
+                                            width: 100,
+                                            height: 100,
+                                            overflow: "hidden",
+                                            alignSelf: "center",
+                                        }}>
+                                        <img
+                                            src={watch("logoPreview")}
+                                            alt="Logo preview"
+                                            style={{
+                                                width: "100%",
+                                                height: "100%",
+                                                objectFit: "cover",
+                                            }}
+                                        />
+                                    </Box>
+                                )}
+                                {errors.image2 && (
+                                    <Typography variant="caption" color="error">
+                                        {errors.image2.message}
+                                    </Typography>
+                                )}
+                            </Box>
+                        </Box>
+                    </Box>
+
+                    {/* Submit Button */}
+                    <Box
+                        sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            mt: 3,
+                        }}>
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            color="info"
+                            disabled={isSubmitting}
+                            sx={{
+                                px: 6,
+                                py: 1.5,
+                                borderRadius: 2,
+                                fontWeight: 600,
+                                fontSize: "1rem",
+                            }}>
+                            {isSubmitting ? (
+                                <CircularProgress size={24} color="inherit" />
+                            ) : (
+                                "Create Community"
                             )}
-                        </div>
-                    ))}
-                </div>
-
-                {/* Image Uploads */}
-                <div className="mb-3">
-                    <label htmlFor="image1" className="form-label">
-                        Community Banner Image
-                    </label>
-                    <input
-                        type="file"
-                        id="image1"
-                        {...register("image1", {
-                            required: "Banner image is required",
-                        })}
-                        className={`form-control ${
-                            errors.image1 ? "is-invalid" : ""
-                        }`}
-                        accept="image/*"
-                    />
-                    {errors.image1 && (
-                        <div className="invalid-feedback">
-                            {errors.image1.message}
-                        </div>
-                    )}
-                </div>
-
-                <div className="mb-3">
-                    <label htmlFor="image2" className="form-label">
-                        Community Logo
-                    </label>
-                    <input
-                        type="file"
-                        id="image2"
-                        {...register("image2", {
-                            required: "Logo is required",
-                        })}
-                        className={`form-control ${
-                            errors.image2 ? "is-invalid" : ""
-                        }`}
-                        accept="image/*"
-                    />
-                    {errors.image2 && (
-                        <div className="invalid-feedback">
-                            {errors.image2.message}
-                        </div>
-                    )}
-                </div>
-
-                {/* Submit Button */}
-                <div className="text-center">
-                    <button type="submit" className="btn btn-primary">
-                        {isSubmitting ? <ButtonLoad /> : <>Create Community</>}
-                    </button>
-                </div>
-            </form>
-        </div>
+                        </Button>
+                    </Box>
+                </Box>
+            </Paper>
+        </Container>
     );
 };
 

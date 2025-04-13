@@ -1,7 +1,11 @@
 const express = require("express");
+const cloudinary = require("cloudinary").v2;
+
 const UsersModel = require("../Models/Users");
 const Community = require("../Models/Community");
 const CommunityCourse = require("../Models/CommunityCourse");
+const { upload, uploadToCloudinary } = require("../utils/uploadMedia");
+const CommunityMessage = require("../Models/CommunityMessage");
 
 const router = express.Router();
 
@@ -24,7 +28,7 @@ router.get("/data", async (req, res) => {
 });
 
 // endpoint to join community
-router.post("/joinCommunity/:communityId", async (req, res) => {
+router.put("/joinCommunity/:communityId", async (req, res) => {
     const userId = req.userId;
     const { communityId } = req.params;
 
@@ -64,6 +68,51 @@ router.post("/joinCommunity/:communityId", async (req, res) => {
     } catch (error) {
         res.status(500).send("Internal server error.");
         console.log(error);
+    }
+});
+
+// endpoint to get communities user is part of
+router.get("/community-member", async (req, res) => {
+    const userId = req.userId;
+
+    try {
+        // Find communities where:
+        // 1. The user is the creator (owner) OR
+        // 2. The user is listed in the members array
+        const userCommunities = await Community.find({
+            $or: [
+                { createdBy: userId }, // User is the creator
+                { "members.userId": userId }, // User is a member
+            ],
+        })
+            .select(
+                "name description category createdBy logo bannerImage subscriptionFee members createdAt"
+            )
+            .lean();
+
+        // Transform the data to include membership status
+        const formattedCommunities =
+            userCommunities.length > 0 &&
+            userCommunities.map((community) => {
+                const isOwner =
+                    community.createdBy.toString() === userId.toString();
+                const memberSince = isOwner
+                    ? community.createdAt
+                    : community.members.find(
+                          (m) => m.userId.toString() === userId.toString()
+                      ).createdAt;
+
+                return {
+                    ...community,
+                    role: isOwner ? "owner" : "member",
+                    memberSince: memberSince,
+                };
+            });
+
+        res.status(200).json(formattedCommunities);
+    } catch (error) {
+        console.error("Error fetching user communities:", error);
+        res.status(500).json("Failed to fetch user communities");
     }
 });
 
@@ -245,5 +294,128 @@ router.put(
         }
     }
 );
+
+// endpoint to update profile pic
+router.put("/upload-avatar", upload.single("avatar"), async (req, res) => {
+    const userId = req.userId;
+
+    try {
+        // find user
+        const user = await UsersModel.findById(userId);
+
+        if (!user) {
+            return res.status(404).json("User not found");
+        }
+
+        // Check if file was uploaded
+        if (!req.file) {
+            return res.status(400).json("No file uploaded");
+        }
+
+        // delete existing avatar if exists
+        if (user.avatar) {
+            try {
+                const publicId = user.avatar
+                    .split("/")
+                    .slice(-2)
+                    .join("/")
+                    .split(".")[0];
+                await cloudinary.uploader.destroy(publicId);
+            } catch (cloudinaryError) {
+                console.error("Error deleting old avatar:", cloudinaryError);
+                // Continue even if deletion fails - we don't want to block the upload
+            }
+        }
+
+        // Upload new avatar to Cloudinary
+        const avatarResult = await uploadToCloudinary(
+            req.file.buffer, // Access buffer directly from req.file
+            req.file.originalname,
+            "image"
+        );
+
+        user.avatar = avatarResult.secure_url;
+
+        await user.save();
+
+        res.status(200).json("Profile Picture Updated");
+    } catch (error) {
+        res.status(500).send("Internal server error.");
+        console.log(error);
+    }
+});
+
+// toggle online status
+router.put("/toggle-online-status", async (req, res) => {
+    const userId = req.userId;
+    const { status } = req.body;
+
+    try {
+        // find user
+        const user = await UsersModel.findByIdAndUpdate(
+            userId,
+            { onlineStatus: status },
+            { new: true, runValidators: true }
+        );
+
+        if (!user) {
+            return res.status(404).json("User not found");
+        }
+
+        res.status(200).json(
+            `User is now ${user.onlineStatus ? "online" : "offline"}`
+        );
+    } catch (error) {
+        res.status(500).send("Internal server error.");
+        console.log(error);
+    }
+});
+
+// Send message endpoint
+router.put("/:communityId/send/messages", async (req, res) => {
+    const { communityId } = req.params;
+    const userId = req.userId;
+
+    try {
+        const { content } = req.body;
+        const community = await Community.findById(communityId);
+
+        if (!community) {
+            return res.status(404).json("Community not found");
+        }
+
+        // Check if user is a member
+        const isMember = community.members.some((m) => m.userId.equals(userId));
+        if (!isMember) {
+            return res.status(403).json("Not a community member");
+        }
+
+        // Find community message document
+        let communityMessage = await CommunityMessage.findOne({
+            communityId: community._id,
+        });
+
+        // Add new message
+        communityMessage.messages.push({
+            sender: userId,
+            content,
+        });
+
+        await communityMessage.save();
+
+        // Populate sender info for response
+        const savedMessage =
+            communityMessage.messages[communityMessage.messages.length - 1];
+        await CommunityMessage.populate(savedMessage, {
+            path: "sender",
+            select: "name avatar",
+        });
+
+        res.status(201).json(savedMessage);
+    } catch (error) {
+        res.status(500).json("Server error");
+        console.log(error);
+    }
+});
 
 module.exports = { User: router };

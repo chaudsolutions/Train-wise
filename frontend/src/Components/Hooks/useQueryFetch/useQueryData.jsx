@@ -5,6 +5,7 @@ import {
     fetchCommunityCourses,
     fetchCommunitySingleCourse,
     fetchUser,
+    fetchUserJoinedCommunities,
     fetchUserMembership,
 } from "../useFetch";
 import { useAuthContext } from "../../Context/AuthContext";
@@ -134,5 +135,29 @@ export const useIsUserMembershipData = (communityId) => {
         isUserMembershipLoading,
         isUserMembershipError,
         refetchIsUserMembership,
+    };
+};
+
+// use user joined community data
+export const useUserJoinedCommunitiesData = () => {
+    const { user } = useAuthContext();
+    const profilePage = location.pathname === "/profile";
+
+    const {
+        data: joinedCommunitiesData,
+        isLoading: isJoinedCommunitiesLoading,
+        isError: isJoinedCommunitiesError,
+        refetch: refetchJoinedCommunities,
+    } = useQuery({
+        queryKey: ["userJoinedCommunities"],
+        queryFn: fetchUserJoinedCommunities,
+        enabled: !!user && !!profilePage,
+    });
+
+    return {
+        joinedCommunitiesData,
+        isJoinedCommunitiesLoading,
+        isJoinedCommunitiesError,
+        refetchJoinedCommunities,
     };
 };

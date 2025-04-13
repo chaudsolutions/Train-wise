@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
-import "./buttons.css";
+import { Button } from "@mui/material";
 
 export const LinkOne = ({ linkDetails }) => {
     const { name, url } = linkDetails[0];
 
     return (
-        <Link to={url} className="linkOne">
+        <Button LinkComponent={Link} variant="contained" color="info" to={url}>
             {name}
-        </Link>
+        </Button>
     );
 };
 
@@ -15,8 +15,8 @@ export const LinkTwo = ({ linkDetails }) => {
     const { name, url } = linkDetails[0];
 
     return (
-        <Link to={url} className="linkTwo">
+        <Button LinkComponent={Link} variant="outlined" color="info" to={url}>
             {name}
-        </Link>
+        </Button>
     );
 };

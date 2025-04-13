@@ -1,9 +1,16 @@
-import { useEffect } from "react";
+import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    Box,
+    Container,
+    Typography,
+    useTheme,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 const FAQComponent = () => {
-    useEffect(() => {
-        window.scroll(0, 0); // scroll to top on component mount
-    }, []);
+    const theme = useTheme();
 
     const FAQs = [
         {
@@ -68,22 +75,66 @@ const FAQComponent = () => {
         },
     ];
 
-    const faqOutput = FAQs.map((faq, i) => (
-        <li key={i}>
-            <h5>{faq.title}</h5>
-            <p>{faq.info}</p>
-        </li>
-    ));
-
     return (
-        <main className="home">
-            <header>
-                <h1>FAQ</h1>
-                <p>Frequently Asked Questions</p>
-            </header>
+        <Container maxWidth="md" sx={{ py: 4 }}>
+            <Box textAlign="center" mb={4}>
+                <Typography
+                    variant="h3"
+                    component="h1"
+                    gutterBottom
+                    sx={{
+                        color: theme.palette.info.main,
+                        fontWeight: 700,
+                    }}>
+                    Frequently Asked Questions
+                </Typography>
+                <Typography variant="subtitle1" color="text.secondary">
+                    Find answers to common questions about our platform
+                </Typography>
+            </Box>
 
-            <ul className="faqUl">{faqOutput}</ul>
-        </main>
+            <Box
+                sx={{
+                    "& .MuiAccordion-root": {
+                        mb: 2,
+                        borderRadius: "8px !important",
+                        overflow: "hidden",
+                        "&:before": {
+                            display: "none",
+                        },
+                    },
+                }}>
+                {FAQs.map((faq, index) => (
+                    <Accordion key={index} elevation={0}>
+                        <AccordionSummary
+                            expandIcon={<ExpandMoreIcon color="info" />}
+                            sx={{
+                                backgroundColor: theme.palette.info.light,
+                                "&:hover": {
+                                    backgroundColor: theme.palette.info.light,
+                                },
+                                "&.Mui-expanded": {
+                                    backgroundColor: theme.palette.info.light,
+                                    borderBottom: `1px solid ${theme.palette.divider}`,
+                                },
+                            }}>
+                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                {faq.title}
+                            </Typography>
+                        </AccordionSummary>
+                        <AccordionDetails
+                            sx={{
+                                backgroundColor: theme.palette.background.paper,
+                                py: 3,
+                            }}>
+                            <Typography color="text.secondary">
+                                {faq.info}
+                            </Typography>
+                        </AccordionDetails>
+                    </Accordion>
+                ))}
+            </Box>
+        </Container>
     );
 };
 

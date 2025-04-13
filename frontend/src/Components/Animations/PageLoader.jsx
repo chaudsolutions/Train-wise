@@ -1,12 +1,34 @@
-import "./pageLoader.css";
+import { Box, CircularProgress } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 
 const PageLoader = () => {
+    const theme = useTheme();
+
     return (
-        <div className="loader-container">
-            <svg viewBox="25 25 50 50" className="svg">
-                <circle r="20" cy="50" cx="50"></circle>
-            </svg>
-        </div>
+        <Box
+            sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                width: "100%",
+                height: "100vh", // Full viewport height
+                backgroundColor: theme.palette.background.default,
+                position: "fixed",
+                top: 0,
+                left: 0,
+                zIndex: theme.zIndex.modal + 1, // Ensure it's above other content
+            }}>
+            <CircularProgress
+                size={60}
+                thickness={4}
+                sx={{
+                    color: theme.palette.info.main,
+                    "& .MuiCircularProgress-circle": {
+                        strokeLinecap: "round",
+                    },
+                }}
+            />
+        </Box>
     );
 };
 

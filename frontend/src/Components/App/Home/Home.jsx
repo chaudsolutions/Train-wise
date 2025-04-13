@@ -1,39 +1,68 @@
+import { Box, Container, Typography } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import PageLoader from "../../Animations/PageLoader";
 import PaginatedData from "../../Custom/PaginatedData/PaginatedData";
 import Search from "../../Custom/Search/Search";
-import { useCommunitiesData } from "../../Hooks/useQueryFetch/useQueryData";
 import { useReactRouter } from "../../Hooks/useReactRouter";
-import "./home.css";
-import { useEffect } from "react";
+import { useEnhancedSearch } from "../../Hooks/useFuzzySearch";
 
 const Home = () => {
-    useEffect(() => {
-        window.scroll(0, 0); // scroll to top on component mount
-    }, []);
-
     const { Link } = useReactRouter();
+    const theme = useTheme();
 
-    const { communities, isCommunitiesLoading } = useCommunitiesData();
+    const {
+        searchResults,
+        searchQuery,
+        setSearchQuery,
+        isLoading,
+        allCommunities,
+        hasSearched,
+    } = useEnhancedSearch();
 
-    if (isCommunitiesLoading) {
+    if (isLoading) {
         return <PageLoader />;
     }
 
     return (
-        <main className="home">
-            <header>
-                <h1>Discover communities</h1>
-                <p>
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+            <Box component="header" sx={{ mb: 4, textAlign: "center" }}>
+                <Typography
+                    variant="h3"
+                    component="h1"
+                    gutterBottom
+                    sx={{
+                        fontWeight: 700,
+                        color: theme.palette.text.primary,
+                    }}>
+                    Discover communities
+                </Typography>
+                <Typography variant="subtitle1" color="text.secondary">
                     or <Link to="/create-a-community">create your own</Link>
-                </p>
-            </header>
+                </Typography>
+            </Box>
 
             {/* search component */}
-            <Search />
+            <Box display="flex" justifyContent="center" sx={{ mb: 4 }}>
+                <Search
+                    setSearchQuery={setSearchQuery}
+                    searchQuery={searchQuery}
+                />
+
+                {hasSearched && (
+                    <Typography
+                        variant="body2"
+                        sx={{ mt: 1, color: "text.secondary" }}>
+                        Found {searchResults.length}{" "}
+                        {searchResults.length === 1 ? "result" : "results"}
+                    </Typography>
+                )}
+            </Box>
 
             {/* render data */}
-            <PaginatedData communities={communities} />
-        </main>
+            <PaginatedData
+                communities={searchQuery ? searchResults : allCommunities}
+            />
+        </Container>
     );
 };
 

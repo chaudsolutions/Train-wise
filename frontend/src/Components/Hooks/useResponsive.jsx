@@ -1,7 +1,8 @@
-import { useMediaQuery } from "react-responsive";
+import { useMediaQuery, useTheme } from "@mui/material";
 
 const useResponsive = () => {
-    const isMobile = useMediaQuery({ query: "(max-width: 767px)" });
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
     return { isMobile };
 };

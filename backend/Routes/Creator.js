@@ -1,57 +1,14 @@
 const express = require("express");
-const { v4: uuidv4 } = require("uuid");
 //images store path
-const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 
 const Community = require("../Models/Community");
 const UsersModel = require("../Models/Users");
 const CommunityCourse = require("../Models/CommunityCourse");
+const { uploadToCloudinary, upload } = require("../utils/uploadMedia");
+const CommunityMessage = require("../Models/CommunityMessage");
 
 const router = express.Router();
-
-// cloudinary configurations
-const cloud_name = process.env.cloudinaryName;
-const api_key = process.env.cloudinaryApiKey;
-const api_secret = process.env.cloudinaryApiSecret;
-
-// cloudinary config
-cloudinary.config({
-    cloud_name,
-    api_key,
-    api_secret,
-});
-
-// Configure multer for file upload
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
-
-// Promisify the upload_stream function
-const uploadToCloudinary = (buffer, originalName, resourceType) => {
-    return new Promise((resolve, reject) => {
-        const uniqueName = `${uuidv4()}-${originalName}`;
-        const stream = cloudinary.uploader.upload_stream(
-            {
-                folder: "TrainWise",
-                public_id: uniqueName,
-                resource_type: resourceType, // "auto", "image", "video", or "raw" (for PDFs)
-                transformation: [
-                    { width: 500, crop: "scale" }, // Only for images
-                    { quality: "auto:best" },
-                    { fetch_format: "auto" },
-                ],
-            },
-            (error, result) => {
-                if (error) {
-                    console.error("Cloudinary upload error:", error);
-                    return reject(error);
-                }
-                resolve(result);
-            }
-        );
-        stream.end(buffer);
-    });
-};
 
 // endpoint to create a community
 router.post(
@@ -81,12 +38,6 @@ router.post(
                 return res.status(404).json("User not found");
             }
 
-            const communities = await Community.find({});
-
-            const existingSN = await Community.findOne({
-                SN: communities.length + 1,
-            });
-
             // Upload banner image to Cloudinary
             const bannerImageBuffer = req.files["bannerImage"][0].buffer;
             const bannerImageName = req.files["bannerImage"][0].originalname;
@@ -107,7 +58,6 @@ router.post(
 
             // Create the community
             const community = await Community.create({
-                SN: existingSN ? existingSN.SN + 1 : communities.length + 1,
                 name,
                 description,
                 rules,
@@ -123,6 +73,12 @@ router.post(
             await CommunityCourse.create({
                 communityId: community._id,
                 courses: [],
+            });
+
+            // create community messages obj also
+            await CommunityMessage.create({
+                communityId: community._id,
+                messages: [],
             });
 
             res.status(200).json(community);

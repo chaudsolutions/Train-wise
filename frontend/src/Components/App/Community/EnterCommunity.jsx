@@ -1,5 +1,33 @@
 import { useState } from "react";
-import "./enterCommunity.css"; // Custom CSS for additional styling
+import {
+    Box,
+    Typography,
+    Avatar,
+    Tabs,
+    Tab,
+    Paper,
+    Chip,
+    Divider,
+    useTheme,
+    Button,
+    Badge,
+    Stack,
+    Grid,
+    List,
+    ListItem,
+    ListItemAvatar,
+    ListItemText,
+    Snackbar,
+    Alert,
+} from "@mui/material";
+import {
+    People as PeopleIcon,
+    School as SchoolIcon,
+    Notifications as NotificationsIcon,
+    OnlinePrediction as OnlinePredictionIcon,
+    Add,
+    Message,
+} from "@mui/icons-material";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import {
     useCommunityByIdData,
@@ -9,33 +37,25 @@ import {
 import PageLoader from "../../Animations/PageLoader";
 import useResponsive from "../../Hooks/useResponsive";
 import {
+    CommunityChatroom,
     CommunityClassroom,
     CommunityOverview,
 } from "../../Custom/community/EnterCommunity";
+import { useOnlineStatus } from "../../Hooks/useToggleOnlineStatus";
 
 const EnterCommunity = () => {
-    const [activeTab, setActiveTab] = useState("community"); // State to manage active tab
+    const [activeTab, setActiveTab] = useState("community");
+    const [openSnackbar, setOpenSnackbar] = useState(false);
 
-    // Tabs for switching displays
-    const tabs = [
-        { id: "community", label: "Community" },
-        { id: "classroom", label: "Classroom" },
-        { id: "about", label: "About" },
-        { id: "members", label: "Members" },
-    ];
-
+    const theme = useTheme();
     const { isMobile } = useResponsive();
-
-    const { useParams } = useReactRouter();
-
+    const { useParams, Link } = useReactRouter();
     const { communityId } = useParams();
 
     const { userData, isUserDataLoading } = useUserData();
-
     const { community, isCommunityLoading } = useCommunityByIdData({
         id: communityId,
     });
-
     const { coursesData, isCoursesLoading } = useCommunityCoursesData({
         id: communityId,
     });
@@ -52,105 +72,312 @@ const EnterCommunity = () => {
         notifications,
     } = community?.community || {};
 
-    const { _id, coursesWatched } = userData || {};
-
+    const { _id, coursesWatched, onlineStatus } = userData || {};
     const { courses } = coursesData || {};
-
     const isCommunityAdmin = createdBy === _id;
+
+    // function to toggle user online status
+    useOnlineStatus({ onlineStatus, isUserDataLoading });
+
+    const handleTabChange = (event, newValue) => {
+        setActiveTab(newValue);
+    };
+
+    const tabs = [
+        { id: "community", label: "Community", icon: <NotificationsIcon /> },
+        { id: "classroom", label: "Classroom", icon: <SchoolIcon /> },
+        { id: "chatroom", label: "Chatroom", icon: <Message /> },
+        { id: "members", label: "Members", icon: <PeopleIcon /> },
+    ];
+
+    const handleInviteMembers = () => {
+        const communityLink = `${location.origin}/community/${communityId}`;
+
+        // Copy to clipboard
+        navigator.clipboard
+            .writeText(communityLink)
+            .then(() => {
+                setOpenSnackbar(true);
+            })
+            .catch((err) => {
+                console.error("Failed to copy text: ", err);
+                // You might want to show an error toast here
+            });
+    };
+
+    const handleCloseSnackbar = (event, reason) => {
+        if (reason === "clickaway") {
+            return;
+        }
+        setOpenSnackbar(false);
+    };
 
     if (isCommunityLoading || isUserDataLoading || isCoursesLoading) {
         return <PageLoader />;
     }
 
-    console.log(members);
-
     return (
-        <div className="m-2 d-flex gap-5">
-            <div className="container enter-community">
-                {/* Header with community name and logo */}
-                <header className="community-header">
-                    <img
-                        src={logo}
-                        alt="Community Logo"
-                        className="community-logo"
-                    />
-                    <h1 className="community-name">{name}</h1>
-                </header>
+        <Box sx={{ p: 2 }}>
+            <Grid container spacing={3}>
+                {/* Main Content Area */}
+                <Grid size={{ xs: 12, md: isMobile ? 12 : 8 }}>
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            borderRadius: 4,
+                            overflow: "hidden",
+                            mb: 3,
+                            border: `1px solid ${theme.palette.divider}`,
+                        }}>
+                        {/* Banner Image */}
+                        <Box
+                            sx={{
+                                height: 200,
+                                backgroundImage: `url(${bannerImage})`,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                                position: "relative",
+                            }}>
+                            <Box
+                                sx={{
+                                    position: "absolute",
+                                    bottom: -40,
+                                    left: 20,
+                                    display: "flex",
+                                    alignItems: "flex-end",
+                                    gap: 3,
+                                }}>
+                                <Badge
+                                    overlap="circular"
+                                    anchorOrigin={{
+                                        vertical: "bottom",
+                                        horizontal: "right",
+                                    }}
+                                    badgeContent={
+                                        <Chip
+                                            label={category}
+                                            size="small"
+                                            sx={{
+                                                bgcolor:
+                                                    theme.palette.info.dark,
+                                                color: theme.palette.info
+                                                    .contrastText,
+                                            }}
+                                        />
+                                    }>
+                                    <Avatar
+                                        src={logo}
+                                        alt={name}
+                                        sx={{
+                                            width: 80,
+                                            height: 80,
+                                            border: `3px solid ${theme.palette.background.paper}`,
+                                        }}
+                                    />
+                                </Badge>
+                                <Typography
+                                    variant="h4"
+                                    fontWeight="bold"
+                                    sx={{
+                                        color: "common.white",
+                                        textShadow: "0 2px 4px rgba(0,0,0,0.9)",
+                                        mb: 1,
+                                    }}>
+                                    {name}
+                                </Typography>
+                            </Box>
+                        </Box>
 
-                {/* Tabs for switching displays */}
-                <nav className="tabs overflow-x-auto">
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            className={`tab-button ${
-                                activeTab === tab.id ? "active" : ""
-                            }`}
-                            onClick={() => setActiveTab(tab.id)}>
-                            {tab.label}
-                        </button>
-                    ))}
-                </nav>
+                        {/* Tabs Section */}
+                        <Box sx={{ mt: 6, px: 3 }}>
+                            <Tabs
+                                value={activeTab}
+                                onChange={handleTabChange}
+                                variant="scrollable"
+                                scrollButtons
+                                allowScrollButtonsMobile
+                                sx={{
+                                    "& .MuiTabs-indicator": {
+                                        backgroundColor:
+                                            theme.palette.info.main,
+                                        height: 3,
+                                    },
+                                }}>
+                                {tabs.map((tab) => (
+                                    <Tab
+                                        key={tab.id}
+                                        value={tab.id}
+                                        label={tab.label}
+                                        icon={tab.icon}
+                                        iconPosition="start"
+                                        sx={{
+                                            minHeight: 60,
+                                            "&.Mui-selected": {
+                                                color: theme.palette.info.main,
+                                            },
+                                        }}
+                                    />
+                                ))}
+                            </Tabs>
+                            <Divider />
+                        </Box>
 
-                {/* Main content based on active tab */}
-                <main className="main-content">
-                    {activeTab === "community" && (
-                        <CommunityOverview
-                            createdAt={createdAt}
-                            notifications={notifications}
-                        />
-                    )}
+                        {/* Tab Content */}
+                        <Box sx={{ p: 3 }}>
+                            {activeTab === "community" && (
+                                <CommunityOverview
+                                    createdAt={createdAt}
+                                    notifications={notifications}
+                                />
+                            )}
 
-                    {activeTab === "classroom" && (
-                        <CommunityClassroom
-                            isCommunityAdmin={isCommunityAdmin}
-                            communityId={communityId}
-                            courses={courses}
-                            coursesWatched={coursesWatched}
-                        />
-                    )}
+                            {activeTab === "classroom" && (
+                                <CommunityClassroom
+                                    isCommunityAdmin={isCommunityAdmin}
+                                    communityId={communityId}
+                                    courses={courses}
+                                    coursesWatched={coursesWatched}
+                                />
+                            )}
 
-                    {activeTab === "about" && (
-                        <div className="about-view">
-                            <h3>About</h3>
-                            <p>
-                                Learn more about this community and its goals.
-                            </p>
-                        </div>
-                    )}
+                            {activeTab === "chatroom" && (
+                                <CommunityChatroom
+                                    communityId={communityId}
+                                    userId={_id}
+                                />
+                            )}
 
-                    {activeTab === "members" && (
-                        <div className="members-view">
-                            <h3>Members</h3>
-                            <p>
-                                View and connect with other members of the
-                                community.
-                            </p>
-                        </div>
-                    )}
-                </main>
-            </div>
+                            {activeTab === "members" && (
+                                <Box>
+                                    <Typography variant="h6" gutterBottom>
+                                        Community Members
+                                    </Typography>
+                                    <List>
+                                        {members?.slice(0, 5).map((member) => (
+                                            <ListItem key={member._id}>
+                                                <ListItemAvatar>
+                                                    <Avatar
+                                                        src={member.avatar}
+                                                        alt={member.name}
+                                                    />
+                                                </ListItemAvatar>
+                                                <ListItemText
+                                                    primary={member.name}
+                                                    secondary={
+                                                        member.role === "owner"
+                                                            ? "Community Owner"
+                                                            : "Member"
+                                                    }
+                                                />
+                                            </ListItem>
+                                        ))}
+                                    </List>
+                                    {members?.length > 5 && (
+                                        <Button
+                                            variant="text"
+                                            color="info"
+                                            sx={{ mt: 1 }}>
+                                            View all {members.length} members
+                                        </Button>
+                                    )}
+                                </Box>
+                            )}
+                        </Box>
+                    </Paper>
+                </Grid>
 
-            {!isMobile && (
-                <div className="community-card w-25">
-                    <img src={bannerImage} />
+                {/* Sidebar - Only shown on desktop */}
 
-                    <div>
-                        <h4>{name}</h4>
-                        <p>{description}</p>
-                        <strong>{category || ""}</strong>
+                <Grid size={{ xs: 12, md: 4 }}>
+                    <Stack spacing={3}>
+                        {/* Community Info Card */}
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                p: 3,
+                                borderRadius: 4,
+                                border: `1px solid ${theme.palette.divider}`,
+                            }}>
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    mb: 2,
+                                }}>
+                                <Typography variant="h6" fontWeight="bold">
+                                    Community Details
+                                </Typography>
+                            </Box>
 
-                        <div>
-                            <div>
-                                <b>{members?.length}</b> members
-                            </div>
-                            <div>
-                                <b>10</b> online
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+                            <Typography
+                                variant="body1"
+                                color="text.secondary"
+                                sx={{ mb: 3 }}>
+                                {description}
+                            </Typography>
+
+                            <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+                                <Chip
+                                    label={category}
+                                    color="info"
+                                    variant="outlined"
+                                    size="small"
+                                />
+                                <Chip
+                                    label={`${members?.length || 0} members`}
+                                    icon={<PeopleIcon fontSize="small" />}
+                                    size="small"
+                                />
+                                <Chip
+                                    label="10 online"
+                                    icon={
+                                        <OnlinePredictionIcon
+                                            fontSize="small"
+                                            color="success"
+                                        />
+                                    }
+                                    size="small"
+                                />
+                            </Stack>
+
+                            <Stack spacing={1}>
+                                {isCommunityAdmin && (
+                                    <Button
+                                        LinkComponent={Link}
+                                        to={`/admin/add-course/${communityId}`}
+                                        variant="outlined"
+                                        color="info"
+                                        startIcon={<Add />}>
+                                        Create Course
+                                    </Button>
+                                )}
+                                <Button
+                                    onClick={handleInviteMembers}
+                                    variant="outlined"
+                                    color="info"
+                                    startIcon={<PeopleIcon />}>
+                                    Invite Members
+                                </Button>
+                            </Stack>
+                        </Paper>
+                    </Stack>
+                </Grid>
+            </Grid>
+
+            <Snackbar
+                open={openSnackbar}
+                autoHideDuration={3000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
+                <Alert
+                    onClose={handleCloseSnackbar}
+                    severity="success"
+                    sx={{ width: "100%" }}>
+                    link copied!
+                </Alert>
+            </Snackbar>
+        </Box>
     );
 };
 

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import PageLoader from "../Components/Animations/PageLoader";
 import {
     useIsUserMembershipData,
@@ -19,7 +19,9 @@ export const UserMembershipWrapper = ({ children }) => {
     useEffect(() => {
         // Redirect if the user is not a member
         if (!isUserMembershipLoading && !isUserMembership) {
-            toast.error("You're not not a member of this community");
+            toast.error(
+                "You're not not a member of this community or your subscription has expired"
+            );
 
             // run a function that removes the user from the membership
 
@@ -35,6 +37,7 @@ export const UserMembershipWrapper = ({ children }) => {
 };
 
 export const CreatorWrapper = ({ children }) => {
+    const [isLoad, setIsLoad] = useState(true);
     const { useNavigate } = useReactRouter();
 
     const navigate = useNavigate();
@@ -47,10 +50,12 @@ export const CreatorWrapper = ({ children }) => {
             toast.error("You're not an admin");
 
             navigate("/"); // Redirect to a "not authorized" page
+        } else {
+            setIsLoad(false);
         }
     }, [userData, navigate]);
 
-    if (isUserDataLoading) {
+    if (isUserDataLoading || isLoad) {
         return <PageLoader />;
     }
 
