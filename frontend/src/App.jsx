@@ -20,6 +20,7 @@ import CreateCommunity from "./Components/App/Community/CreateCommunity";
 import EnterCommunity from "./Components/App/Community/EnterCommunity";
 import CreateCourse from "./Components/App/Community/CreateCourse";
 import Classroom from "./Components/App/Community/Classroom";
+import BuggyComponent from "./Components/Error/Bug";
 
 function App() {
     const { user } = useAuthContext();
@@ -121,6 +122,8 @@ function App() {
                                 )
                             }
                         />
+
+                        <Route path="/buggy" element={<BuggyComponent />} />
 
                         {/* catch all route */}
                         <Route path="*" element={<NotFound />} />
