@@ -1,19 +1,15 @@
 import { useLocation } from "react-router-dom";
-import { serVer, useToken } from "./useVariable";
+import { localStorageToken, serVer } from "./useVariable";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useDebounce } from "react-use";
 
 export const useOnlineStatus = ({ onlineStatus, isUserDataLoading }) => {
     const location = useLocation();
-    const { token } = useToken();
     const [debouncedStatus, setDebouncedStatus] = useState(null);
 
-    if (isUserDataLoading) {
-        return;
-    }
-
     const toggleOnlineStatus = async (status) => {
+        const token = localStorage.getItem(localStorageToken);
         try {
             const response = await axios.put(
                 `${serVer}/user/toggle-online-status`,
@@ -21,7 +17,6 @@ export const useOnlineStatus = ({ onlineStatus, isUserDataLoading }) => {
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
                     },
                 }
             );
@@ -58,14 +53,18 @@ export const useOnlineStatus = ({ onlineStatus, isUserDataLoading }) => {
     // Debounce the actual API call
     useDebounce(
         () => {
-            if (debouncedStatus !== null && debouncedStatus !== onlineStatus) {
+            if (
+                debouncedStatus !== null &&
+                debouncedStatus !== onlineStatus &&
+                !isUserDataLoading
+            ) {
                 toggleOnlineStatus(debouncedStatus).catch((e) => {
                     console.error("Debounced status update failed:", e);
                 });
             }
         },
         1000, // 1000ms debounce delay
-        [debouncedStatus, onlineStatus, token]
+        [debouncedStatus, onlineStatus]
     );
 
     // Cleanup when unmounting - set offline immediately
