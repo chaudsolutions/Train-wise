@@ -189,13 +189,12 @@ const EnterCommunity = () => {
                         </Box>
 
                         {/* Tabs Section */}
-                        <Box sx={{ mt: 6, px: 3 }}>
+                        <Box sx={{ mt: 6, px: 2 }}>
                             <Tabs
                                 value={activeTab}
                                 onChange={handleTabChange}
                                 variant="scrollable"
-                                scrollButtons
-                                allowScrollButtonsMobile
+                                scrollButtons="auto"
                                 sx={{
                                     "& .MuiTabs-indicator": {
                                         backgroundColor:
