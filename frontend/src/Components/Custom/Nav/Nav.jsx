@@ -79,8 +79,7 @@ const Nav = () => {
                                         color="inherit"
                                         aria-label="open drawer"
                                         edge="start"
-                                        onClick={handleDrawerToggle}
-                                        sx={{ mr: 2 }}>
+                                        onClick={handleDrawerToggle}>
                                         <MenuIcon />
                                     </IconButton>
                                 )}
@@ -225,8 +224,8 @@ export const Logo = () => {
                 src={logo}
                 alt="logo"
                 sx={{
-                    width: 56,
-                    height: 56,
+                    width: 30,
+                    height: 46,
                     mr: 1,
                 }}
             />

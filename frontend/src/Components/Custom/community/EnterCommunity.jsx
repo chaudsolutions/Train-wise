@@ -459,7 +459,6 @@ export const CommunityChatroom = ({ communityId, userId }) => {
         }
     };
 
-    console.log(messages);
 
     return (
         <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>

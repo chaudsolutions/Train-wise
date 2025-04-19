@@ -42,7 +42,7 @@ const Home = () => {
             </Box>
 
             {/* search component */}
-            <Box display="flex" justifyContent="center" sx={{ mb: 4 }}>
+            <Box sx={{ mb: 4 }}>
                 <Search
                     setSearchQuery={setSearchQuery}
                     searchQuery={searchQuery}
@@ -50,7 +50,9 @@ const Home = () => {
 
                 {hasSearched && (
                     <Typography
+                        component="p"
                         variant="body2"
+                        textAlign="center"
                         sx={{ mt: 1, color: "text.secondary" }}>
                         Found {searchResults.length}{" "}
                         {searchResults.length === 1 ? "result" : "results"}

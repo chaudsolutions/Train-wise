@@ -77,6 +77,7 @@ const communitySchema = new mongoose.Schema(
             ref: "User", // Reference to the User model (if you have one)
             required: [true, "Creator ID is required"],
         },
+        paymentId: { type: String },
         members: [communityMembersSchema], // Array of members in the community
         notifications: [notificationsSchema], // Array of notifications
     },

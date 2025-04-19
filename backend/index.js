@@ -7,7 +7,6 @@ require("dotenv").config();
 const { mongoUrl, serverPort } = require("./utils/variables");
 
 const app = express();
-
 app.use(morgan("tiny"));
 app.use(helmet());
 
@@ -29,6 +28,7 @@ const { Authentication } = require("./Routes/Authentication");
 const { User } = require("./Routes/User");
 const { Creator } = require("./Routes/Creator");
 const { Api } = require("./Routes/Api");
+const { VerifyPayments } = require("./Routes/VerifyPayments");
 
 //connect to DB
 mongoose.connect(mongoUrl);
@@ -50,6 +50,10 @@ app.use("/user", User);
 // user route
 app.use("/creator", requireAuth);
 app.use("/creator", Creator);
+
+// Use payments verification route
+app.use("/payment", requireAuth);
+app.use("/payment", VerifyPayments);
 
 app.listen(serverPort, () => {
     console.log(`server is running on port ${serverPort}`);

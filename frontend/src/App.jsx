@@ -61,24 +61,18 @@ function App() {
                             element={user ? <Profile /> : <Navigate to="/" />}
                         />
 
-                        {/* view a community */}
-                        <Route
-                            path="/community/:communityId"
-                            element={<CommunityView />}
-                        />
-
                         {/* create a community */}
                         <Route
                             path="/create-a-community"
                             element={
-                                user ? (
-                                    <CreatorWrapper>
-                                        <CreateCommunity />
-                                    </CreatorWrapper>
-                                ) : (
-                                    <Navigate to="/" />
-                                )
+                                user ? <CreateCommunity /> : <Navigate to="/" />
                             }
+                        />
+
+                        {/* view a community */}
+                        <Route
+                            path="/community/:communityId"
+                            element={<CommunityView />}
                         />
 
                         {/* Enter a community */}
