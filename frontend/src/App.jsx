@@ -2,7 +2,11 @@ import ScrollToTop from "react-scroll-to-top";
 import { Toaster } from "react-hot-toast";
 import { useReactRouter } from "./Components/Hooks/useReactRouter";
 import { useAuthContext } from "./Components/Context/AuthContext";
-import { CreatorWrapper, UserMembershipWrapper } from "./utils/Wrappers";
+import {
+    AdminWrapper,
+    CreatorWrapper,
+    UserMembershipWrapper,
+} from "./utils/Wrappers";
 
 // components
 import Footer from "./Components/Custom/Footer/Footer";
@@ -21,17 +25,25 @@ import EnterCommunity from "./Components/App/Community/EnterCommunity";
 import CreateCourse from "./Components/App/Community/CreateCourse";
 import Classroom from "./Components/App/Community/Classroom";
 import BuggyComponent from "./Components/Error/Bug";
+import AdminDash from "./Components/App/admin/AdminDash";
+import DashboardHome from "./Components/App/admin/DashboardHome";
+import Users from "./Components/App/admin/Users";
+import Category from "./Components/App/admin/Category";
 
 function App() {
     const { user } = useAuthContext();
 
-    const { Routes, Route, Navigate } = useReactRouter();
+    const { Routes, Route, Navigate, useLocation } = useReactRouter();
+
+    const location = useLocation();
+
+    const showNavFooter = !location.pathname.startsWith("/admin");
 
     return (
         <ErrorBoundary>
             <div className="App">
                 <div className="app-div">
-                    <Nav />
+                    {showNavFooter && <Nav />}
 
                     {/* routing */}
                     <Routes>
@@ -91,7 +103,7 @@ function App() {
 
                         {/* Create a community course */}
                         <Route
-                            path="/admin/add-course/:communityId"
+                            path="/creator/add-course/:communityId"
                             element={
                                 user ? (
                                     <CreatorWrapper>
@@ -117,6 +129,24 @@ function App() {
                             }
                         />
 
+                        {/* admin dashboard */}
+                        <Route
+                            path="/admin/dashboard"
+                            element={
+                                user ? (
+                                    <AdminWrapper>
+                                        <AdminDash />
+                                    </AdminWrapper>
+                                ) : (
+                                    <Navigate to="/" />
+                                )
+                            }>
+                            <Route index element={<DashboardHome />} />
+                            <Route path="users" element={<Users />} />
+                            {/* <Route path="communities" element={<Communities />} /> */}
+                            <Route path="categories" element={<Category />} />
+                        </Route>
+
                         <Route path="/buggy" element={<BuggyComponent />} />
 
                         {/* catch all route */}
@@ -134,7 +164,7 @@ function App() {
                 />
 
                 {/* footer */}
-                <Footer />
+                {showNavFooter && <Footer />}
 
                 {/* custom components */}
                 <Toaster />

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import PageLoader from "../Components/Animations/PageLoader";
 import {
+    useCommunityByIdData,
     useIsUserMembershipData,
     useUserData,
 } from "../Components/Hooks/useQueryFetch/useQueryData";
@@ -18,7 +19,7 @@ export const UserMembershipWrapper = ({ children }) => {
 
     useEffect(() => {
         // Redirect if the user is not a member
-        if (!isUserMembershipLoading && !isUserMembership) {
+        if (!isUserMembership) {
             toast.error(
                 "You're not not a member of this community or your subscription has expired"
             );
@@ -38,6 +39,43 @@ export const UserMembershipWrapper = ({ children }) => {
 
 export const CreatorWrapper = ({ children }) => {
     const [isLoad, setIsLoad] = useState(true);
+    const { useNavigate, useParams } = useReactRouter();
+
+    const { communityId } = useParams();
+
+    const navigate = useNavigate();
+
+    const { userData, isUserDataLoading } = useUserData();
+    const { community, isCommunityLoading } = useCommunityByIdData({
+        id: communityId,
+    });
+
+    const { _id } = userData || {};
+    const { createdBy } = community?.community || {};
+
+    const creator = createdBy === _id;
+
+    useEffect(() => {
+        // Redirect if the user is not a member
+        if (userData && userData?.role === "user" && !creator) {
+            toast.error("You're not the creator of this community");
+
+            navigate("/"); // Redirect to a "not authorized" page
+        } else {
+            setIsLoad(false);
+        }
+    }, [navigate, userData, creator]);
+
+    if (isUserDataLoading || isCommunityLoading || isLoad) {
+        return <PageLoader />;
+    }
+
+    return <>{children}</>;
+};
+
+// admin wrapper
+export const AdminWrapper = ({ children }) => {
+    const [isLoad, setIsLoad] = useState(true);
     const { useNavigate } = useReactRouter();
 
     const navigate = useNavigate();
@@ -46,14 +84,14 @@ export const CreatorWrapper = ({ children }) => {
 
     useEffect(() => {
         // Redirect if the user is not a member
-        if (userData && userData?.role === "user") {
+        if (userData && userData?.role !== "admin") {
             toast.error("You're not an admin");
 
             navigate("/"); // Redirect to a "not authorized" page
         } else {
             setIsLoad(false);
         }
-    }, [userData, navigate]);
+    }, [navigate, userData]);
 
     if (isUserDataLoading || isLoad) {
         return <PageLoader />;

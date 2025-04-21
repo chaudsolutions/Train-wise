@@ -13,6 +13,21 @@ const UsersSchema = new Schema(
             enum: ["admin", "creator", "user"],
             default: "user",
         },
+        stripeCustomerId: { type: String },
+        activeSubscriptions: [
+            {
+                communityId: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "Community",
+                },
+                subscriptionId: { type: String }, // Stripe subscription ID
+                status: {
+                    type: String,
+                    enum: ["active", "past_due", "canceled", "unpaid"],
+                },
+                currentPeriodEnd: { type: Date },
+            },
+        ],
         avatar: { type: String },
         onlineStatus: { type: Boolean, default: false },
         coursesWatched: [

@@ -1,12 +1,14 @@
 const express = require("express");
 //images store path
 const cloudinary = require("cloudinary").v2;
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const Community = require("../Models/Community");
 const UsersModel = require("../Models/Users");
 const CommunityCourse = require("../Models/CommunityCourse");
 const { uploadToCloudinary, upload } = require("../utils/uploadMedia");
 const CommunityMessage = require("../Models/CommunityMessage");
+const Payment = require("../Models/Payment");
 
 const router = express.Router();
 
@@ -38,6 +40,17 @@ router.post(
         }
 
         try {
+            // Step 1: Verify the payment with Stripe
+            const paymentIntent = await stripe.paymentIntents.retrieve(
+                paymentId
+            );
+            if (
+                paymentIntent.status !== "succeeded" ||
+                paymentIntent.amount !== process.env.COMMUNITY_CREATION_FEE // $100 in cents
+            ) {
+                return res.status(400).json("Invalid or unverified payment");
+            }
+
             // find user
             const creator = await UsersModel.findById(userId);
 
@@ -75,6 +88,17 @@ router.post(
                 logo: logoResult.secure_url, // Store Cloudinary URL
                 createdBy: creator._id,
                 paymentId,
+            });
+
+            // Step 3: Store the payment details
+            await Payment.create({
+                paymentId,
+                amount: paymentIntent.amount / 100, // Convert cents to dollars
+                currency: paymentIntent.currency,
+                userId,
+                communityId: community._id,
+                paymentType: "community_creation",
+                status: paymentIntent.status,
             });
 
             // create community course obj also

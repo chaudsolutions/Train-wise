@@ -19,18 +19,18 @@ import {
 } from "@mui/material";
 import {
     Circle as CircleIcon,
-    Add as AddIcon,
     Pets as PetsIcon,
     Edit as EditIcon,
     CameraAlt as CameraIcon,
 } from "@mui/icons-material";
 import PageLoader from "../../Animations/PageLoader";
 import {
+    useCategoriesData,
     useUserData,
     useUserJoinedCommunitiesData,
 } from "../../Hooks/useQueryFetch/useQueryData";
 import { Link } from "react-router-dom";
-import { categories, serVer, useToken } from "../../Hooks/useVariable";
+import { serVer, useToken } from "../../Hooks/useVariable";
 import axios from "axios";
 import toast from "react-hot-toast";
 
@@ -39,14 +39,20 @@ const Profile = () => {
     const { userData, isUserDataLoading, refetchUserData } = useUserData();
     const { joinedCommunitiesData, isJoinedCommunitiesLoading } =
         useUserJoinedCommunitiesData();
-    const { createdAt, role, name, email, avatar } = userData || {};
+    const { categories, isCategoriesLoading } = useCategoriesData();
+
+    const { createdAt, name, email, avatar } = userData || {};
 
     const { token } = useToken();
 
     const [profileImage, setProfileImage] = useState(false);
     const fileInputRef = useRef(null);
 
-    if (isUserDataLoading || isJoinedCommunitiesLoading) {
+    if (
+        isUserDataLoading ||
+        isJoinedCommunitiesLoading ||
+        isCategoriesLoading
+    ) {
         return <PageLoader />;
     }
 
@@ -232,25 +238,12 @@ const Profile = () => {
                             justifyContent: "space-between",
                             alignItems: "center",
                         }}>
-                        <Typography variant="h5" fontWeight="bold">
+                        <Typography
+                            variant="h5"
+                            fontWeight="bold"
+                            fontSize="1.3rem">
                             My Communities
                         </Typography>
-                        {role === "creator" && (
-                            <Button
-                                component={Link}
-                                to="/create-a-community"
-                                variant="outlined"
-                                color="info"
-                                startIcon={<AddIcon />}
-                                sx={{
-                                    px: 3,
-                                    py: 1,
-                                    borderRadius: 2,
-                                    fontWeight: 600,
-                                }}>
-                                Create Community
-                            </Button>
-                        )}
                     </Box>
 
                     <Divider />
@@ -322,7 +315,7 @@ const Profile = () => {
                                             </Typography>
                                         }
                                         secondary={
-                                            <>
+                                            <Box>
                                                 <Box
                                                     sx={{
                                                         display: "flex",
@@ -354,14 +347,18 @@ const Profile = () => {
                                                 </Box>
                                                 <Typography
                                                     variant="caption"
+                                                    component="div"
                                                     color="text.secondary">
                                                     Member since:{" "}
                                                     {new Date(
                                                         community.memberSince
                                                     ).toLocaleDateString()}
                                                 </Typography>
-                                            </>
+                                            </Box>
                                         }
+                                        secondaryTypographyProps={{
+                                            component: "div",
+                                        }}
                                     />
                                 </ListItem>
                             ))}

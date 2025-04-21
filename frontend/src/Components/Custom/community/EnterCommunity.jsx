@@ -34,6 +34,7 @@ import CourseStockImg from "../../../assets/courseStock.png";
 import { useEffect, useRef, useState } from "react";
 import { serVer, useToken } from "../../Hooks/useVariable";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 export const CommunityOverview = ({ notifications, createdAt }) => {
     const theme = useTheme();
@@ -327,7 +328,7 @@ export const CommunityClassroom = ({
                     sx={{ mt: 4, display: "flex", justifyContent: "flex-end" }}>
                     <Button
                         component={Link}
-                        to={`/admin/add-course/${communityId}`}
+                        to={`/creator/add-course/${communityId}`}
                         variant="contained"
                         color="info"
                         startIcon={<AddIcon />}
@@ -345,7 +346,7 @@ export const CommunityClassroom = ({
     );
 };
 
-export const CommunityChatroom = ({ communityId, userId }) => {
+export const CommunityChatroom = ({ communityId, userId, createdBy }) => {
     const theme = useTheme();
     const [messages, setMessages] = useState([]);
     const [onlineUsers, setOnlineUsers] = useState([]);
@@ -444,8 +445,10 @@ export const CommunityChatroom = ({ communityId, userId }) => {
             );
 
             setMessageInput("");
+            toast.success("Sent");
         } catch (error) {
             console.error("Failed to send message:", error);
+            toast.error("Failed to send message");
         } finally {
             setIsSending(false);
         }
@@ -459,6 +462,7 @@ export const CommunityChatroom = ({ communityId, userId }) => {
         }
     };
 
+    console.log(messages);
 
     return (
         <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -572,94 +576,110 @@ export const CommunityChatroom = ({ communityId, userId }) => {
                                 overflowY: "scroll",
                                 scrollbarWidth: "thin",
                             }}>
-                            {messages.map((msg) => (
-                                <Box
-                                    key={
-                                        msg._id || msg.sender._id + msg.content
-                                    }>
-                                    <ListItem
-                                        sx={{
-                                            display: "flex",
-                                            justifyContent:
-                                                msg.sender._id === userId
-                                                    ? "flex-end"
-                                                    : "flex-start",
-                                            px: 0,
-                                            py: 0.5,
-                                        }}>
-                                        {msg.sender._id !== userId && (
-                                            <ListItemAvatar
-                                                sx={{
-                                                    minWidth: 40,
-                                                    alignSelf: "flex-start",
-                                                }}>
-                                                <Avatar
-                                                    src={msg.sender.avatar}
-                                                    alt={msg.sender.name}
-                                                />
-                                            </ListItemAvatar>
-                                        )}
-                                        <Box
+                            {messages.length === 0 ? (
+                                <Typography
+                                    textAlign="center"
+                                    variant="body2"
+                                    component="p"
+                                    fontSize=".8rem">
+                                    No messages yet
+                                </Typography>
+                            ) : (
+                                messages.map((msg) => (
+                                    <Box
+                                        key={
+                                            msg._id ||
+                                            msg.sender._id + msg.content
+                                        }>
+                                        <ListItem
                                             sx={{
-                                                maxWidth: "70%",
                                                 display: "flex",
-                                                flexDirection: "column",
-                                                alignItems:
+                                                justifyContent:
                                                     msg.sender._id === userId
                                                         ? "flex-end"
                                                         : "flex-start",
+                                                px: 0,
+                                                py: 0.5,
                                             }}>
                                             {msg.sender._id !== userId && (
+                                                <ListItemAvatar
+                                                    sx={{
+                                                        minWidth: 40,
+                                                        alignSelf: "flex-start",
+                                                    }}>
+                                                    <Avatar
+                                                        src={msg.sender.avatar}
+                                                        alt={msg.sender.name}
+                                                    />
+                                                </ListItemAvatar>
+                                            )}
+                                            <Box
+                                                sx={{
+                                                    maxWidth: "70%",
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    alignItems:
+                                                        msg.sender._id ===
+                                                        userId
+                                                            ? "flex-end"
+                                                            : "flex-start",
+                                                }}>
+                                                {msg.sender._id !== userId && (
+                                                    <Typography
+                                                        variant="caption"
+                                                        color="text.secondary">
+                                                        {msg.sender._id ===
+                                                        createdBy
+                                                            ? "Creator"
+                                                            : msg.sender.name}
+                                                    </Typography>
+                                                )}
+                                                <Paper
+                                                    elevation={0}
+                                                    sx={{
+                                                        px: 2,
+                                                        py: 0.5,
+                                                        borderRadius:
+                                                            msg.sender._id ===
+                                                            userId
+                                                                ? "18px 18px 0 18px"
+                                                                : "18px 18px 18px 0",
+                                                        bgcolor:
+                                                            msg.sender._id ===
+                                                            userId
+                                                                ? theme.palette
+                                                                      .info.main
+                                                                : theme.palette
+                                                                      .grey[100],
+                                                        color:
+                                                            msg.sender._id ===
+                                                            userId
+                                                                ? theme.palette
+                                                                      .info
+                                                                      .contrastText
+                                                                : "inherit",
+                                                    }}>
+                                                    <Typography variant="body1">
+                                                        {msg.content}
+                                                    </Typography>
+                                                </Paper>
                                                 <Typography
                                                     variant="caption"
-                                                    color="text.secondary">
-                                                    {msg.sender.name}
+                                                    color="text.secondary"
+                                                    fontSize=".6rem"
+                                                    sx={{ mt: 0.5 }}>
+                                                    {formatTime(msg.createdAt)}
                                                 </Typography>
-                                            )}
-                                            <Paper
-                                                elevation={0}
-                                                sx={{
-                                                    px: 2,
-                                                    py: 0.5,
-                                                    borderRadius:
-                                                        msg.sender._id ===
-                                                        userId
-                                                            ? "18px 18px 0 18px"
-                                                            : "18px 18px 18px 0",
-                                                    bgcolor:
-                                                        msg.sender._id ===
-                                                        userId
-                                                            ? theme.palette.info
-                                                                  .main
-                                                            : theme.palette
-                                                                  .grey[100],
-                                                    color:
-                                                        msg.sender._id ===
-                                                        userId
-                                                            ? theme.palette.info
-                                                                  .contrastText
-                                                            : "inherit",
-                                                }}>
-                                                <Typography variant="body1">
-                                                    {msg.content}
-                                                </Typography>
-                                            </Paper>
-                                            <Typography
-                                                variant="caption"
-                                                color="text.secondary"
-                                                fontSize=".6rem"
-                                                sx={{ mt: 0.5 }}>
-                                                {formatTime(msg.createdAt)}
-                                            </Typography>
-                                        </Box>
-                                    </ListItem>
-                                    <Divider
-                                        variant="inset"
-                                        component="li"
-                                        sx={{ opacity: 0.5 }}
-                                    />
-                                </Box>
-                            ))}
+                                            </Box>
+                                        </ListItem>
+                                        <Divider
+                                            variant="inset"
+                                            component="li"
+                                            sx={{ opacity: 0.5 }}
+                                        />
+                                    </Box>
+                                ))
+                            )}
                         </List>
                     </Box>
 

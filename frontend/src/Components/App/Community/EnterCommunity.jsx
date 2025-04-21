@@ -243,6 +243,7 @@ const EnterCommunity = () => {
                                 <CommunityChatroom
                                     communityId={communityId}
                                     userId={_id}
+                                    createdBy={createdBy}
                                 />
                             )}
 
@@ -344,7 +345,7 @@ const EnterCommunity = () => {
                                 {isCommunityAdmin && (
                                     <Button
                                         LinkComponent={Link}
-                                        to={`/admin/add-course/${communityId}`}
+                                        to={`/creator/add-course/${communityId}`}
                                         variant="outlined"
                                         color="info"
                                         startIcon={<Add />}>

@@ -16,8 +16,11 @@ import axios from "axios";
 import { useForm } from "react-hook-form";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import toast from "react-hot-toast";
-import { categories, serVer, useToken } from "../../Hooks/useVariable";
-import { useCommunitiesData } from "../../Hooks/useQueryFetch/useQueryData";
+import { serVer, useToken } from "../../Hooks/useVariable";
+import {
+    useCategoriesData,
+    useCommunitiesData,
+} from "../../Hooks/useQueryFetch/useQueryData";
 import PageLoader from "../../Animations/PageLoader";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
@@ -117,6 +120,8 @@ const CreateCommunity = () => {
     const { useNavigate } = useReactRouter();
     const { token } = useToken();
     const { isCommunitiesLoading, refetchCommunities } = useCommunitiesData();
+    const { categories, isCategoriesLoading } = useCategoriesData();
+
     const {
         register,
         handleSubmit,
@@ -294,13 +299,17 @@ const CreateCommunity = () => {
                                 <MenuItem value="" disabled>
                                     Select a category
                                 </MenuItem>
-                                {categories.map((category) => (
-                                    <MenuItem
-                                        key={category.name}
-                                        value={category.name}>
-                                        {category.name}
-                                    </MenuItem>
-                                ))}
+                                {isCategoriesLoading ? (
+                                    <MenuItem>Loading...</MenuItem>
+                                ) : (
+                                    categories.map((category) => (
+                                        <MenuItem
+                                            key={category.name}
+                                            value={category.name}>
+                                            {category.name}
+                                        </MenuItem>
+                                    ))
+                                )}
                             </Select>
                             {errors.category && (
                                 <Typography variant="caption" color="error">

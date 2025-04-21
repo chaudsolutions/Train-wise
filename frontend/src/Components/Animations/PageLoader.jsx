@@ -13,7 +13,7 @@ const PageLoader = () => {
                 width: "100%",
                 height: "100vh", // Full viewport height
                 backgroundColor: theme.palette.background.default,
-                position: "fixed",
+                position: "absolute",
                 top: 0,
                 left: 0,
                 zIndex: theme.zIndex.modal + 1, // Ensure it's above other content

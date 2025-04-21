@@ -8,7 +8,15 @@ const communityMembersSchema = new mongoose.Schema(
             required: true,
         },
         membership: { type: Boolean },
-        membershipExpiration: { type: Date }, // field if community requires monthly subscription
+        stripeCustomerId: { type: String },
+        stripeSubscriptionId: { type: String },
+        status: {
+            type: String,
+            enum: ["active", "past_due", "canceled", "unpaid"],
+            default: "active",
+        },
+        currentPeriodEnd: { type: Date },
+        paymentMethodId: { type: String },
     },
     {
         timestamps: true,
@@ -64,6 +72,8 @@ const communitySchema = new mongoose.Schema(
             type: String,
             required: [true, "Category is required"],
         },
+        stripeProductId: { type: String }, // Add this
+        stripePriceId: { type: String },
         bannerImage: {
             type: String, // Store the file path or URL
             required: [true, "Banner image is required"],

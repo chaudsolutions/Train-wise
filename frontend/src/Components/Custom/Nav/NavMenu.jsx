@@ -11,6 +11,7 @@ import { useUserData } from "../../Hooks/useQueryFetch/useQueryData";
 import { Link } from "react-router-dom";
 import ExploreIcon from "@mui/icons-material/Explore";
 import AddIcon from "@mui/icons-material/Add";
+import { Settings } from "@mui/icons-material";
 
 const NavMenu = ({ handleDrawerToggle }) => {
     const theme = useTheme();
@@ -29,6 +30,12 @@ const NavMenu = ({ handleDrawerToggle }) => {
             link: "/create-a-community",
             icon: <AddIcon fontSize="large" />,
             show: role === "creator" || role === "admin" || !role,
+        },
+        {
+            name: "Admin Dashboard",
+            link: "/admin/dashboard",
+            icon: <Settings fontSize="large" />,
+            show: role === "admin",
         },
     ];
 

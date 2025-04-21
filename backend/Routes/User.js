@@ -1,5 +1,6 @@
 const express = require("express");
 const cloudinary = require("cloudinary").v2;
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const UsersModel = require("../Models/Users");
 const Community = require("../Models/Community");
@@ -27,47 +28,70 @@ router.get("/data", async (req, res) => {
     }
 });
 
-// endpoint to join community
+// 2. Community Membership Endpoint (Joining Logic)
 router.put("/joinCommunity/:communityId", async (req, res) => {
     const userId = req.userId;
     const { communityId } = req.params;
+    const { subscriptionId } = req.body;
 
     try {
-        // find user
         const user = await UsersModel.findById(userId);
-        // Retrieve the community details from the database using the community ID
         const community = await Community.findById(communityId);
+
         if (!community || !user) {
-            return res.status(404).send("not found.");
+            return res.status(404).send("Community or user not found");
         }
 
-        // Check if user is already a member of the community
-        const isMember =
-            community.members.some(
-                (community) => community.userId.toString() === user.id
-            ) || community.createdBy.toString() === user.id;
-
+        // Check if already a member
+        const isMember = community.members.some(
+            (m) => m.userId.toString() === userId.toString()
+        );
         if (isMember) {
-            return res.status(403).send("User already a member.");
+            return res.status(200).json("Welcome Back");
         }
 
-        // Add the user to the community members array
+        // For paid communities, verify subscription
+        if (community.subscriptionFee > 0) {
+            if (!subscriptionId) {
+                return res.status(400).json("Subscription required");
+            }
+
+            // Verify subscription is valid and belongs to user
+            const subscription = await stripe.subscriptions.retrieve(
+                subscriptionId
+            );
+
+            if (subscription.customer !== user.stripeCustomerId) {
+                return res
+                    .status(403)
+                    .json("Subscription doesn't belong to user");
+            }
+
+            if (subscription.status !== "active") {
+                return res.status(400).json("Subscription not active");
+            }
+        }
+
+        // Add to community members
+        // Add to community members
+        const currentPeriodEnd =
+            community.subscriptionFee > 0
+                ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                : null;
+
         community.members.push({
             userId: user._id,
-            membership: true,
-            membershipExpiration:
-                community.subscriptionFee > 0
-                    ? new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000) // Add 30 days
-                    : null,
+            stripeCustomerId: user.stripeCustomerId,
+            stripeSubscriptionId: subscriptionId,
+            status: "active",
+            currentPeriodEnd,
         });
 
-        // Save the updated community details
         await community.save();
-
-        res.status(200).json("Success");
+        res.status(200).json("Successfully joined community");
     } catch (error) {
-        res.status(500).send("Internal server error.");
-        console.log(error);
+        console.error("Join error:", error);
+        res.status(500).send("Internal server error");
     }
 });
 
@@ -130,29 +154,27 @@ router.get("/verify-membership/:communityId", async (req, res) => {
             return res.status(403).send("User or community not found.");
         }
 
-        // Check if the user is the creator of the community
-        const isCreator = community.createdBy.toString() === user.id;
-
         // Find the user in the community members array
         const userMembership = community.members.find(
             (member) => member.userId.toString() === user.id
         );
 
         // Check if the user is a member and their membership is active
-        let isMember = false;
-        if (userMembership) {
-            isMember = userMembership.membership === true;
+        let isMember = userMembership.membership;
 
-            // For paid communities, check if the membership has expired
-            if (community.subscriptionFee > 0) {
-                const currentTime = new Date();
-                const membershipExpiration = new Date(
-                    userMembership.membershipExpiration
-                );
+        // Check if the user is the creator of the community
+        const isCreator = community.createdBy.toString() === user.id;
 
-                if (membershipExpiration < currentTime) {
-                    isMember = false; // Membership has expired
-                }
+        // For paid communities, check if the membership has expired
+        if (community.subscriptionFee > 0) {
+            console.log("here");
+            const currentTime = new Date();
+            const membershipExpiration = new Date(
+                userMembership.membershipExpiration
+            );
+
+            if (membershipExpiration < currentTime) {
+                isMember = false; // Membership has expired
             }
         }
 
@@ -384,8 +406,12 @@ router.put("/:communityId/send/messages", async (req, res) => {
             return res.status(404).json("Community not found");
         }
 
+        // check if admin
+        const createdBy = community.createdBy.toString() === userId.toString();
+
         // Check if user is a member
-        const isMember = community.members.some((m) => m.userId.equals(userId));
+        const isMember =
+            community.members.some((m) => m.userId.equals(userId)) || createdBy;
         if (!isMember) {
             return res.status(403).json("Not a community member");
         }

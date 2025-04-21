@@ -1,0 +1,94 @@
+import {
+    Box,
+    Drawer,
+    Toolbar,
+    List,
+    ListItem,
+    IconButton,
+    Typography,
+    Divider,
+} from "@mui/material";
+import { NavLink } from "react-router-dom"; // Import NavLink
+import {
+    Dashboard as DashboardIcon,
+    People as PeopleIcon,
+    Groups as GroupsIcon,
+    Category as CategoryIcon,
+    ChevronLeft as ChevronLeftIcon,
+} from "@mui/icons-material";
+import { Logo } from "../Nav/Nav";
+
+const SideNav = ({ isMobile, drawerOpen, handleDrawerToggle, drawerWidth }) => {
+    const navItems = [
+        {
+            text: "Dashboard",
+            icon: <DashboardIcon />,
+            path: "/admin/dashboard",
+        },
+        { text: "Users", icon: <PeopleIcon />, path: "/admin/dashboard/users" },
+        {
+            text: "Communities",
+            icon: <GroupsIcon />,
+            path: "/admin/dashboard/communities",
+        },
+        {
+            text: "Categories",
+            icon: <CategoryIcon />,
+            path: "/admin/dashboard/categories",
+        },
+    ];
+
+    return (
+        <Box
+            component="nav"
+            sx={{ width: { md: drawerWidth }, flexShrink: { sm: 0 } }}>
+            <Drawer
+                variant={isMobile ? "temporary" : "permanent"}
+                open={drawerOpen}
+                onClose={handleDrawerToggle}
+                sx={{
+                    "& .MuiDrawer-paper": {
+                        width: drawerWidth,
+                        bgcolor: "primary.main",
+                        color: "white",
+                    },
+                }}>
+                <Toolbar
+                    sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <Logo />
+                    {isMobile && (
+                        <IconButton
+                            onClick={handleDrawerToggle}
+                            color="inherit">
+                            <ChevronLeftIcon />
+                        </IconButton>
+                    )}
+                </Toolbar>
+                <Divider />
+                <List>
+                    {navItems.map((item) => (
+                        <ListItem
+                            component={NavLink}
+                            to={item.path}
+                            key={item.text}
+                            onClick={isMobile ? handleDrawerToggle : null} // Close drawer on mobile
+                            sx={{
+                                borderRadius: 0,
+                                py: 2,
+                                color: "white",
+                                "&:hover": { bgcolor: "primary.dark" },
+                                "&.active": { bgcolor: "primary.dark" }, // Highlight active link
+                            }}>
+                            <IconButton sx={{ color: "white" }}>
+                                {item.icon}
+                            </IconButton>
+                            <Typography sx={{ ml: 2 }}>{item.text}</Typography>
+                        </ListItem>
+                    ))}
+                </List>
+            </Drawer>
+        </Box>
+    );
+};
+
+export default SideNav;

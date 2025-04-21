@@ -76,6 +76,17 @@ export const fetchCommunitySingleCourse = async ({ communityId, courseId }) => {
     return response.data;
 };
 
+// fetch categories
+export const fetchCategories = async () => {
+    const response = await axios.get(`${serVer}/api/all-categories`);
+
+    if (response.status !== 200) {
+        throw new Error("Network response was not ok");
+    }
+
+    return response.data;
+};
+
 // fetch user membership
 export const fetchUserMembership = async (communityId) => {
     const token = localStorage.getItem(localStorageToken);
@@ -111,4 +122,23 @@ export const fetchUserJoinedCommunities = async () => {
     }
 
     return response.data;
+};
+
+// get admin analytics
+export const fetchAdminAnalytics = async () => {
+    const token = localStorage.getItem(localStorageToken);
+
+    const response = await axios.get(`${serVer}/admin/dashboard/analytics`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (response.status !== 200) {
+        throw new Error("Network response was not ok");
+    }
+
+    const { communities, revenue, users } = response.data;
+
+    return { communities, revenue, users };
 };

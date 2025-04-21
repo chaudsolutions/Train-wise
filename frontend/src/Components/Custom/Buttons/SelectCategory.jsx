@@ -1,9 +1,10 @@
-import { Button, Stack } from "@mui/material";
-import { categories } from "../../Hooks/useVariable";
+import { Button, CircularProgress, Stack } from "@mui/material";
 import useResponsive from "../../Hooks/useResponsive";
+import { useCategoriesData } from "../../Hooks/useQueryFetch/useQueryData";
 
 const SelectCategory = ({ activeCategory, selectCategory }) => {
     const { isMobile } = useResponsive();
+    const { categories, isCategoriesLoading } = useCategoriesData();
 
     return (
         <Stack
@@ -33,20 +34,24 @@ const SelectCategory = ({ activeCategory, selectCategory }) => {
                 onClick={() => selectCategory("")}>
                 All
             </Button>
-            {categories.map((category, i) => (
-                <Button
-                    key={i}
-                    variant={
-                        activeCategory === category.name
-                            ? "contained"
-                            : "outlined"
-                    }
-                    color="info"
-                    onClick={() => selectCategory(category.name)}
-                    startIcon={category.icon}>
-                    {category.name}
-                </Button>
-            ))}
+            {isCategoriesLoading ? (
+                <CircularProgress size={20} />
+            ) : (
+                categories.map((category, i) => (
+                    <Button
+                        key={i}
+                        variant={
+                            activeCategory === category.name
+                                ? "contained"
+                                : "outlined"
+                        }
+                        color="info"
+                        onClick={() => selectCategory(category.name)}
+                        startIcon={category.icon}>
+                        {category.name}
+                    </Button>
+                ))
+            )}
         </Stack>
     );
 };

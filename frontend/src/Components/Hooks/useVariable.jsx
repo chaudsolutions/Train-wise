@@ -23,15 +23,3 @@ export const useToken = () => {
 
     return { token };
 };
-
-export const categories = [
-    { icon: "🎨", name: "Hobbies" },
-    { icon: "🎸", name: "Music" },
-    { icon: "💰", name: "Money" },
-    { icon: "🙏", name: "Spirituality" },
-    { icon: "💻", name: "Tech" },
-    { icon: "🥕", name: "Health" },
-    { icon: "⚽", name: "Sports" },
-    { icon: "📚", name: "Self-improvement" },
-    { icon: "❤️", name: "Relationships" },
-];

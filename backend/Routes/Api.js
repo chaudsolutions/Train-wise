@@ -1,8 +1,11 @@
 const express = require("express");
+const bodyParser = require("body-parser");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const Community = require("../Models/Community.js");
 const UsersModel = require("../Models/Users.js");
 const CommunityMessage = require("../Models/CommunityMessage.js");
+const Category = require("../Models/Category.js");
 
 const router = express.Router();
 
@@ -40,6 +43,21 @@ router.get("/community/:id", async (req, res) => {
         });
     } catch (error) {
         res.status(400).json("Community not found.");
+        console.error(error);
+    }
+});
+
+// server get all categories
+router.get("/all-categories", async (req, res) => {
+    try {
+        //   get categories
+        const categories = await Category.find({}).sort({ createdAt: -1 });
+
+        if (!categories) return res.status(404).json("Categories not found.");
+
+        res.status(200).json(categories);
+    } catch (error) {
+        res.status(400).json("Internal Server Error.");
         console.error(error);
     }
 });
@@ -148,5 +166,91 @@ router.get("/communities/:communityId/messages/stream", async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 });
+
+// Stripe webhook endpoint
+router.post(
+    "/stripe-webhook",
+    bodyParser.raw({ type: "application/json" }),
+    async (req, res) => {
+        const sig = req.headers["stripe-signature"];
+
+        try {
+            const event = stripe.webhooks.constructEvent(
+                req.body,
+                sig,
+                process.env.STRIPE_WEBHOOK_SECRET
+            );
+
+            switch (event.type) {
+                case "invoice.paid":
+                    await handleInvoicePaid(event.data.object);
+                    break;
+                case "invoice.payment_failed":
+                    await handlePaymentFailed(event.data.object);
+                    break;
+                case "customer.subscription.deleted":
+                    await handleSubscriptionDeleted(event.data.object);
+                    break;
+            }
+
+            res.json({ received: true });
+        } catch (err) {
+            res.status(400).send(`Webhook Error: ${err.message}`);
+        }
+    }
+);
+
+async function handleInvoicePaid(invoice) {
+    const subscription = invoice.subscription;
+    const periodEnd = new Date(invoice.period_end * 1000);
+
+    // Update user's subscription
+    await UsersModel.updateOne(
+        { "activeSubscriptions.subscriptionId": subscription },
+        {
+            $set: {
+                "activeSubscriptions.$.currentPeriodEnd": periodEnd,
+                "activeSubscriptions.$.status": "active",
+            },
+        }
+    );
+
+    // Update community membership
+    await Community.updateOne(
+        { "members.stripeSubscriptionId": subscription },
+        {
+            $set: {
+                "members.$.currentPeriodEnd": periodEnd,
+                "members.$.status": "active",
+            },
+        }
+    );
+}
+
+async function handlePaymentFailed(invoice) {
+    const subscription = invoice.subscription;
+
+    await UsersModel.updateOne(
+        { "activeSubscriptions.subscriptionId": subscription },
+        { $set: { "activeSubscriptions.$.status": "past_due" } }
+    );
+
+    await Community.updateOne(
+        { "members.stripeSubscriptionId": subscription },
+        { $set: { "members.$.status": "past_due" } }
+    );
+}
+
+async function handleSubscriptionDeleted(subscription) {
+    await UsersModel.updateOne(
+        { "activeSubscriptions.subscriptionId": subscription.id },
+        { $set: { "activeSubscriptions.$.status": "canceled" } }
+    );
+
+    await Community.updateOne(
+        { "members.stripeSubscriptionId": subscription.id },
+        { $set: { "members.$.status": "canceled" } }
+    );
+}
 
 module.exports = { Api: router };

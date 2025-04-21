@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import {
+    fetchAdminAnalytics,
+    fetchCategories,
     fetchCommunities,
     fetchCommunity,
     fetchCommunityCourses,
@@ -9,6 +11,7 @@ import {
     fetchUserMembership,
 } from "../useFetch";
 import { useAuthContext } from "../../Context/AuthContext";
+import { useReactRouter } from "../useReactRouter";
 
 // fetch user details
 export const useUserData = () => {
@@ -115,6 +118,26 @@ export const useCommunitySingleCourseData = ({ communityId, courseId }) => {
     };
 };
 
+// use categories data
+export const useCategoriesData = () => {
+    const {
+        data: categories,
+        isLoading: isCategoriesLoading,
+        isError: isCategoriesError,
+        refetch: refetchCategories,
+    } = useQuery({
+        queryKey: ["categories"], // Use the new object-based syntax
+        queryFn: fetchCategories,
+    });
+
+    return {
+        categories,
+        isCategoriesLoading,
+        isCategoriesError,
+        refetchCategories,
+    };
+};
+
 // use user membership data
 export const useIsUserMembershipData = (communityId) => {
     const { user } = useAuthContext();
@@ -159,5 +182,32 @@ export const useUserJoinedCommunitiesData = () => {
         isJoinedCommunitiesLoading,
         isJoinedCommunitiesError,
         refetchJoinedCommunities,
+    };
+};
+
+// use admin analytics data
+export const useAdminAnalyticsData = () => {
+    const { user } = useAuthContext();
+    const { useLocation } = useReactRouter();
+    const location = useLocation();
+
+    const adminPage = location.pathname.startsWith("/admin");
+
+    const {
+        data: analyticsData,
+        isLoading: isAnalyticsDataLoading,
+        isError: isAnalyticsDataError,
+        refetch: refetchAnalyticsData,
+    } = useQuery({
+        queryKey: ["analyticsData"],
+        queryFn: fetchAdminAnalytics,
+        enabled: !!user && !!adminPage,
+    });
+
+    return {
+        analyticsData,
+        isAnalyticsDataLoading,
+        isAnalyticsDataError,
+        refetchAnalyticsData,
     };
 };
