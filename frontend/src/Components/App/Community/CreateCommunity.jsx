@@ -20,6 +20,7 @@ import { serVer, useToken } from "../../Hooks/useVariable";
 import {
     useCategoriesData,
     useCommunitiesData,
+    useUserData,
 } from "../../Hooks/useQueryFetch/useQueryData";
 import PageLoader from "../../Animations/PageLoader";
 import { Elements } from "@stripe/react-stripe-js";
@@ -30,7 +31,13 @@ import { useState } from "react";
 // Initialize Stripe with your publishable key
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PK);
 
-const PaymentForm = ({ formData, token, createCommunity, theme }) => {
+const PaymentForm = ({
+    formData,
+    token,
+    createCommunity,
+    theme,
+    onSuccess,
+}) => {
     const stripe = useStripe();
     const elements = useElements();
     const [paymentProcessing, setPaymentProcessing] = useState(false);
@@ -66,6 +73,7 @@ const PaymentForm = ({ formData, token, createCommunity, theme }) => {
                     ...formData,
                     paymentId: paymentIntent.id,
                 });
+                onSuccess(); // Close PaymentForm after success
             }
         } catch (error) {
             toast.error(`Payment failed: ${error.message}`);
@@ -121,6 +129,7 @@ const CreateCommunity = () => {
     const { token } = useToken();
     const { isCommunitiesLoading, refetchCommunities } = useCommunitiesData();
     const { categories, isCategoriesLoading } = useCategoriesData();
+    const { userData, isUserDataLoading } = useUserData();
 
     const {
         register,
@@ -137,6 +146,8 @@ const CreateCommunity = () => {
     const navigate = useNavigate();
     const [showPayment, setShowPayment] = useState(false);
     const [formData, setFormData] = useState(null);
+
+    const userRole = userData?.role; // "admin", "creator", or "user"
 
     const PaymentBenefitsCard = () => (
         <Paper
@@ -168,12 +179,17 @@ const CreateCommunity = () => {
                 <li>🔒 Secure payment processing</li>
             </Box>
             <Typography variant="body1" sx={{ mt: 2, fontWeight: 500 }}>
-                One-time setup fee:{" "}
+                One-time setup fee for regular users:{" "}
                 <Box
                     component="span"
                     sx={{ color: "success.main", fontSize: "1.2rem" }}>
                     $100
                 </Box>
+                {userRole === "admin" || userRole === "creator" ? (
+                    <Box component="span" sx={{ ml: 1, color: "info.main" }}>
+                        (Waived for {userRole}s)
+                    </Box>
+                ) : null}
             </Typography>
         </Paper>
     );
@@ -196,7 +212,9 @@ const CreateCommunity = () => {
             );
             formData.append("bannerImage", data.image1[0]);
             formData.append("logo", data.image2[0]);
-            formData.append("paymentId", data.paymentId);
+            if (data.paymentId) {
+                formData.append("paymentId", data.paymentId);
+            }
 
             const response = await axios.post(
                 `${serVer}/creator/create-community`,
@@ -221,10 +239,16 @@ const CreateCommunity = () => {
 
     const onSubmit = async (data) => {
         setFormData(data);
-        setShowPayment(true);
+        if (userRole === "admin" || userRole === "creator") {
+            // Admins and creators create directly without payment
+            await createCommunity(data);
+        } else {
+            // Regular users proceed to payment
+            setShowPayment(true);
+        }
     };
 
-    if (isCommunitiesLoading) {
+    if (isCommunitiesLoading || isCategoriesLoading || isUserDataLoading) {
         return <PageLoader />;
     }
 
@@ -367,7 +391,12 @@ const CreateCommunity = () => {
                                 />
                             ))}
                         </Box>
-                        <Box sx={{ display: "flex", gap: 3 }}>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                gap: 3,
+                                flexDirection: { xs: "column", sm: "row" },
+                            }}>
                             <Box sx={{ flex: 1 }}>
                                 <Typography variant="subtitle1" gutterBottom>
                                     Community Banner Image
@@ -541,18 +570,22 @@ const CreateCommunity = () => {
                                         size={24}
                                         color="inherit"
                                     />
+                                ) : userRole === "admin" ||
+                                  userRole === "creator" ? (
+                                    "Create Community"
                                 ) : (
                                     "Review & Continue to Payment"
                                 )}
                             </Button>
                         </Box>
                     </Box>
-                    {showPayment && (
+                    {showPayment && userRole === "user" && (
                         <PaymentForm
                             formData={formData}
                             token={token}
                             createCommunity={createCommunity}
                             theme={theme}
+                            onSuccess={() => setShowPayment(false)}
                         />
                     )}
                 </Paper>

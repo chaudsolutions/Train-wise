@@ -107,11 +107,11 @@ export const fetchUserMembership = async (communityId) => {
     return response.data;
 };
 
-// fetch user communities
-export const fetchUserJoinedCommunities = async () => {
+// fetch user analytics
+export const fetchUserAnalytics = async () => {
     const token = localStorage.getItem(localStorageToken);
 
-    const response = await axios.get(`${serVer}/user/community-member`, {
+    const response = await axios.get(`${serVer}/user/analytics`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
@@ -121,7 +121,9 @@ export const fetchUserJoinedCommunities = async () => {
         throw new Error("Network response was not ok");
     }
 
-    return response.data;
+    const { user, communities, finances } = response.data;
+
+    return { user, communities, finances };
 };
 
 // get admin analytics
@@ -141,4 +143,42 @@ export const fetchAdminAnalytics = async () => {
     const { communities, revenue, users } = response.data;
 
     return { communities, revenue, users };
+};
+
+// get admin analytics for single user
+export const fetchAdminAnalyticsSingleUser = async ({ userId }) => {
+    const token = localStorage.getItem(localStorageToken);
+
+    const response = await axios.get(`${serVer}/admin/user/${userId}`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (response.status !== 200) {
+        throw new Error("Network response was not ok");
+    }
+
+    const { communities, finances, user } = response.data;
+
+    return { communities, finances, user };
+};
+
+// get notifications
+export const fetchNotifications = async () => {
+    const token = localStorage.getItem(localStorageToken);
+
+    const response = await axios.get(`${serVer}/user/notifications`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (response.status !== 200) {
+        throw new Error("Network response was not ok");
+    }
+
+    console.log(response.data);
+
+    return response.data;
 };

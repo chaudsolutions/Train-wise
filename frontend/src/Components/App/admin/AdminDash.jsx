@@ -72,7 +72,7 @@ const AdminDash = () => {
                 <Box
                     component="main"
                     position="relative"
-                    sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+                    sx={{ flexGrow: 1, p: 1, mt: 8 }}>
                     <Outlet /> {/* Nested route components render here */}
                 </Box>
             </Box>

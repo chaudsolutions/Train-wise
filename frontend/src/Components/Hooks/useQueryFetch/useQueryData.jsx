@@ -1,13 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import {
     fetchAdminAnalytics,
+    fetchAdminAnalyticsSingleUser,
     fetchCategories,
     fetchCommunities,
     fetchCommunity,
     fetchCommunityCourses,
     fetchCommunitySingleCourse,
+    fetchNotifications,
     fetchUser,
-    fetchUserJoinedCommunities,
+    fetchUserAnalytics,
     fetchUserMembership,
 } from "../useFetch";
 import { useAuthContext } from "../../Context/AuthContext";
@@ -162,26 +164,26 @@ export const useIsUserMembershipData = (communityId) => {
 };
 
 // use user joined community data
-export const useUserJoinedCommunitiesData = () => {
+export const useUserAnalyticsData = () => {
     const { user } = useAuthContext();
     const profilePage = location.pathname === "/profile";
 
     const {
-        data: joinedCommunitiesData,
-        isLoading: isJoinedCommunitiesLoading,
-        isError: isJoinedCommunitiesError,
-        refetch: refetchJoinedCommunities,
+        data: userAnalyticsData,
+        isLoading: isUserAnalyticsLoading,
+        isError: isUserAnalyticsError,
+        refetch: refetchUserAnalytics,
     } = useQuery({
-        queryKey: ["userJoinedCommunities"],
-        queryFn: fetchUserJoinedCommunities,
+        queryKey: ["userAnalytics"],
+        queryFn: fetchUserAnalytics,
         enabled: !!user && !!profilePage,
     });
 
     return {
-        joinedCommunitiesData,
-        isJoinedCommunitiesLoading,
-        isJoinedCommunitiesError,
-        refetchJoinedCommunities,
+        userAnalyticsData,
+        isUserAnalyticsLoading,
+        isUserAnalyticsError,
+        refetchUserAnalytics,
     };
 };
 
@@ -209,5 +211,55 @@ export const useAdminAnalyticsData = () => {
         isAnalyticsDataLoading,
         isAnalyticsDataError,
         refetchAnalyticsData,
+    };
+};
+
+// use admin analytics data for single user
+export const useAdminAnalyticsSingleUserData = ({ userId }) => {
+    const { user } = useAuthContext();
+    const { useLocation } = useReactRouter();
+    const location = useLocation();
+
+    const adminPage = location.pathname.startsWith("/admin");
+
+    const {
+        data: analyticsSingleUserData,
+        isLoading: isAnalyticsSingleUserDataLoading,
+        isError: isAnalyticsSingleUserDataError,
+        refetch: refetchAnalyticsSingleUserData,
+    } = useQuery({
+        queryKey: ["analyticsSingleUserData", userId],
+        queryFn: () => fetchAdminAnalyticsSingleUser({ userId }),
+        enabled: !!user && !!adminPage,
+    });
+
+    return {
+        analyticsSingleUserData,
+        isAnalyticsSingleUserDataLoading,
+        isAnalyticsSingleUserDataError,
+        refetchAnalyticsSingleUserData,
+    };
+};
+
+// fetch user notifications
+export const useUserNotifications = () => {
+    const { user } = useAuthContext();
+
+    const {
+        data: notificationsData,
+        isLoading: isNotificationsDataLoading,
+        isError: isNotificationsDataError,
+        refetch: refetchNotificationsData,
+    } = useQuery({
+        queryKey: ["notifications"], // Use the new object-based syntax
+        queryFn: fetchNotifications,
+        enabled: !!user,
+    });
+
+    return {
+        notificationsData,
+        isNotificationsDataLoading,
+        isNotificationsDataError,
+        refetchNotificationsData,
     };
 };

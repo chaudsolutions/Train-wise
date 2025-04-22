@@ -11,10 +11,12 @@ import { useUserData } from "../../Hooks/useQueryFetch/useQueryData";
 import { Link } from "react-router-dom";
 import ExploreIcon from "@mui/icons-material/Explore";
 import AddIcon from "@mui/icons-material/Add";
-import { Settings } from "@mui/icons-material";
+import { Notifications, Person, Settings } from "@mui/icons-material";
+import { useAuthContext } from "../../Context/AuthContext";
 
 const NavMenu = ({ handleDrawerToggle }) => {
     const theme = useTheme();
+    const { user } = useAuthContext();
     const { userData, isUserDataLoading } = useUserData();
     const { role } = userData || {};
 
@@ -32,10 +34,22 @@ const NavMenu = ({ handleDrawerToggle }) => {
             show: role === "creator" || role === "admin" || !role,
         },
         {
+            name: "Profile",
+            link: "/profile",
+            icon: <Person fontSize="large" />,
+            show: user,
+        },
+        {
+            name: "Notifications",
+            link: "/notifications",
+            icon: <Notifications fontSize="large" />,
+            show: user,
+        },
+        {
             name: "Admin Dashboard",
             link: "/admin/dashboard",
             icon: <Settings fontSize="large" />,
-            show: role === "admin",
+            show: user && role === "admin",
         },
     ];
 
@@ -58,6 +72,7 @@ const NavMenu = ({ handleDrawerToggle }) => {
                                 sx={{
                                     px: 3,
                                     py: 2,
+                                    color: theme.palette.text.primary,
                                     "&.active": {
                                         backgroundColor:
                                             theme.palette.action.selected,
@@ -78,6 +93,7 @@ const NavMenu = ({ handleDrawerToggle }) => {
                                     {item.icon}
                                 </ListItemIcon>
                                 <ListItemText
+                                    color="inherit"
                                     primary={item.name}
                                     primaryTypographyProps={{
                                         variant: "body1",

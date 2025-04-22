@@ -29,6 +29,9 @@ import AdminDash from "./Components/App/admin/AdminDash";
 import DashboardHome from "./Components/App/admin/DashboardHome";
 import Users from "./Components/App/admin/Users";
 import Category from "./Components/App/admin/Category";
+import CommunityDash from "./Components/App/admin/CommunityDash";
+import UserDetails from "./Components/App/admin/SingleUserDetails";
+import Notifications from "./Components/App/notifications/Notifications";
 
 function App() {
     const { user } = useAuthContext();
@@ -71,6 +74,14 @@ function App() {
                         <Route
                             path="/profile"
                             element={user ? <Profile /> : <Navigate to="/" />}
+                        />
+
+                        {/* notifications */}
+                        <Route
+                            path="/notifications"
+                            element={
+                                user ? <Notifications /> : <Navigate to="/" />
+                            }
                         />
 
                         {/* create a community */}
@@ -143,7 +154,14 @@ function App() {
                             }>
                             <Route index element={<DashboardHome />} />
                             <Route path="users" element={<Users />} />
-                            {/* <Route path="communities" element={<Communities />} /> */}
+                            <Route
+                                path="user/:userId"
+                                element={<UserDetails />}
+                            />
+                            <Route
+                                path="communities"
+                                element={<CommunityDash />}
+                            />
                             <Route path="categories" element={<Category />} />
                         </Route>
 

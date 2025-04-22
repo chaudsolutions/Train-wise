@@ -13,6 +13,7 @@ const UsersSchema = new Schema(
             enum: ["admin", "creator", "user"],
             default: "user",
         },
+        balance: { type: Number, default: 0 },
         stripeCustomerId: { type: String },
         activeSubscriptions: [
             {

@@ -107,6 +107,7 @@ const Category = () => {
                 <Typography
                     variant="h4"
                     component="h1"
+                    fontSize="1.5rem"
                     gutterBottom
                     sx={{
                         fontWeight: 700,

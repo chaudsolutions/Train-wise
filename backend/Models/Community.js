@@ -63,6 +63,7 @@ const communitySchema = new mongoose.Schema(
                 message: "Exactly 3 visions are required",
             },
         },
+        balance: { type: Number, default: 0 },
         subscriptionFee: {
             type: Number,
             required: [true, "Subscription fee is required"],

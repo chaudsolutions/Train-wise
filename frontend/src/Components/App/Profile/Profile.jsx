@@ -1,60 +1,28 @@
 import { useState, useRef } from "react";
-import {
-    Container,
-    Box,
-    Typography,
-    Button,
-    Avatar,
-    Paper,
-    Chip,
-    Divider,
-    useTheme,
-    List,
-    ListItem,
-    ListItemAvatar,
-    ListItemText,
-    Badge,
-    IconButton,
-    CircularProgress,
-} from "@mui/material";
-import {
-    Circle as CircleIcon,
-    Pets as PetsIcon,
-    Edit as EditIcon,
-    CameraAlt as CameraIcon,
-} from "@mui/icons-material";
+import { Container } from "@mui/material";
+
 import PageLoader from "../../Animations/PageLoader";
 import {
     useCategoriesData,
-    useUserData,
-    useUserJoinedCommunitiesData,
+    useUserAnalyticsData,
 } from "../../Hooks/useQueryFetch/useQueryData";
-import { Link } from "react-router-dom";
 import { serVer, useToken } from "../../Hooks/useVariable";
 import axios from "axios";
 import toast from "react-hot-toast";
+import ProfileContainer from "../../Custom/profile/ProfileContainer";
 
 const Profile = () => {
-    const theme = useTheme();
-    const { userData, isUserDataLoading, refetchUserData } = useUserData();
-    const { joinedCommunitiesData, isJoinedCommunitiesLoading } =
-        useUserJoinedCommunitiesData();
+    const { userAnalyticsData, isUserAnalyticsLoading, refetchUserAnalytics } =
+        useUserAnalyticsData();
     const { categories, isCategoriesLoading } = useCategoriesData();
 
-    const { createdAt, name, email, avatar } = userData || {};
+    const { user, communities, finances } = userAnalyticsData || {};
 
     const { token } = useToken();
 
     const [profileImage, setProfileImage] = useState(false);
+    const [btnLoad, setBtnLoad] = useState(false);
     const fileInputRef = useRef(null);
-
-    if (
-        isUserDataLoading ||
-        isJoinedCommunitiesLoading ||
-        isCategoriesLoading
-    ) {
-        return <PageLoader />;
-    }
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
@@ -101,7 +69,7 @@ const Profile = () => {
                 }
             );
 
-            await refetchUserData();
+            await refetchUserAnalytics();
 
             toast.success(response.data);
         } catch (error) {
@@ -112,286 +80,48 @@ const Profile = () => {
         }
     };
 
-    const getCategoryIcon = (category) => {
-        let categoryArr = categories.find((c) => c.name === category);
+    // function to withdraw balance
+    const withdrawBalance = async (amountToWithdraw) => {
+        setBtnLoad(true);
+        try {
+            const res = await axios.put(
+                `${serVer}/user/withdraw/${amountToWithdraw}`,
+                {},
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
 
-        if (categoryArr) return categoryArr.icon;
-        else return <PetsIcon />;
+            toast.success(res.data);
+
+            await refetchUserAnalytics();
+        } catch (error) {
+            toast.error(error?.response?.data);
+        } finally {
+            setBtnLoad(false);
+        }
     };
+
+    if (isUserAnalyticsLoading || isCategoriesLoading) {
+        return <PageLoader />;
+    }
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Box
-                sx={{
-                    display: "flex",
-                    flexDirection: { xs: "column", md: "row" },
-                    gap: 4,
-                }}>
-                {/* Profile Card */}
-                <Paper
-                    elevation={3}
-                    sx={{
-                        p: 4,
-                        borderRadius: 4,
-                        flex: 1,
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: 3,
-                        position: "relative",
-                    }}>
-                    <Box sx={{ position: "relative" }}>
-                        <Avatar
-                            src={avatar}
-                            sx={{
-                                width: 120,
-                                height: 120,
-                                fontSize: "3rem",
-                                bgcolor: theme.palette.info.main,
-                            }}>
-                            {!avatar && name?.charAt(0).toUpperCase()}
-                        </Avatar>
-                        <IconButton
-                            onClick={triggerFileInput}
-                            sx={{
-                                position: "absolute",
-                                bottom: 0,
-                                right: 0,
-                                bgcolor: theme.palette.grey[200],
-                                color: theme.palette.info.dark,
-                                "&:hover": {
-                                    bgcolor: "black",
-                                    color: "white",
-                                },
-                            }}>
-                            {profileImage ? (
-                                <CircularProgress size={20} />
-                            ) : (
-                                <CameraIcon />
-                            )}
-                        </IconButton>
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleFileChange}
-                            accept="image/*"
-                            style={{ display: "none" }}
-                        />
-                    </Box>
-
-                    <Typography variant="h5" fontWeight="bold">
-                        {name}
-                    </Typography>
-
-                    <Typography variant="body1" color="text.secondary">
-                        {email}
-                    </Typography>
-
-                    <Button
-                        onClick={triggerFileInput}
-                        variant="contained"
-                        color="warning"
-                        startIcon={<EditIcon />}
-                        sx={{
-                            borderRadius: 1,
-                            fontWeight: 400,
-                        }}>
-                        Change Profile Picture
-                    </Button>
-
-                    <Box
-                        sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 1,
-                            alignItems: "center",
-                            mt: 2,
-                        }}>
-                        <Chip
-                            icon={
-                                <CircleIcon color="success" fontSize="small" />
-                            }
-                            label="Online Now"
-                            variant="outlined"
-                            sx={{ color: "success.main" }}
-                        />
-                        <Typography variant="caption" color="text.secondary">
-                            Joined {new Date(createdAt)?.toLocaleDateString()}
-                        </Typography>
-                    </Box>
-                </Paper>
-
-                {/* Communities Section */}
-                <Paper
-                    elevation={3}
-                    sx={{
-                        p: 4,
-                        borderRadius: 4,
-                        flex: 2,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 3,
-                    }}>
-                    <Box
-                        sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                        }}>
-                        <Typography
-                            variant="h5"
-                            fontWeight="bold"
-                            fontSize="1.3rem">
-                            My Communities
-                        </Typography>
-                    </Box>
-
-                    <Divider />
-
-                    {joinedCommunitiesData?.length > 0 ? (
-                        <List sx={{ width: "100%" }}>
-                            {joinedCommunitiesData.map((community) => (
-                                <ListItem
-                                    key={community._id}
-                                    component={Link}
-                                    to={`/community/access/${community._id}`}
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 2,
-                                        py: 2,
-                                        px: 0,
-                                        textDecoration: "none",
-                                        color: "inherit",
-                                        "&:hover": {
-                                            backgroundColor:
-                                                theme.palette.action.hover,
-                                            borderRadius: 2,
-                                        },
-                                    }}>
-                                    <ListItemAvatar>
-                                        <Badge
-                                            overlap="circular"
-                                            anchorOrigin={{
-                                                vertical: "bottom",
-                                                horizontal: "right",
-                                            }}
-                                            badgeContent={
-                                                <Box
-                                                    sx={{
-                                                        width: 24,
-                                                        height: 24,
-                                                        borderRadius: "50%",
-                                                        bgcolor: "white",
-                                                        border: `1px solid ${theme.palette.info.light}`,
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent:
-                                                            "center",
-                                                        color: theme.palette
-                                                            .info.contrastText,
-                                                    }}>
-                                                    {getCategoryIcon(
-                                                        community.category
-                                                    )}
-                                                </Box>
-                                            }>
-                                            <Avatar
-                                                src={community.logo}
-                                                alt={community.name}
-                                                sx={{
-                                                    width: 60,
-                                                    height: 60,
-                                                }}
-                                            />
-                                        </Badge>
-                                    </ListItemAvatar>
-                                    <ListItemText
-                                        primary={
-                                            <Typography
-                                                variant="h6"
-                                                fontWeight="bold">
-                                                {community.name}
-                                            </Typography>
-                                        }
-                                        secondary={
-                                            <Box>
-                                                <Box
-                                                    sx={{
-                                                        display: "flex",
-                                                        gap: 1,
-                                                        mt: 0.5,
-                                                    }}>
-                                                    <Chip
-                                                        label={
-                                                            community.role ===
-                                                            "owner"
-                                                                ? "Owner"
-                                                                : "Member"
-                                                        }
-                                                        size="small"
-                                                        color={
-                                                            community.role ===
-                                                            "owner"
-                                                                ? "info"
-                                                                : "default"
-                                                        }
-                                                    />
-                                                    <Chip
-                                                        label={
-                                                            community.category
-                                                        }
-                                                        size="small"
-                                                        variant="outlined"
-                                                    />
-                                                </Box>
-                                                <Typography
-                                                    variant="caption"
-                                                    component="div"
-                                                    color="text.secondary">
-                                                    Member since:{" "}
-                                                    {new Date(
-                                                        community.memberSince
-                                                    ).toLocaleDateString()}
-                                                </Typography>
-                                            </Box>
-                                        }
-                                        secondaryTypographyProps={{
-                                            component: "div",
-                                        }}
-                                    />
-                                </ListItem>
-                            ))}
-                        </List>
-                    ) : (
-                        <Box
-                            sx={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                gap: 2,
-                                py: 4,
-                            }}>
-                            <Typography variant="body1" color="text.secondary">
-                                You haven&apos;t joined any communities yet.
-                            </Typography>
-                            <Button
-                                component={Link}
-                                to="/discovery"
-                                variant="contained"
-                                color="info"
-                                sx={{
-                                    px: 3,
-                                    py: 1.5,
-                                    borderRadius: 2,
-                                    fontWeight: 600,
-                                }}>
-                                Explore Communities
-                            </Button>
-                        </Box>
-                    )}
-                </Paper>
-            </Box>
+            <ProfileContainer
+                categories={categories}
+                user={user}
+                communities={communities}
+                finances={finances}
+                handleProfileImage={{
+                    triggerFileInput,
+                    profileImage,
+                    fileInputRef,
+                    handleFileChange,
+                    withdrawBalance,
+                    btnLoad,
+                }}
+            />
         </Container>
     );
 };

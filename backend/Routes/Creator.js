@@ -9,10 +9,11 @@ const CommunityCourse = require("../Models/CommunityCourse");
 const { uploadToCloudinary, upload } = require("../utils/uploadMedia");
 const CommunityMessage = require("../Models/CommunityMessage");
 const Payment = require("../Models/Payment");
+const { createNotification } = require("../utils/notifications");
 
 const router = express.Router();
 
-// endpoint to create a community
+// Endpoint to create a community
 router.post(
     "/create-community",
     upload.fields([
@@ -35,32 +36,56 @@ router.post(
         const bannerImage = req.files["bannerImage"]?.[0];
         const logo = req.files["logo"]?.[0];
 
+        // Validate required fields
+        if (
+            !name ||
+            !description ||
+            !subscriptionFee ||
+            !category ||
+            !rules ||
+            !visions
+        ) {
+            return res.status(400).json("All fields are required");
+        }
+
         if (!bannerImage || !logo) {
             return res.status(400).json("Banner image and logo are required");
         }
 
         try {
-            // Step 1: Verify the payment with Stripe
-            const paymentIntent = await stripe.paymentIntents.retrieve(
-                paymentId
-            );
-            if (
-                paymentIntent.status !== "succeeded" ||
-                paymentIntent.amount !== process.env.COMMUNITY_CREATION_FEE // $100 in cents
-            ) {
-                return res.status(400).json("Invalid or unverified payment");
-            }
-
-            // find user
+            // Find user
             const creator = await UsersModel.findById(userId);
-
             if (!creator) {
                 return res.status(404).json("User not found");
             }
 
+            // Check payment or role
+            if (!paymentId) {
+                // If no paymentId, user must be admin or creator
+                if (creator.role !== "admin" && creator.role !== "creator") {
+                    return res
+                        .status(403)
+                        .json("Payment required for regular users");
+                }
+            } else {
+                // If paymentId is provided, verify payment
+                const paymentIntent = await stripe.paymentIntents.retrieve(
+                    paymentId
+                );
+                if (
+                    paymentIntent.status !== "succeeded" ||
+                    paymentIntent.amount !==
+                        parseInt(process.env.COMMUNITY_CREATION_FEE)
+                ) {
+                    return res
+                        .status(400)
+                        .json("Invalid or unverified payment");
+                }
+            }
+
             // Upload banner image to Cloudinary
-            const bannerImageBuffer = req.files["bannerImage"][0].buffer;
-            const bannerImageName = req.files["bannerImage"][0].originalname;
+            const bannerImageBuffer = bannerImage.buffer;
+            const bannerImageName = bannerImage.originalname;
             const bannerImageResult = await uploadToCloudinary(
                 bannerImageBuffer,
                 bannerImageName,
@@ -68,8 +93,8 @@ router.post(
             );
 
             // Upload logo to Cloudinary
-            const logoBuffer = req.files["logo"][0].buffer;
-            const logoName = req.files["logo"][0].originalname;
+            const logoBuffer = logo.buffer;
+            const logoName = logo.originalname;
             const logoResult = await uploadToCloudinary(
                 logoBuffer,
                 logoName,
@@ -77,37 +102,60 @@ router.post(
             );
 
             // Create the community
-            const community = await Community.create({
+            const communityData = {
                 name,
                 description,
                 rules,
                 visions,
-                subscriptionFee,
+                subscriptionFee: parseFloat(subscriptionFee),
                 category,
-                bannerImage: bannerImageResult.secure_url, // Store Cloudinary URL
-                logo: logoResult.secure_url, // Store Cloudinary URL
+                bannerImage: bannerImageResult.secure_url,
+                logo: logoResult.secure_url,
                 createdBy: creator._id,
-                paymentId,
-            });
+            };
+            if (paymentId) {
+                communityData.paymentId = paymentId;
+            }
 
-            // Step 3: Store the payment details
-            await Payment.create({
-                paymentId,
-                amount: paymentIntent.amount / 100, // Convert cents to dollars
-                currency: paymentIntent.currency,
-                userId,
-                communityId: community._id,
-                paymentType: "community_creation",
-                status: paymentIntent.status,
-            });
+            const community = await Community.create(communityData);
 
-            // create community course obj also
+            // If payment was made, store payment details
+            if (paymentId) {
+                const paymentIntent = await stripe.paymentIntents.retrieve(
+                    paymentId
+                );
+                await Payment.create({
+                    paymentId,
+                    amount: paymentIntent.amount / 100, // Convert cents to dollars
+                    currency: paymentIntent.currency,
+                    userId,
+                    communityId: community._id,
+                    paymentType: "community_creation",
+                    status: paymentIntent.status,
+                });
+
+                // Notify payment success
+                await createNotification(
+                    userId,
+                    `Payment of $${
+                        paymentIntent.amount / 100
+                    } for community ${name} creation succeeded`
+                );
+            }
+
+            // Create community course object
             await CommunityCourse.create({
                 communityId: community._id,
                 courses: [],
             });
 
-            // create community messages obj also
+            // Notify community creation
+            await createNotification(
+                userId,
+                `You Created the community "${name}"`
+            );
+
+            // Create community messages object
             await CommunityMessage.create({
                 communityId: community._id,
                 messages: [],

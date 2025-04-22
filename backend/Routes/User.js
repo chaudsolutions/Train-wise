@@ -7,6 +7,9 @@ const Community = require("../Models/Community");
 const CommunityCourse = require("../Models/CommunityCourse");
 const { upload, uploadToCloudinary } = require("../utils/uploadMedia");
 const CommunityMessage = require("../Models/CommunityMessage");
+const Payment = require("../Models/Payment");
+const { createNotification } = require("../utils/notifications");
+const Notification = require("../Models/Notification");
 
 const router = express.Router();
 
@@ -96,47 +99,117 @@ router.put("/joinCommunity/:communityId", async (req, res) => {
 });
 
 // endpoint to get communities user is part of
-router.get("/community-member", async (req, res) => {
+router.get("/analytics", async (req, res) => {
     const userId = req.userId;
 
     try {
-        // Find communities where:
-        // 1. The user is the creator (owner) OR
-        // 2. The user is listed in the members array
+        // Fetch user details
+        const user = await UsersModel.findById(userId)
+            .select("name email balance role avatar createdAt")
+            .lean();
+        if (!user) {
+            return res.status(404).json("User not found");
+        }
+
+        // Fetch communities (created or joined)
         const userCommunities = await Community.find({
-            $or: [
-                { createdBy: userId }, // User is the creator
-                { "members.userId": userId }, // User is a member
-            ],
+            $or: [{ createdBy: userId }, { "members.userId": userId }],
         })
             .select(
                 "name description category createdBy logo bannerImage subscriptionFee members createdAt"
             )
             .lean();
 
-        // Transform the data to include membership status
-        const formattedCommunities =
-            userCommunities.length > 0 &&
-            userCommunities.map((community) => {
-                const isOwner =
-                    community.createdBy.toString() === userId.toString();
-                const memberSince = isOwner
-                    ? community.createdAt
-                    : community.members.find(
-                          (m) => m.userId.toString() === userId.toString()
-                      ).createdAt;
+        // Format communities with role and memberSince
+        const formattedCommunities = userCommunities.map((community) => {
+            const isOwner =
+                community.createdBy.toString() === userId.toString();
+            const memberSince = isOwner
+                ? community.createdAt
+                : community.members.find(
+                      (m) => m.userId.toString() === userId.toString()
+                  ).createdAt;
+            return {
+                ...community,
+                role: isOwner ? "owner" : "member",
+                memberSince,
+            };
+        });
 
-                return {
-                    ...community,
-                    role: isOwner ? "owner" : "member",
-                    memberSince: memberSince,
-                };
-            });
+        // Split communities
+        const communitiesCreated = formattedCommunities.filter(
+            (c) => c.role === "owner"
+        );
+        const communitiesJoined = formattedCommunities.filter(
+            (c) => c.role === "member"
+        );
 
-        res.status(200).json(formattedCommunities);
+        // Fetch financial data
+        const payments = await Payment.find({ userId, status: "succeeded" });
+
+        // Calculate amount spent on community creation
+        const communityCreationSpent = payments
+            .filter((p) => p.paymentType === "community_creation")
+            .reduce((sum, p) => sum + p.amount, 0);
+
+        // Calculate amount spent on community membership subscriptions
+        const joinedCommunityIds = communitiesJoined.map((c) => c._id);
+        const communityMembershipSpent = await Payment.aggregate([
+            {
+                $match: {
+                    paymentType: "community_subscription",
+                    userId: userId,
+                    communityId: { $in: joinedCommunityIds },
+                    status: "succeeded",
+                },
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: "$amount" },
+                },
+            },
+        ]);
+
+        const totalMembershipSpent = communityMembershipSpent[0]?.total || 0;
+
+        // Fetch subscription revenue from user's created communities
+        const createdCommunityIds = communitiesCreated.map((c) => c._id);
+        const subscriptionRevenue = await Payment.aggregate([
+            {
+                $match: {
+                    paymentType: "community_subscription",
+                    communityId: { $in: createdCommunityIds },
+                    status: "succeeded",
+                },
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: "$amount" },
+                },
+            },
+        ]);
+
+        const totalSubscriptionRevenue = subscriptionRevenue[0]?.total || 0;
+
+        const analytics = {
+            user,
+            communities: {
+                created: communitiesCreated,
+                joined: communitiesJoined,
+            },
+            finances: {
+                communityCreationSpent,
+                subscriptionRevenue: totalSubscriptionRevenue,
+                communityMembershipSpent: totalMembershipSpent,
+            },
+        };
+
+        res.status(200).json(analytics);
     } catch (error) {
-        console.error("Error fetching user communities:", error);
-        res.status(500).json("Failed to fetch user communities");
+        console.error("Error fetching user analytics:", error);
+        res.status(500).json("Internal server error");
     }
 });
 
@@ -441,6 +514,68 @@ router.put("/:communityId/send/messages", async (req, res) => {
     } catch (error) {
         res.status(500).json("Server error");
         console.log(error);
+    }
+});
+
+// Example withdrawal endpoint
+router.post("/withdraw/:amountToWithdraw", async (req, res) => {
+    const userId = req.userId;
+    const { amountToWithdraw } = req.params;
+
+    const amount = parseFloat(amountToWithdraw);
+    if (isNaN(amount) || amount <= 0) {
+        return res.status(400).json("Invalid withdrawal amount");
+    }
+
+    try {
+        const user = await UsersModel.findById(userId);
+        if (!user) {
+            return res.status(404).json("User not found");
+        }
+
+        if (user.balance < amount) {
+            return res.status(400).json("Insufficient balance");
+        }
+
+        // Process withdrawal (e.g., via Stripe or other service)
+        // Assume withdrawal logic here updates user.balance
+        user.balance -= amount;
+        await user.save();
+
+        // Notify user
+        await createNotification(
+            userId,
+            `You requested a withdrawal of $${amount.toFixed(2)}`
+        );
+
+        res.status(200).json("Withdrawal requested successfully");
+    } catch (error) {
+        console.error("Error processing withdrawal:", error);
+        res.status(500).json("Failed to process withdrawal");
+    }
+});
+
+// Get notifications for a user or admin
+router.get("/notifications", async (req, res) => {
+    const userId = req.userId;
+
+    try {
+        const user = await UsersModel.findById(userId);
+        if (!user) {
+            return res.status(404).json("User not found");
+        }
+
+        const notifications =
+            user.role === "admin"
+                ? await Notification.find()
+                      .sort({ createdAt: -1 })
+                      .populate("userId", "name email")
+                : await Notification.find({ userId }).sort({ createdAt: -1 });
+
+        res.status(200).json(notifications);
+    } catch (error) {
+        console.error("Error fetching notifications:", error);
+        res.status(500).json("Failed to fetch notifications");
     }
 });
 
