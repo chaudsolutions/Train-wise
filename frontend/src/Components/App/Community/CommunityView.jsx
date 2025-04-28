@@ -81,8 +81,7 @@ const CommunityView = () => {
         bannerImage,
         members,
         createdBy,
-    } = community?.community || {};
-    const { creatorName } = community || {};
+    } = community || {};
 
     const { _id } = userData || {};
 
@@ -184,7 +183,9 @@ const CommunityView = () => {
                                     />
                                     <Chip
                                         icon={<PersonIcon />}
-                                        label={isCreator ? "You" : creatorName}
+                                        label={
+                                            isCreator ? "You" : createdBy?.name
+                                        }
                                         color="info"
                                         variant="outlined"
                                         deleteIcon={<StarIcon color="info" />}
@@ -308,7 +309,8 @@ const CommunityView = () => {
                                         variant="body2"
                                         color="text.secondary"
                                         paragraph>
-                                        This group is created by {creatorName}
+                                        This group is created by{" "}
+                                        {createdBy?.name}
                                     </Typography>
                                     <Chip
                                         label={category}

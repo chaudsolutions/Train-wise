@@ -50,9 +50,11 @@ router.get("/dashboard/analytics", async (req, res) => {
         // Fetch payments and communities
         const payments = await Payment.find({ status: "succeeded" });
         const communities = await Community.find({})
+            .sort({ createdAt: -1 })
             .select(
-                "name description category createdBy logo bannerImage subscriptionFee members createdAt"
+                "name description balance category createdBy logo bannerImage subscriptionFee members createdAt"
             )
+            .populate("createdBy", "name") // Populate createdBy with name field
             .lean();
 
         // Fetch users with their communities using aggregation
@@ -403,6 +405,42 @@ router.put("/role-change/:userId", async (req, res) => {
     } catch (error) {
         console.error("Error changing role:", error);
         res.status(500).json("Failed to change role");
+    }
+});
+
+// Delete a community
+router.delete("/community/:communityId", async (req, res) => {
+    const { communityId } = req.params;
+    const adminId = req.userId;
+
+    try {
+        const community = await Community.findById(communityId);
+        if (!community) {
+            return res.status(404).json("Community not found");
+        }
+
+        // Notify creator
+        await createNotification(
+            community.createdBy,
+            `Your community "${community.name}" was deleted by an admin`
+        );
+
+        // Notify admin
+        await createNotification(
+            adminId,
+            `You deleted the community "${community.name}"`
+        );
+
+        // Delete community
+        await Community.deleteOne({ _id: communityId });
+
+        res.status(200).json({ message: "Community deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting community:", error.message, error.stack);
+        res.status(500).json({
+            message: "Failed to delete community",
+            error: error.message,
+        });
     }
 });
 

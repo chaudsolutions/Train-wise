@@ -51,20 +51,21 @@ export const CreatorWrapper = ({ children }) => {
     });
 
     const { _id } = userData || {};
-    const { createdBy } = community?.community || {};
-
-    const creator = createdBy === _id;
 
     useEffect(() => {
         // Redirect if the user is not a member
-        if (userData && userData?.role === "user" && !creator) {
+        if (
+            userData &&
+            userData?.role === "user" &&
+            !community?.createdBy?.creator === _id
+        ) {
             toast.error("You're not the creator of this community");
 
             navigate("/"); // Redirect to a "not authorized" page
         } else {
             setIsLoad(false);
         }
-    }, [navigate, userData, creator]);
+    }, [navigate, userData, community, _id]);
 
     if (isUserDataLoading || isCommunityLoading || isLoad) {
         return <PageLoader />;

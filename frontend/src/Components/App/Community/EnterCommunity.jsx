@@ -70,7 +70,7 @@ const EnterCommunity = () => {
         createdBy,
         createdAt,
         notifications,
-    } = community?.community || {};
+    } = community || {};
 
     const { _id, coursesWatched, onlineStatus } = userData || {};
     const { courses } = coursesData || {};

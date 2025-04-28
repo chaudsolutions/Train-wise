@@ -29,18 +29,18 @@ router.get("/community/:id", async (req, res) => {
     const { id } = req.params;
     try {
         //   get community by id
-        const community = await Community.findById(id);
+        const community = await Community.findById(id)
+            .select(
+                "name description balance rules visions category createdBy logo bannerImage subscriptionFee members createdAt"
+            )
+            .populate("createdBy", "name") // Populate creator name
+            .populate("members.userId", "name") // Populate member names
+            .lean();
 
         if (!community) return res.status(404).json("Community not found.");
 
-        // find creator name
-        const creator = await UsersModel.findById(community.createdBy);
-
         // Send response with community and creator name
-        res.status(200).json({
-            community,
-            creatorName: creator.name,
-        });
+        res.status(200).json(community);
     } catch (error) {
         res.status(400).json("Community not found.");
         console.error(error);

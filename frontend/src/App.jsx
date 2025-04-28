@@ -32,6 +32,7 @@ import Category from "./Components/App/admin/Category";
 import CommunityDash from "./Components/App/admin/CommunityDash";
 import UserDetails from "./Components/App/admin/SingleUserDetails";
 import Notifications from "./Components/App/notifications/Notifications";
+import SingleCommunityDash from "./Components/App/admin/SingleCommunityDash";
 
 function App() {
     const { user } = useAuthContext();
@@ -161,6 +162,10 @@ function App() {
                             <Route
                                 path="communities"
                                 element={<CommunityDash />}
+                            />
+                            <Route
+                                path="community/:communityId"
+                                element={<SingleCommunityDash />}
                             />
                             <Route path="categories" element={<Category />} />
                         </Route>
