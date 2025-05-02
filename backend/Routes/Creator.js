@@ -257,9 +257,9 @@ router.delete("/delete-community/:id", async (req, res) => {
         }
 
         // get community courses obj and delete and also the videos url
-        const communityCourse = await CommunityCourse.findOne({
-            communityId: community._id,
-        });
+        const communityCourse = await CommunityCourse.findByIdAndDelete(
+            communityCourse._id
+        );
 
         if (communityCourse) {
             await communityCourse.courses.forEach(async (course) => {
@@ -276,9 +276,6 @@ router.delete("/delete-community/:id", async (req, res) => {
                     })
                 );
             });
-
-            // now delete community course
-            await CommunityCourse.findByIdAndDelete(communityCourse._id);
         }
 
         const imageUrls = [community.logo, community.bannerImage];

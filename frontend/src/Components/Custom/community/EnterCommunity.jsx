@@ -331,7 +331,7 @@ export const CommunityClassroom = ({
                     sx={{ mt: 4, display: "flex", justifyContent: "flex-end" }}>
                     <Button
                         component={Link}
-                        to={`/creator/add-course/${communityId}`}
+                        to={`/creator/${communityId}/add-course`}
                         variant="contained"
                         color="info"
                         startIcon={<AddIcon />}

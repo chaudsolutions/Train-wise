@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     AppBar,
     Box,
@@ -10,9 +10,12 @@ import {
     createTheme,
 } from "@mui/material";
 import { Menu as MenuIcon } from "@mui/icons-material";
-import useResponsive from "../../Hooks/useResponsive";
-import { Outlet } from "react-router-dom";
-import SideNav from "../../Custom/admin/SideNav";
+import { Outlet, useNavigate } from "react-router-dom";
+import useResponsive from "../Components/Hooks/useResponsive";
+import SideNav from "../Components/Custom/admin/SideNav";
+import { useUserData } from "../Components/Hooks/useQueryFetch/useQueryData";
+import toast from "react-hot-toast";
+import PageLoader from "../Components/Animations/PageLoader";
 
 const theme = createTheme({
     palette: {
@@ -29,13 +32,33 @@ const theme = createTheme({
 
 const drawerWidth = 240;
 
-const AdminDash = () => {
+const AdminLayout = () => {
     const { isMobile } = useResponsive();
     const [drawerOpen, setDrawerOpen] = useState(!isMobile);
+    const [isLoad, setIsLoad] = useState(true);
 
     const handleDrawerToggle = () => {
         setDrawerOpen(!drawerOpen);
     };
+
+    const navigate = useNavigate();
+
+    const { userData, isUserDataLoading } = useUserData();
+
+    useEffect(() => {
+        // Redirect if the user is not a member
+        if (userData && userData?.role !== "admin") {
+            toast.error("You're not an admin");
+
+            navigate("/"); // Redirect to a "not authorized" page
+        } else {
+            setIsLoad(false);
+        }
+    }, [navigate, userData]);
+
+    if (isUserDataLoading || isLoad) {
+        return <PageLoader />;
+    }
 
     return (
         <ThemeProvider theme={theme}>
@@ -72,7 +95,7 @@ const AdminDash = () => {
                 <Box
                     component="main"
                     position="relative"
-                    sx={{ flexGrow: 1, p: 1, mt: 8 }}>
+                    sx={{ p: 1, mt: 8, width: "100%" }}>
                     <Outlet /> {/* Nested route components render here */}
                 </Box>
             </Box>
@@ -80,4 +103,4 @@ const AdminDash = () => {
     );
 };
 
-export default AdminDash;
+export default AdminLayout;

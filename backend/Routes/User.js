@@ -54,6 +54,9 @@ router.put("/joinCommunity/:communityId", async (req, res) => {
         if (isMember) {
             return res.status(200).json("Welcome Back");
         }
+        if (user.role === "admin") {
+            return res.status(200).json("Welcome Admin");
+        }
 
         // For paid communities, verify payment
         if (community.subscriptionFee > 0) {

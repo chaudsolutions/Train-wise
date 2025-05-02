@@ -75,6 +75,7 @@ const CommunityView = () => {
         name,
         description,
         category,
+        role,
         rules,
         visions,
         subscriptionFee,
@@ -90,6 +91,7 @@ const CommunityView = () => {
         members?.some((member) => member.userId._id === _id) ||
         createdBy === _id;
     const isCreator = createdBy?._id === _id;
+    const isAdmin = role === "admin";
 
     const handleJoinCommunity = async () => {
         if (!user) {
@@ -97,7 +99,7 @@ const CommunityView = () => {
             return setAuthOpen(true);
         }
 
-        if (subscriptionFee === 0 || isUserMember) {
+        if (subscriptionFee === 0 || isUserMember || isCreator || isAdmin) {
             const success = await joinCommunity(communityId);
             if (success) {
                 refetchCommunity();
@@ -211,7 +213,7 @@ const CommunityView = () => {
                                             size={24}
                                             color="inherit"
                                         />
-                                    ) : isUserMember ? (
+                                    ) : isUserMember || isCreator || isAdmin ? (
                                         "Explore Group"
                                     ) : (
                                         "Join Group"

@@ -391,7 +391,7 @@ const EnterCommunity = () => {
                                     <>
                                         <Button
                                             LinkComponent={Link}
-                                            to={`/creator/add-course/${communityId}`}
+                                            to={`/creator/${communityId}/add-course`}
                                             variant="outlined"
                                             color="info"
                                             startIcon={<Add />}>

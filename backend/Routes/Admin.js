@@ -1,4 +1,6 @@
 const express = require("express");
+const sanitizeHtml = require("sanitize-html");
+
 const Category = require("../Models/Category");
 const Payment = require("../Models/Payment");
 const Community = require("../Models/Community");
@@ -534,10 +536,12 @@ router.delete("/community/:communityId", async (req, res) => {
 });
 
 // Admin approves/rejects withdrawal
-router.put("/withdrawal/:id", async (req, res) => {
-    const { id } = req.params;
-    const { status, adminNote } = req.body;
+router.put("/withdrawal/:id/:action", async (req, res) => {
+    const { id, action } = req.params;
+    const { adminNote } = req.body;
     const userId = req.userId;
+
+    const status = action === "approve" ? "approved" : "rejected";
 
     try {
         const admin = await UsersModel.findById(userId);
@@ -546,9 +550,19 @@ router.put("/withdrawal/:id", async (req, res) => {
                 .status(403)
                 .json("Only admins can approve/reject withdrawals");
         }
-        const withdrawal = await Withdrawal.findById(id).populate("userId");
+
+        // Find withdrawal
+        const withdrawal = await Withdrawal.findById(id).populate(
+            "userId",
+            "name email balance"
+        );
         if (!withdrawal) {
             return res.status(404).json("Withdrawal not found");
+        }
+
+        // Check status
+        if (withdrawal.status !== "pending") {
+            return res.status(404).json("Withdrawal is not pending");
         }
 
         // Validate status transition
@@ -558,53 +572,41 @@ router.put("/withdrawal/:id", async (req, res) => {
 
         // Update withdrawal
         withdrawal.status = status;
-        withdrawal.adminNote = adminNote || "";
+        withdrawal.adminNote = sanitizeHtml(
+            adminNote || withdrawal.adminNote || ""
+        );
 
         if (status === "rejected") {
             // Return funds to user if rejected
             const user = await UsersModel.findById(withdrawal.userId._id);
             user.balance += withdrawal.amount;
 
-            await user.save();
-
+            await Promise.all([user.save(), withdrawal.save()]);
+        } else {
             await withdrawal.save();
-
-            // user notification
-            await createNotification(
-                withdrawal.user._id,
-                `Your withdrawal of $${withdrawal.amount.toFixed(
-                    2
-                )} was rejected. ${adminNote}`
-            );
-
-            // admin notification
-            await createNotification(
-                userId,
-                `You rejected a withdrawal of $${withdrawal.amount.toFixed(2)}`
-            );
-
-            return res.json("Withdrawal rejected and funds returned");
         }
 
-        // If approved, mark as processed (actual payment would happen via cron job or external service)
-        withdrawal.status = "approved";
-        await withdrawal.save();
+        // Create user notification
+        const userNotificationMessage =
+            status === "approved"
+                ? `Your withdrawal of $${withdrawal.amount.toFixed(
+                      2
+                  )} was approved and will be processed shortly`
+                : `Your withdrawal of $${withdrawal.amount.toFixed(
+                      2
+                  )} was rejected${adminNote ? `: ${adminNote}` : ""}`;
 
-        // user notification
-        await createNotification(
-            withdrawal.user._id,
-            `Your withdrawal of $${withdrawal.amount.toFixed(
-                2
-            )} was approved and will be processed shortly`
-        );
+        await Promise.all([
+            createNotification(withdrawal.userId._id, userNotificationMessage),
+            createNotification(
+                userId,
+                `You ${status} a withdrawal of $${withdrawal.amount.toFixed(
+                    2
+                )} for ${withdrawal.userId.name}`
+            ),
+        ]);
 
-        // admin notification
-        await createNotification(
-            userId,
-            `You approved a withdrawal of $${withdrawal.amount.toFixed(2)}`
-        );
-
-        res.json("Withdrawal approved");
+        res.json(`Withdrawal ${status}`);
     } catch (error) {
         console.error("Admin withdrawal error:", error);
         res.status(500).json("Failed to process withdrawal");

@@ -33,7 +33,7 @@ router.get("/community/:id", async (req, res) => {
             .select(
                 "name description balance rules visions category createdBy logo bannerImage subscriptionFee members createdAt"
             )
-            .populate("createdBy", "name") // Populate creator name
+            .populate("createdBy", "name avatar") // Populate creator name
             .populate("members.userId", "name avatar") // Populate member names and id
             .lean();
 

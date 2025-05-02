@@ -2,7 +2,6 @@ import ScrollToTop from "react-scroll-to-top";
 import { Toaster } from "react-hot-toast";
 import { useReactRouter } from "./Components/Hooks/useReactRouter";
 import { useAuthContext } from "./Components/Context/AuthContext";
-import { AdminWrapper, CreatorWrapper } from "./utils/Wrappers";
 
 // components
 import Footer from "./Components/Custom/Footer/Footer";
@@ -21,7 +20,6 @@ import EnterCommunity from "./Components/App/Community/EnterCommunity";
 import CreateCourse from "./Components/App/Community/CreateCourse";
 import Classroom from "./Components/App/Community/Classroom";
 import BuggyComponent from "./Components/Error/Bug";
-import AdminDash from "./Components/App/admin/AdminDash";
 import DashboardHome from "./Components/App/admin/DashboardHome";
 import Users from "./Components/App/admin/Users";
 import Category from "./Components/App/admin/Category";
@@ -32,6 +30,8 @@ import SingleCommunityDash from "./Components/App/admin/SingleCommunityDash";
 import CommunityLayout from "./layout/CommunityLayout";
 import Withdrawals from "./Components/App/Profile/Withdrawals";
 import WithdrawalsDash from "./Components/App/admin/WithdrawalsDash";
+import AdminLayout from "./layout/AdminLayout";
+import CommunityCreatorLayout from "./layout/CommunityCreatorLayout";
 
 function App() {
     const { user } = useAuthContext();
@@ -106,46 +106,42 @@ function App() {
                             element={<CommunityView />}
                         />
 
-                        {/* Create a community course */}
+                        {/* community membership protected layout */}
                         <Route
-                            path="/creator/add-course/:communityId"
-                            element={
-                                user ? (
-                                    <CreatorWrapper>
-                                        <CreateCourse />
-                                    </CreatorWrapper>
-                                ) : (
-                                    <Navigate to="/" />
-                                )
-                            }
-                        />
-
-                        {/* community course classroom */}
-                        <Route
-                            path="/course/:courseId/community/:communityId"
-                            element={user ? <Classroom /> : <Navigate to="/" />}
-                        />
-
-                        {/* protected community routes layout */}
-                        <Route
-                            path="/community/access/:communityId/"
+                            path="/community/access/:communityId"
                             element={
                                 user ? <CommunityLayout /> : <Navigate to="/" />
                             }>
                             <Route index element={<EnterCommunity />} />
+                            {/* community course classroom */}
+                            <Route
+                                path="course/:courseId"
+                                element={<Classroom />}
+                            />
+                        </Route>
+
+                        {/* community creator/owner protected layout */}
+                        <Route
+                            path="/creator/:communityId"
+                            element={
+                                user ? (
+                                    <CommunityCreatorLayout />
+                                ) : (
+                                    <Navigate to="/" />
+                                )
+                            }>
+                            {/* Create a community course */}
+                            <Route
+                                path="add-course"
+                                element={<CreateCourse />}
+                            />
                         </Route>
 
                         {/* admin protected layout */}
                         <Route
                             path="/admin/dashboard"
                             element={
-                                user ? (
-                                    <AdminWrapper>
-                                        <AdminDash />
-                                    </AdminWrapper>
-                                ) : (
-                                    <Navigate to="/" />
-                                )
+                                user ? <AdminLayout /> : <Navigate to="/" />
                             }>
                             <Route index element={<DashboardHome />} />
                             <Route path="users" element={<Users />} />

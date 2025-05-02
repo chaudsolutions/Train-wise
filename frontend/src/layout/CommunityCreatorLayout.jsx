@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
-import PageLoader from "../Components/Animations/PageLoader";
+import { Outlet, useNavigate, useParams } from "react-router-dom";
 import {
     useCommunityByIdData,
     useUserData,
 } from "../Components/Hooks/useQueryFetch/useQueryData";
-import { useReactRouter } from "../Components/Hooks/useReactRouter";
 import toast from "react-hot-toast";
+import PageLoader from "../Components/Animations/PageLoader";
 
-
-export const CreatorWrapper = ({ children }) => {
+const CommunityCreatorLayout = () => {
     const [isLoad, setIsLoad] = useState(true);
-    const { useNavigate, useParams } = useReactRouter();
 
     const { communityId } = useParams();
 
@@ -42,32 +40,7 @@ export const CreatorWrapper = ({ children }) => {
         return <PageLoader />;
     }
 
-    return <>{children}</>;
+    return <Outlet />;
 };
 
-// admin wrapper
-export const AdminWrapper = ({ children }) => {
-    const [isLoad, setIsLoad] = useState(true);
-    const { useNavigate } = useReactRouter();
-
-    const navigate = useNavigate();
-
-    const { userData, isUserDataLoading } = useUserData();
-
-    useEffect(() => {
-        // Redirect if the user is not a member
-        if (userData && userData?.role !== "admin") {
-            toast.error("You're not an admin");
-
-            navigate("/"); // Redirect to a "not authorized" page
-        } else {
-            setIsLoad(false);
-        }
-    }, [navigate, userData]);
-
-    if (isUserDataLoading || isLoad) {
-        return <PageLoader />;
-    }
-
-    return <>{children}</>;
-};
+export default CommunityCreatorLayout;

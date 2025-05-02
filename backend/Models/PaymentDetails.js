@@ -21,8 +21,8 @@ const paymentDetailsSchema = new mongoose.Schema(
         // PayPal
         paypalEmail: { type: String },
         // Crypto
+        cryptoWalletName: { type: String },
         cryptoWalletAddress: { type: String },
-        cryptoType: { type: String },
         // Verification
         verified: {
             type: Boolean,
