@@ -24,10 +24,10 @@ import {
     People as PeopleIcon,
     School as SchoolIcon,
     Notifications as NotificationsIcon,
-    OnlinePrediction as OnlinePredictionIcon,
     Add,
     Message,
 } from "@mui/icons-material";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import {
     useCommunityByIdData,
@@ -39,23 +39,29 @@ import useResponsive from "../../Hooks/useResponsive";
 import {
     CommunityChatroom,
     CommunityClassroom,
+    CommunityInventory,
     CommunityOverview,
 } from "../../Custom/community/EnterCommunity";
-import { useOnlineStatus } from "../../Hooks/useToggleOnlineStatus";
+import toast from "react-hot-toast";
+import axios from "axios";
+import { serVer, useToken } from "../../Hooks/useVariable";
 
 const EnterCommunity = () => {
     const [activeTab, setActiveTab] = useState("community");
     const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [btn, setBtn] = useState(false);
 
     const theme = useTheme();
     const { isMobile } = useResponsive();
+    const { token } = useToken();
     const { useParams, Link } = useReactRouter();
     const { communityId } = useParams();
 
     const { userData, isUserDataLoading } = useUserData();
-    const { community, isCommunityLoading } = useCommunityByIdData({
-        id: communityId,
-    });
+    const { community, isCommunityLoading, refetchCommunity } =
+        useCommunityByIdData({
+            id: communityId,
+        });
     const { coursesData, isCoursesLoading } = useCommunityCoursesData({
         id: communityId,
     });
@@ -63,6 +69,7 @@ const EnterCommunity = () => {
     const {
         name,
         logo,
+        balance,
         category,
         description,
         bannerImage,
@@ -72,12 +79,9 @@ const EnterCommunity = () => {
         notifications,
     } = community || {};
 
-    const { _id, coursesWatched, onlineStatus } = userData || {};
+    const { _id, coursesWatched } = userData || {};
     const { courses } = coursesData || {};
-    const isCommunityAdmin = createdBy === _id;
-
-    // function to toggle user online status
-    useOnlineStatus({ onlineStatus, isUserDataLoading });
+    const isCommunityAdmin = createdBy?._id === _id;
 
     const handleTabChange = (event, newValue) => {
         setActiveTab(newValue);
@@ -110,6 +114,29 @@ const EnterCommunity = () => {
             return;
         }
         setOpenSnackbar(false);
+    };
+
+    const withdrawCommunityBalance = async () => {
+        setBtn(true);
+        try {
+            const res = await axios.put(
+                `${serVer}/creator/withdraw/${communityId}`,
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            toast.success(res.data);
+
+            refetchCommunity();
+        } catch (error) {
+            toast.error(error?.response.data || "Withdrawal failed");
+        } finally {
+            setBtn(false);
+        }
     };
 
     if (isCommunityLoading || isUserDataLoading || isCoursesLoading) {
@@ -202,6 +229,20 @@ const EnterCommunity = () => {
                                         height: 3,
                                     },
                                 }}>
+                                {isCommunityAdmin && (
+                                    <Tab
+                                        value="inventory"
+                                        label="Inventory"
+                                        icon={<AttachMoneyIcon />}
+                                        iconPosition="start"
+                                        sx={{
+                                            minHeight: 60,
+                                            "&.Mui-selected": {
+                                                color: theme.palette.info.main,
+                                            },
+                                        }}
+                                    />
+                                )}
                                 {tabs.map((tab) => (
                                     <Tab
                                         key={tab.id}
@@ -223,6 +264,14 @@ const EnterCommunity = () => {
 
                         {/* Tab Content */}
                         <Box sx={{ p: 3 }}>
+                            {activeTab === "inventory" && isCommunityAdmin && (
+                                <CommunityInventory
+                                    balance={balance}
+                                    handleWithdrawal={withdrawCommunityBalance}
+                                    btn={btn}
+                                />
+                            )}
+
                             {activeTab === "community" && (
                                 <CommunityOverview
                                     createdAt={createdAt}
@@ -253,33 +302,40 @@ const EnterCommunity = () => {
                                         Community Members
                                     </Typography>
                                     <List>
-                                        {members?.slice(0, 5).map((member) => (
-                                            <ListItem key={member._id}>
+                                        <ListItem>
+                                            <ListItemAvatar>
+                                                <Avatar
+                                                    src={createdBy?.avatar}
+                                                    alt={createdBy?.name}
+                                                />
+                                            </ListItemAvatar>
+                                            <ListItemText
+                                                primary={createdBy.name}
+                                                secondary={"Creator"}
+                                            />
+                                        </ListItem>
+                                        {members?.map((member) => (
+                                            <ListItem key={member?.userId._id}>
                                                 <ListItemAvatar>
                                                     <Avatar
-                                                        src={member.avatar}
-                                                        alt={member.name}
+                                                        src={
+                                                            member?.userId
+                                                                .avatar
+                                                        }
+                                                        alt={
+                                                            member?.userId.name
+                                                        }
                                                     />
                                                 </ListItemAvatar>
                                                 <ListItemText
-                                                    primary={member.name}
-                                                    secondary={
-                                                        member.role === "owner"
-                                                            ? "Community Owner"
-                                                            : "Member"
+                                                    primary={
+                                                        member?.userId.name
                                                     }
+                                                    secondary={"Member"}
                                                 />
                                             </ListItem>
                                         ))}
                                     </List>
-                                    {members?.length > 5 && (
-                                        <Button
-                                            variant="text"
-                                            color="info"
-                                            sx={{ mt: 1 }}>
-                                            View all {members.length} members
-                                        </Button>
-                                    )}
                                 </Box>
                             )}
                         </Box>
@@ -287,7 +343,6 @@ const EnterCommunity = () => {
                 </Grid>
 
                 {/* Sidebar - Only shown on desktop */}
-
                 <Grid size={{ xs: 12, md: 4 }}>
                     <Stack spacing={3}>
                         {/* Community Info Card */}
@@ -329,28 +384,20 @@ const EnterCommunity = () => {
                                     icon={<PeopleIcon fontSize="small" />}
                                     size="small"
                                 />
-                                <Chip
-                                    label="10 online"
-                                    icon={
-                                        <OnlinePredictionIcon
-                                            fontSize="small"
-                                            color="success"
-                                        />
-                                    }
-                                    size="small"
-                                />
                             </Stack>
 
                             <Stack spacing={1}>
                                 {isCommunityAdmin && (
-                                    <Button
-                                        LinkComponent={Link}
-                                        to={`/creator/add-course/${communityId}`}
-                                        variant="outlined"
-                                        color="info"
-                                        startIcon={<Add />}>
-                                        Create Course
-                                    </Button>
+                                    <>
+                                        <Button
+                                            LinkComponent={Link}
+                                            to={`/creator/add-course/${communityId}`}
+                                            variant="outlined"
+                                            color="info"
+                                            startIcon={<Add />}>
+                                            Create Course
+                                        </Button>
+                                    </>
                                 )}
                                 <Button
                                     onClick={handleInviteMembers}

@@ -140,9 +140,9 @@ export const fetchAdminAnalytics = async () => {
         throw new Error("Network response was not ok");
     }
 
-    const { communities, revenue, users } = response.data;
+    const { communities, revenue, users, withdrawals } = response.data;
 
-    return { communities, revenue, users };
+    return { communities, revenue, users, withdrawals };
 };
 
 // get admin analytics for single user
@@ -178,7 +178,24 @@ export const fetchNotifications = async () => {
         throw new Error("Network response was not ok");
     }
 
-    console.log(response.data);
-
     return response.data;
+};
+
+// get withdrawals
+export const fetchWithdrawals = async () => {
+    const token = localStorage.getItem(localStorageToken);
+
+    const response = await axios.get(`${serVer}/user/withdrawals`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (response.status !== 200) {
+        throw new Error("Network response was not ok");
+    }
+
+    const { withdrawals, paymentDetails } = response.data;
+
+    return { withdrawals, paymentDetails };
 };

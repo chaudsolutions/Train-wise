@@ -7,6 +7,7 @@ import {
     useTheme,
     Box,
 } from "@mui/material";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import { useUserData } from "../../Hooks/useQueryFetch/useQueryData";
 import { Link } from "react-router-dom";
 import ExploreIcon from "@mui/icons-material/Explore";
@@ -43,6 +44,12 @@ const NavMenu = ({ handleDrawerToggle }) => {
             name: "Notifications",
             link: "/notifications",
             icon: <Notifications fontSize="large" />,
+            show: user,
+        },
+        {
+            name: "Withdrawals",
+            link: "/withdrawals",
+            icon: <AttachMoneyIcon fontSize="large" />,
             show: user,
         },
         {

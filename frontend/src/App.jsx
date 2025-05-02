@@ -2,11 +2,7 @@ import ScrollToTop from "react-scroll-to-top";
 import { Toaster } from "react-hot-toast";
 import { useReactRouter } from "./Components/Hooks/useReactRouter";
 import { useAuthContext } from "./Components/Context/AuthContext";
-import {
-    AdminWrapper,
-    CreatorWrapper,
-    UserMembershipWrapper,
-} from "./utils/Wrappers";
+import { AdminWrapper, CreatorWrapper } from "./utils/Wrappers";
 
 // components
 import Footer from "./Components/Custom/Footer/Footer";
@@ -33,6 +29,9 @@ import CommunityDash from "./Components/App/admin/CommunityDash";
 import UserDetails from "./Components/App/admin/SingleUserDetails";
 import Notifications from "./Components/App/notifications/Notifications";
 import SingleCommunityDash from "./Components/App/admin/SingleCommunityDash";
+import CommunityLayout from "./layout/CommunityLayout";
+import Withdrawals from "./Components/App/Profile/Withdrawals";
+import WithdrawalsDash from "./Components/App/admin/WithdrawalsDash";
 
 function App() {
     const { user } = useAuthContext();
@@ -77,6 +76,14 @@ function App() {
                             element={user ? <Profile /> : <Navigate to="/" />}
                         />
 
+                        {/* withdrawals */}
+                        <Route
+                            path="/withdrawals"
+                            element={
+                                user ? <Withdrawals /> : <Navigate to="/" />
+                            }
+                        />
+
                         {/* notifications */}
                         <Route
                             path="/notifications"
@@ -99,20 +106,6 @@ function App() {
                             element={<CommunityView />}
                         />
 
-                        {/* Enter a community */}
-                        <Route
-                            path="/community/access/:communityId"
-                            element={
-                                user ? (
-                                    <UserMembershipWrapper>
-                                        <EnterCommunity />
-                                    </UserMembershipWrapper>
-                                ) : (
-                                    <Navigate to="/" />
-                                )
-                            }
-                        />
-
                         {/* Create a community course */}
                         <Route
                             path="/creator/add-course/:communityId"
@@ -130,18 +123,19 @@ function App() {
                         {/* community course classroom */}
                         <Route
                             path="/course/:courseId/community/:communityId"
-                            element={
-                                user ? (
-                                    <UserMembershipWrapper>
-                                        <Classroom />
-                                    </UserMembershipWrapper>
-                                ) : (
-                                    <Navigate to="/" />
-                                )
-                            }
+                            element={user ? <Classroom /> : <Navigate to="/" />}
                         />
 
-                        {/* admin dashboard */}
+                        {/* protected community routes layout */}
+                        <Route
+                            path="/community/access/:communityId/"
+                            element={
+                                user ? <CommunityLayout /> : <Navigate to="/" />
+                            }>
+                            <Route index element={<EnterCommunity />} />
+                        </Route>
+
+                        {/* admin protected layout */}
                         <Route
                             path="/admin/dashboard"
                             element={
@@ -168,6 +162,10 @@ function App() {
                                 element={<SingleCommunityDash />}
                             />
                             <Route path="categories" element={<Category />} />
+                            <Route
+                                path="withdrawals"
+                                element={<WithdrawalsDash />}
+                            />
                         </Route>
 
                         <Route path="/buggy" element={<BuggyComponent />} />

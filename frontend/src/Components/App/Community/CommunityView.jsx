@@ -87,8 +87,9 @@ const CommunityView = () => {
 
     // check if user is part of community
     const isUserMember =
-        members?.some((member) => member.userId === _id) || createdBy === _id;
-    const isCreator = createdBy === _id;
+        members?.some((member) => member.userId._id === _id) ||
+        createdBy === _id;
+    const isCreator = createdBy?._id === _id;
 
     const handleJoinCommunity = async () => {
         if (!user) {
@@ -96,7 +97,7 @@ const CommunityView = () => {
             return setAuthOpen(true);
         }
 
-        if (subscriptionFee === 0) {
+        if (subscriptionFee === 0 || isUserMember) {
             const success = await joinCommunity(communityId);
             if (success) {
                 refetchCommunity();
@@ -361,7 +362,7 @@ const CommunityView = () => {
                     amount={subscriptionFee}
                     communityId={communityId}
                     onPaymentSuccess={handlePaymentSuccess}
-                    type="subscription"
+                    type="community_subscription"
                 />
             </Container>
         </Elements>
@@ -382,7 +383,7 @@ export const CommunityName = () => {
         id: communityId,
     });
 
-    const { name, logo } = community?.community || {};
+    const { name, logo } = community || {};
 
     const navigate = useNavigate();
 

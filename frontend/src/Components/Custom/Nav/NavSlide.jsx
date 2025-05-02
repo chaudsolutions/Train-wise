@@ -3,7 +3,7 @@ import Logout from "../Buttons/Logout";
 import { useAuthContext } from "../../Context/AuthContext";
 import { useUserData } from "../../Hooks/useQueryFetch/useQueryData";
 import { Avatar, Box, Button, Typography } from "@mui/material";
-import { AccountCircle, ChevronRight } from "@mui/icons-material";
+import { ChevronRight } from "@mui/icons-material";
 
 export const AuthContainer = ({ setAuthOpen }) => {
     const { user } = useAuthContext();
@@ -29,18 +29,19 @@ export const UserProfile = () => {
 
     const { userData } = useUserData();
 
-    const { name, role } = userData || {};
+    const { name, role, avatar } = userData || {};
 
     return (
         <Box sx={{ p: 3, textAlign: "center" }}>
             <Avatar
+                src={avatar}
                 sx={{
                     width: 80,
                     height: 80,
                     mb: 2,
                     mx: "auto",
                 }}>
-                <AccountCircle sx={{ fontSize: 80 }} />
+                {!avatar && name?.charAt(0).toUpperCase()}
             </Avatar>
 
             {isProfilePage ? (

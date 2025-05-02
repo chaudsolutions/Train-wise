@@ -11,6 +11,7 @@ import {
     fetchUser,
     fetchUserAnalytics,
     fetchUserMembership,
+    fetchWithdrawals,
 } from "../useFetch";
 import { useAuthContext } from "../../Context/AuthContext";
 import { useReactRouter } from "../useReactRouter";
@@ -141,25 +142,25 @@ export const useCategoriesData = () => {
 };
 
 // use user membership data
-export const useIsUserMembershipData = (communityId) => {
+export const useUserMembershipData = (communityId) => {
     const { user } = useAuthContext();
 
     const {
-        data: isUserMembership,
+        data: userMembershipData,
         isLoading: isUserMembershipLoading,
         isError: isUserMembershipError,
-        refetch: refetchIsUserMembership,
+        refetch: refetchUserMembership,
     } = useQuery({
-        queryKey: ["isUserMembership", communityId], // Use the new object-based syntax
+        queryKey: ["userMembership", user, communityId], // Use the new object-based syntax
         queryFn: () => fetchUserMembership(communityId),
         enabled: !!user && !!communityId,
     });
 
     return {
-        isUserMembership,
+        userMembershipData,
         isUserMembershipLoading,
         isUserMembershipError,
-        refetchIsUserMembership,
+        refetchUserMembership,
     };
 };
 
@@ -261,5 +262,28 @@ export const useUserNotifications = () => {
         isNotificationsDataLoading,
         isNotificationsDataError,
         refetchNotificationsData,
+    };
+};
+
+// fetch user withdrawals
+export const useUserWithdrawals = () => {
+    const { user } = useAuthContext();
+
+    const {
+        data: withdrawalsData,
+        isLoading: isWithdrawalsDataLoading,
+        isError: isWithdrawalsDataError,
+        refetch: refetchWithdrawalsData,
+    } = useQuery({
+        queryKey: ["withdrawals"], // Use the new object-based syntax
+        queryFn: fetchWithdrawals,
+        enabled: !!user,
+    });
+
+    return {
+        withdrawalsData,
+        isWithdrawalsDataLoading,
+        isWithdrawalsDataError,
+        refetchWithdrawalsData,
     };
 };

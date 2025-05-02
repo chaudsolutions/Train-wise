@@ -251,7 +251,11 @@ const ProfileContainer = ({
                                             color="success"
                                             variant="contained"
                                             onClick={handleOpenDialog}
-                                            disabled={balance <= 0 || btnLoad}>
+                                            disabled={
+                                                !balance ||
+                                                balance <= 0 ||
+                                                btnLoad
+                                            }>
                                             {btnLoad ? (
                                                 <CircularProgress size={24} />
                                             ) : (

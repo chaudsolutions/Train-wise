@@ -298,4 +298,50 @@ router.delete("/delete-community/:id", async (req, res) => {
     }
 });
 
+// endpoint to withdraw community balance
+router.put("/withdraw/:communityId", async (req, res) => {
+    try {
+        const { communityId } = req.params;
+        const userId = req.userId; // From auth middleware
+
+        // 1. Verify community ownership
+        const community = await Community.findOne({
+            _id: communityId,
+            createdBy: userId,
+        });
+
+        if (!community) {
+            return res.status(403).json("You don't own this community");
+        }
+
+        // 2. Check available balance
+        if (community.balance <= 0) {
+            return res.status(400).json("No balance available for withdrawal");
+        }
+
+        const withdrawalAmount = community.balance;
+
+        // 3. Update balances
+        await Promise.all([
+            Community.updateOne({ _id: communityId }, { $set: { balance: 0 } }),
+            UsersModel.findByIdAndUpdate(userId, {
+                $inc: { balance: withdrawalAmount },
+            }),
+        ]);
+
+        // 4. Create notification using your hook
+        await createNotification(
+            userId,
+            `You've successfully withdrawn $${withdrawalAmount.toFixed(
+                2
+            )} from ${community.name}`
+        );
+
+        res.status(200).json(`Successful`);
+    } catch (error) {
+        console.error("Withdrawal error:", error);
+        res.status(500).json("Withdrawal failed");
+    }
+});
+
 module.exports = { Creator: router };

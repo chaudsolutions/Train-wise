@@ -7,9 +7,11 @@ const Community = require("../Models/Community");
 const CommunityCourse = require("../Models/CommunityCourse");
 const { upload, uploadToCloudinary } = require("../utils/uploadMedia");
 const CommunityMessage = require("../Models/CommunityMessage");
-const Payment = require("../Models/Payment");
 const { createNotification } = require("../utils/notifications");
 const Notification = require("../Models/Notification");
+const Withdrawal = require("../Models/Withdrawal");
+const Payment = require("../Models/Payment");
+const PaymentDetails = require("../Models/PaymentDetails");
 
 const router = express.Router();
 
@@ -35,14 +37,14 @@ router.get("/data", async (req, res) => {
 router.put("/joinCommunity/:communityId", async (req, res) => {
     const userId = req.userId;
     const { communityId } = req.params;
-    const { subscriptionId } = req.body;
+    const { subscriptionId } = req.body; // Actually paymentIntent.id
 
     try {
         const user = await UsersModel.findById(userId);
         const community = await Community.findById(communityId);
 
         if (!community || !user) {
-            return res.status(404).send("Community or user not found");
+            return res.status(404).json("Community or user not found");
         }
 
         // Check if already a member
@@ -53,48 +55,70 @@ router.put("/joinCommunity/:communityId", async (req, res) => {
             return res.status(200).json("Welcome Back");
         }
 
-        // For paid communities, verify subscription
+        // For paid communities, verify payment
         if (community.subscriptionFee > 0) {
             if (!subscriptionId) {
-                return res.status(400).json("Subscription required");
+                return res.status(400).json("Payment required");
             }
 
-            // Verify subscription is valid and belongs to user
-            const subscription = await stripe.subscriptions.retrieve(
+            // Verify PaymentIntent
+            const paymentIntent = await stripe.paymentIntents.retrieve(
                 subscriptionId
             );
 
-            if (subscription.customer !== user.stripeCustomerId) {
-                return res
-                    .status(403)
-                    .json("Subscription doesn't belong to user");
+            if (paymentIntent.customer !== user.stripeCustomerId) {
+                return res.status(403).json("Payment doesn't belong to user");
             }
 
-            if (subscription.status !== "active") {
-                return res.status(400).json("Subscription not active");
+            if (paymentIntent.status !== "succeeded") {
+                return res.status(400).json("Payment not successful");
             }
+
+            // Save payment record
+            await Payment.create({
+                paymentId: paymentIntent.id,
+                amount: paymentIntent.amount / 100, // Convert cents to dollars
+                currency: paymentIntent.currency,
+                userId,
+                communityId: community._id,
+                paymentType: "community_subscription",
+                status: paymentIntent.status,
+            });
+
+            // Notify payment success
+            await createNotification(
+                userId,
+                `Payment of $${paymentIntent.amount / 100} for community ${
+                    community.name
+                } subscription`
+            );
         }
 
         // Add to community members
-        // Add to community members
         const currentPeriodEnd =
             community.subscriptionFee > 0
-                ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
                 : null;
 
         community.members.push({
             userId: user._id,
             stripeCustomerId: user.stripeCustomerId,
-            stripeSubscriptionId: subscriptionId,
+            stripeSubscriptionId: subscriptionId, // Store paymentIntent.id
             status: "active",
             currentPeriodEnd,
         });
+
+        // Notify user
+        await createNotification(
+            userId,
+            `You successfully joined the community ${community.name}`
+        );
 
         await community.save();
         res.status(200).json("Successfully joined community");
     } catch (error) {
         console.error("Join error:", error);
-        res.status(500).send("Internal server error");
+        res.status(500).json("Internal server error");
     }
 });
 
@@ -227,32 +251,22 @@ router.get("/verify-membership/:communityId", async (req, res) => {
             return res.status(403).send("User or community not found.");
         }
 
-        // Find the user in the community members array
-        const userMembership = community.members.find(
-            (member) => member.userId.toString() === user.id
-        );
-
-        // Check if the user is a member and their membership is active
-        let isMember = userMembership.membership;
-
-        // Check if the user is the creator of the community
-        const isCreator = community.createdBy.toString() === user.id;
-
-        // For paid communities, check if the membership has expired
-        if (community.subscriptionFee > 0) {
-            console.log("here");
-            const currentTime = new Date();
-            const membershipExpiration = new Date(
-                userMembership.membershipExpiration
+        let membership = "";
+        if (user.role === "admin") {
+            membership = "active";
+        } else if (community.createdBy.toString() === user.id) {
+            membership = "active";
+        } else {
+            // Find the user in the community members array
+            let userMembership = community.members.find(
+                (member) => member.userId.toString() === user.id
             );
 
-            if (membershipExpiration < currentTime) {
-                isMember = false; // Membership has expired
-            }
+            membership = userMembership.status;
         }
 
         // Return the membership status
-        res.status(200).json(isMember || isCreator);
+        res.status(200).json(membership);
     } catch (error) {
         res.status(500).send("Internal server error.");
         console.log(error);
@@ -518,7 +532,7 @@ router.put("/:communityId/send/messages", async (req, res) => {
 });
 
 // Example withdrawal endpoint
-router.post("/withdraw/:amountToWithdraw", async (req, res) => {
+router.put("/withdraw/:amountToWithdraw", async (req, res) => {
     const userId = req.userId;
     const { amountToWithdraw } = req.params;
 
@@ -529,6 +543,8 @@ router.post("/withdraw/:amountToWithdraw", async (req, res) => {
 
     try {
         const user = await UsersModel.findById(userId);
+        // find admin
+        const admin = await UsersModel.findOne({ role: "admin" });
         if (!user) {
             return res.status(404).json("User not found");
         }
@@ -537,15 +553,31 @@ router.post("/withdraw/:amountToWithdraw", async (req, res) => {
             return res.status(400).json("Insufficient balance");
         }
 
-        // Process withdrawal (e.g., via Stripe or other service)
-        // Assume withdrawal logic here updates user.balance
+        // 2. Deduct from user's balance and track pending withdrawal
         user.balance -= amount;
         await user.save();
 
-        // Notify user
+        // 3. Create withdrawal record
+        await Withdrawal.create([
+            {
+                userId,
+                amount: amount,
+                status: "pending",
+            },
+        ]);
+
+        // 4. Create user notification
         await createNotification(
             userId,
-            `You requested a withdrawal of $${amount.toFixed(2)}`
+            `Withdrawal request of $${amount.toFixed(
+                2
+            )} submitted for admin approval`
+        );
+
+        // create admin notification
+        await createNotification(
+            admin._id,
+            `New Withdrawal request of $${amount.toFixed(2)}`
         );
 
         res.status(200).json("Withdrawal requested successfully");
@@ -555,7 +587,7 @@ router.post("/withdraw/:amountToWithdraw", async (req, res) => {
     }
 });
 
-// Get notifications for a user or admin
+// Get notifications for a user
 router.get("/notifications", async (req, res) => {
     const userId = req.userId;
 
@@ -565,17 +597,85 @@ router.get("/notifications", async (req, res) => {
             return res.status(404).json("User not found");
         }
 
-        const notifications =
-            user.role === "admin"
-                ? await Notification.find()
-                      .sort({ createdAt: -1 })
-                      .populate("userId", "name email")
-                : await Notification.find({ userId }).sort({ createdAt: -1 });
+        const notifications = await Notification.find({ userId }).sort({
+            createdAt: -1,
+        });
 
         res.status(200).json(notifications);
     } catch (error) {
         console.error("Error fetching notifications:", error);
         res.status(500).json("Failed to fetch notifications");
+    }
+});
+
+// Get withdrawals for a user
+router.get("/withdrawals", async (req, res) => {
+    const userId = req.userId;
+
+    try {
+        const user = await UsersModel.findById(userId);
+        if (!user) {
+            return res.status(404).json("User not found");
+        }
+
+        // find withdrawals
+        const withdrawals = await Withdrawal.find({ userId }).sort({
+            createdAt: -1,
+        });
+
+        // find payment details also
+        const paymentDetails = await PaymentDetails.findOne({ userId });
+
+        res.status(200).json({ withdrawals, paymentDetails });
+    } catch (error) {
+        console.error("Error fetching withdrawals:", error);
+        res.status(500).json("Failed to fetch withdrawals");
+    }
+});
+
+// PUT /payment-details - Create or update payment details
+router.put("/payment-details", async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { methodType, ...details } = req.body;
+
+        // Validate required fields based on method type
+        if (methodType === "bank" && !details.accountNumber) {
+            return res
+                .status(400)
+                .json("Account number required for bank transfer");
+        }
+        if (methodType === "paypal" && !details.paypalEmail) {
+            return res.status(400).json("PayPal email required");
+        }
+        if (
+            methodType === "crypto" &&
+            !details.cryptoWalletAddress &&
+            !details.cryptoWalletName
+        ) {
+            return res.status(400).json("Wallet address required for crypto");
+        }
+
+        await PaymentDetails.findOneAndUpdate(
+            { userId },
+            {
+                methodType,
+                ...details,
+                verified: false, // Reset verification when details change
+            },
+            {
+                new: true,
+                upsert: true, // Create if doesn't exist
+            }
+        );
+
+        // Notify admin for verification
+        await createNotification(userId, `You updated your payment details`);
+
+        res.json("Success");
+    } catch (error) {
+        console.error("Payment details error:", error);
+        res.status(500).json({ error: "Failed to update payment details" });
     }
 });
 

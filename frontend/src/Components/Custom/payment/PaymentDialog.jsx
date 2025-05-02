@@ -14,7 +14,6 @@ export const PaymentDialog = ({
     open,
     onClose,
     amount,
-    communityId,
     onPaymentSuccess,
     type,
 }) => {
@@ -22,12 +21,7 @@ export const PaymentDialog = ({
     const { handlePayment, paymentProcessing } = usePayment();
 
     const handleSubmit = async () => {
-        const success = await handlePayment(
-            amount,
-            communityId,
-            onPaymentSuccess,
-            type
-        );
+        const success = await handlePayment(amount, onPaymentSuccess, type);
         if (success) {
             onClose();
         }

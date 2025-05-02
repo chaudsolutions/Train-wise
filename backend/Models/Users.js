@@ -101,5 +101,8 @@ UsersSchema.statics.login = async function ({ email, password }) {
 };
 
 // Create Mongoose model
-const UsersModel = mongoose.model("User", UsersSchema);
+const UsersModel = mongoose.model(
+    "User",
+    UsersSchema.index({ onlineStatus: 1 })
+);
 module.exports = UsersModel;

@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
 import { Container } from "@mui/material";
-
 import PageLoader from "../../Animations/PageLoader";
 import {
     useCategoriesData,

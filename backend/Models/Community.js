@@ -12,7 +12,7 @@ const communityMembersSchema = new mongoose.Schema(
         stripeSubscriptionId: { type: String },
         status: {
             type: String,
-            enum: ["active", "past_due", "canceled", "unpaid"],
+            enum: ["active", "expired", "canceled", "unpaid"],
             default: "active",
         },
         currentPeriodEnd: { type: Date },

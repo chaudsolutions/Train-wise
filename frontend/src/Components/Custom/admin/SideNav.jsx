@@ -16,6 +16,7 @@ import {
     Category as CategoryIcon,
     ChevronLeft as ChevronLeftIcon,
 } from "@mui/icons-material";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import { Logo } from "../Nav/Nav";
 
 const SideNav = ({ isMobile, drawerOpen, handleDrawerToggle, drawerWidth }) => {
@@ -23,18 +24,23 @@ const SideNav = ({ isMobile, drawerOpen, handleDrawerToggle, drawerWidth }) => {
         {
             text: "Dashboard",
             icon: <DashboardIcon />,
-            path: "/admin/dashboard",
+            path: "",
         },
         { text: "Users", icon: <PeopleIcon />, path: "/admin/dashboard/users" },
         {
             text: "Communities",
             icon: <GroupsIcon />,
-            path: "/admin/dashboard/communities",
+            path: "communities",
+        },
+        {
+            text: "Withdrawals",
+            icon: <AttachMoneyIcon />,
+            path: "withdrawals",
         },
         {
             text: "Categories",
             icon: <CategoryIcon />,
-            path: "/admin/dashboard/categories",
+            path: "categories",
         },
     ];
 

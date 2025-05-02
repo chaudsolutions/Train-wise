@@ -51,7 +51,7 @@ const PaymentForm = ({
         try {
             const paymentResponse = await axios.post(
                 `${serVer}/payment/create-payment-intent`,
-                { amount: 100 },
+                { amount: 100, type: "community_creation" },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             const { clientSecret } = paymentResponse.data;

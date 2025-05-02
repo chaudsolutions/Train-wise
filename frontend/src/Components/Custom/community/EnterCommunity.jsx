@@ -23,18 +23,21 @@ import {
 } from "@mui/material";
 import {
     Info as InfoIcon,
-    MoreVert as MoreVertIcon,
     Add as AddIcon,
     PlayCircleOutline as PlayIcon,
     Send as SendIcon,
     Circle as OnlineIcon,
+    People,
 } from "@mui/icons-material";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import CourseStockImg from "../../../assets/courseStock.png";
 import { useEffect, useRef, useState } from "react";
 import { serVer, useToken } from "../../Hooks/useVariable";
 import axios from "axios";
 import toast from "react-hot-toast";
+import useResponsive from "../../Hooks/useResponsive";
 
 export const CommunityOverview = ({ notifications, createdAt }) => {
     const theme = useTheme();
@@ -355,8 +358,10 @@ export const CommunityChatroom = ({ communityId, userId, createdBy }) => {
     const chatContainerRef = useRef(null);
     const [isConnected, setIsConnected] = useState(false);
     const [sending, setIsSending] = useState(false);
+    const [showOnlineUsers, setShowOnlineUsers] = useState(false);
 
     const { token } = useToken();
+    const { isMobile } = useResponsive();
 
     // Format time for display
     const formatTime = (dateString) => {
@@ -462,7 +467,63 @@ export const CommunityChatroom = ({ communityId, userId, createdBy }) => {
         }
     };
 
-    console.log(messages);
+    // Online Users List Component
+    const OnlineUsersList = () => (
+        <Paper
+            elevation={0}
+            sx={{
+                width: { xs: "100%", md: 250 },
+                p: 2,
+                borderRight: { md: `1px solid ${theme.palette.divider}` },
+                borderBottom: {
+                    xs: `1px solid ${theme.palette.divider}`,
+                    md: "none",
+                },
+                display: "flex",
+                flexDirection: "column",
+                bgcolor: theme.palette.background.default,
+            }}>
+            <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                sx={{ mb: 2 }}>
+                Online Members ({onlineUsers.length})
+            </Typography>
+            <List dense>
+                {onlineUsers.map((user) => (
+                    <ListItem key={user.id} sx={{ px: 0 }}>
+                        <ListItemAvatar>
+                            <Badge
+                                overlap="circular"
+                                anchorOrigin={{
+                                    vertical: "bottom",
+                                    horizontal: "right",
+                                }}
+                                badgeContent={
+                                    <OnlineIcon
+                                        color="success"
+                                        sx={{ fontSize: "0.8rem" }}
+                                    />
+                                }>
+                                <Avatar
+                                    src={user.avatar}
+                                    alt={user.name}
+                                    sx={{ width: 32, height: 32 }}
+                                />
+                            </Badge>
+                        </ListItemAvatar>
+                        <ListItemText
+                            primary={
+                                <Typography variant="body2">
+                                    {user.name}
+                                </Typography>
+                            }
+                        />
+                    </ListItem>
+                ))}
+            </List>
+        </Paper>
+    );
 
     return (
         <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -478,75 +539,55 @@ export const CommunityChatroom = ({ communityId, userId, createdBy }) => {
                     alignItems: "center",
                     justifyContent: "space-between",
                 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Typography variant="h6" fontWeight="bold">
-                        Community Chat
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 2,
+                        width: "100%",
+                    }}>
+                    <Typography variant="h6" fontSize=".9rem" fontWeight="bold">
+                        Chat
                     </Typography>
-                    <Chip
-                        label={isConnected ? "Live" : "Connecting..."}
-                        size="small"
-                        color={isConnected ? "success" : "warning"}
-                        icon={<OnlineIcon fontSize="small" />}
-                    />
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Chip
+                            label={isConnected ? "Live" : "Connecting..."}
+                            size="small"
+                            color={isConnected ? "success" : "warning"}
+                            icon={<OnlineIcon fontSize="small" />}
+                        />
+                        {isMobile && (
+                            <IconButton
+                                size="small"
+                                onClick={() =>
+                                    setShowOnlineUsers(!showOnlineUsers)
+                                }
+                                sx={{
+                                    bgcolor: showOnlineUsers
+                                        ? theme.palette.action.selected
+                                        : "transparent",
+                                }}>
+                                <People fontSize="small" />
+                            </IconButton>
+                        )}
+                    </Box>
                 </Box>
-                <IconButton>
-                    <MoreVertIcon />
-                </IconButton>
             </Paper>
 
             {/* Main Chat Area */}
-            <Box sx={{ display: "flex", flexGrow: 1, overflow: "hidden" }}>
-                {/* Online Users Sidebar */}
-                <Paper
-                    elevation={0}
-                    sx={{
-                        width: 250,
-                        p: 2,
-                        borderRight: `1px solid ${theme.palette.divider}`,
-                        display: { xs: "none", md: "flex" },
-                        flexDirection: "column",
-                        bgcolor: theme.palette.background.default,
-                    }}>
-                    <Typography
-                        variant="subtitle2"
-                        color="text.secondary"
-                        sx={{ mb: 2 }}>
-                        Online Members ({onlineUsers.length})
-                    </Typography>
-                    <List dense>
-                        {onlineUsers.map((user) => (
-                            <ListItem key={user.id} sx={{ px: 0 }}>
-                                <ListItemAvatar>
-                                    <Badge
-                                        overlap="circular"
-                                        anchorOrigin={{
-                                            vertical: "bottom",
-                                            horizontal: "right",
-                                        }}
-                                        badgeContent={
-                                            <OnlineIcon
-                                                color="success"
-                                                sx={{ fontSize: "0.8rem" }}
-                                            />
-                                        }>
-                                        <Avatar
-                                            src={user.avatar}
-                                            alt={user.name}
-                                            sx={{ width: 32, height: 32 }}
-                                        />
-                                    </Badge>
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary={
-                                        <Typography variant="body2">
-                                            {user.name}
-                                        </Typography>
-                                    }
-                                />
-                            </ListItem>
-                        ))}
-                    </List>
-                </Paper>
+            <Box
+                sx={{
+                    display: "flex",
+                    flexGrow: 1,
+                    overflow: "hidden",
+                    flexDirection: { xs: "column", md: "row" },
+                }}>
+                {/* Conditionally render Online Users for mobile */}
+                {isMobile && showOnlineUsers && <OnlineUsersList />}
+
+                {/* Always render Online Users for desktop */}
+                {!isMobile && <OnlineUsersList />}
 
                 {/* Chat Messages */}
                 <Box
@@ -744,5 +785,103 @@ export const CommunityChatroom = ({ communityId, userId, createdBy }) => {
                 </Box>
             </Box>
         </Box>
+    );
+};
+
+export const CommunityInventory = ({ balance, handleWithdrawal, btn }) => {
+    const theme = useTheme();
+
+    return (
+        <Paper
+            elevation={3}
+            sx={{
+                p: 3,
+                borderRadius: 2,
+                bgcolor: theme.palette.background.paper,
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+                alignItems: "center",
+                maxWidth: 400,
+                mx: "auto",
+                border: `1px solid ${theme.palette.divider}`,
+            }}>
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    mb: 1,
+                }}>
+                <AccountBalanceWalletIcon color="primary" fontSize="large" />
+                <Typography variant="h6" component="h2" fontWeight="bold">
+                    Community Inventory
+                </Typography>
+            </Box>
+
+            {/* Balance Display */}
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 2,
+                    width: "100%",
+                    bgcolor: theme.palette.grey[100],
+                    borderRadius: 1,
+                    textAlign: "center",
+                    border: `1px solid ${theme.palette.divider}`,
+                }}>
+                <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    gutterBottom>
+                    Available Balance
+                </Typography>
+                <Typography
+                    variant="h4"
+                    fontWeight="bold"
+                    color="primary"
+                    sx={{
+                        fontFamily: "monospace",
+                    }}>
+                    <AttachMoneyIcon /> {balance?.toFixed(2) || "0.00"}
+                </Typography>
+            </Paper>
+
+            {/* Withdrawal Button */}
+            <Button
+                variant="contained"
+                color="primary"
+                onClick={handleWithdrawal}
+                disabled={btn || !balance || balance <= 0}
+                fullWidth
+                startIcon={
+                    btn && (
+                        <CircularProgress
+                            size={24}
+                            color="inherit"
+                            sx={{ mr: 1 }}
+                        />
+                    )
+                }
+                sx={{
+                    mt: 1,
+                    py: 1.5,
+                    borderRadius: 1,
+                    textTransform: "none",
+                    fontSize: "1rem",
+                    fontWeight: "bold",
+                }}>
+                {btn ? "Processing..." : "Withdraw Funds"}
+            </Button>
+
+            {(!balance || balance <= 0) && (
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ mt: -1, alignSelf: "flex-start" }}>
+                    No funds available for withdrawal
+                </Typography>
+            )}
+        </Paper>
     );
 };

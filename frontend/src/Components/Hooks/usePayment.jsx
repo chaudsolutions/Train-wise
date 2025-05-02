@@ -10,14 +10,9 @@ export const usePayment = () => {
     const [paymentProcessing, setPaymentProcessing] = useState(false);
     const { token } = useToken();
 
-    const handlePayment = async (amount, communityId, onSuccess, type) => {
+    const handlePayment = async (amount, onSuccess, type) => {
         if (!stripe || !elements) {
             toast.error("Payment system not initialized");
-            return false;
-        }
-
-        if (type !== "subscription") {
-            toast.error("Only subscriptions are supported at this time");
             return false;
         }
 
@@ -25,15 +20,15 @@ export const usePayment = () => {
         try {
             // Step 1: Create SetupIntent
             const paymentResponse = await axios.post(
-                `${serVer}/payment/create-subscription`,
-                { communityId },
+                `${serVer}/payment/create-payment-intent`,
+                { amount, type },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            const { clientSecret, priceId } = paymentResponse.data;
+            const { clientSecret } = paymentResponse.data;
 
             // Step 2: Confirm SetupIntent
-            const { error, setupIntent } = await stripe.confirmCardSetup(
+            const { error, paymentIntent } = await stripe.confirmCardPayment(
                 clientSecret,
                 {
                     payment_method: {
@@ -49,21 +44,9 @@ export const usePayment = () => {
                 throw error;
             }
 
-            if (setupIntent.status === "succeeded") {
-                // Step 3: Finalize subscription
-                const finalizeResponse = await axios.post(
-                    `${serVer}/payment/finalize-subscription`,
-                    {
-                        communityId,
-                        paymentMethodId: setupIntent.payment_method,
-                    },
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-
-                const { subscriptionId } = finalizeResponse.data;
-
+            if (paymentIntent.status === "succeeded") {
                 // Step 4: Call onSuccess with subscriptionId
-                await onSuccess(subscriptionId);
+                await onSuccess(paymentIntent.id);
                 return true; // Indicate success
             }
         } catch (error) {

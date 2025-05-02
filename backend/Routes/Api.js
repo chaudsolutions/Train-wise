@@ -34,12 +34,12 @@ router.get("/community/:id", async (req, res) => {
                 "name description balance rules visions category createdBy logo bannerImage subscriptionFee members createdAt"
             )
             .populate("createdBy", "name") // Populate creator name
-            .populate("members.userId", "name") // Populate member names
+            .populate("members.userId", "name avatar") // Populate member names and id
             .lean();
 
         if (!community) return res.status(404).json("Community not found.");
 
-        // Send response with community and creator name
+        // Send response with community
         res.status(200).json(community);
     } catch (error) {
         res.status(400).json("Community not found.");

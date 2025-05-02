@@ -26,7 +26,7 @@ const DashboardHome = () => {
                     value: `$${revenue?.communityCreationRevenue || 0}`,
                 },
                 {
-                    name: "Others",
+                    name: "Community Subscriptions",
                     value: `$${revenue?.communitySubscriptionRevenue || 0}`,
                 },
             ],
@@ -51,7 +51,7 @@ const DashboardHome = () => {
             others: [
                 { name: "Admins", value: users?.adminRoles?.length || 0 },
                 { name: "Creators", value: users?.creatorRoles?.length || 0 },
-                { name: "Creators", value: users?.userRoles?.length || 0 },
+                { name: "Users", value: users?.userRoles?.length || 0 },
             ],
         },
     ];

@@ -4,6 +4,7 @@ const Payment = require("../Models/Payment");
 const Community = require("../Models/Community");
 const UsersModel = require("../Models/Users");
 const { createNotification } = require("../utils/notifications");
+const Withdrawal = require("../Models/Withdrawal");
 
 const router = express.Router();
 
@@ -56,6 +57,73 @@ router.get("/dashboard/analytics", async (req, res) => {
             )
             .populate("createdBy", "name") // Populate createdBy with name field
             .lean();
+
+        // Fetch withdrawals with user and payment details
+        const withdrawals = await Withdrawal.aggregate([
+            // Populate userId with name and email
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "userId",
+                },
+            },
+            { $unwind: "$userId" },
+            // Populate paymentDetails
+            {
+                $lookup: {
+                    from: "paymentdetails",
+                    localField: "userId._id",
+                    foreignField: "userId",
+                    as: "paymentDetails",
+                },
+            },
+            // Unwind paymentDetails (optional, may be empty)
+            {
+                $unwind: {
+                    path: "$paymentDetails",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            // Project relevant fields
+            {
+                $project: {
+                    _id: 1,
+                    userId: {
+                        _id: "$userId._id",
+                        name: "$userId.name",
+                        email: "$userId.email",
+                    },
+                    amount: 1,
+                    status: 1,
+                    adminNote: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    paymentDetails: {
+                        $cond: {
+                            if: { $eq: ["$paymentDetails", null] },
+                            then: null,
+                            else: {
+                                methodType: "$paymentDetails.methodType",
+                                bankName: "$paymentDetails.bankName",
+                                accountNumber: "$paymentDetails.accountNumber",
+                                accountName: "$paymentDetails.accountName",
+                                accountRouting:
+                                    "$paymentDetails.accountRouting",
+                                paypalEmail: "$paymentDetails.paypalEmail",
+                                cryptoWalletAddress:
+                                    "$paymentDetails.cryptoWalletAddress",
+                                cryptoType: "$paymentDetails.cryptoType",
+                                verified: "$paymentDetails.verified",
+                            },
+                        },
+                    },
+                },
+            },
+            // Sort by createdAt descending
+            { $sort: { createdAt: -1 } },
+        ]);
 
         // Fetch users with their communities using aggregation
         const users = await UsersModel.aggregate([
@@ -206,6 +274,20 @@ router.get("/dashboard/analytics", async (req, res) => {
             (c) => c.subscriptionFee === 0
         );
 
+        // Build withdrawals analytics
+        const pendingWithdrawals = withdrawals.filter(
+            (w) => w.status === "pending"
+        );
+        const approvedWithdrawals = withdrawals.filter(
+            (w) => w.status === "approved"
+        );
+        const rejectedWithdrawals = withdrawals.filter(
+            (w) => w.status === "rejected"
+        );
+        const confirmedWithdrawals = withdrawals.filter(
+            (w) => w.status === "confirmed"
+        );
+
         // Filter users by role
         const adminRoles = leanUsers.filter((u) => u.role === "admin");
         const creatorRoles = leanUsers.filter((u) => u.role === "creator");
@@ -227,6 +309,13 @@ router.get("/dashboard/analytics", async (req, res) => {
                 adminRoles,
                 creatorRoles,
                 userRoles,
+            },
+            withdrawals: {
+                withdrawals,
+                pendingWithdrawals,
+                approvedWithdrawals,
+                rejectedWithdrawals,
+                confirmedWithdrawals,
             },
         };
 
@@ -441,6 +530,84 @@ router.delete("/community/:communityId", async (req, res) => {
             message: "Failed to delete community",
             error: error.message,
         });
+    }
+});
+
+// Admin approves/rejects withdrawal
+router.put("/withdrawal/:id", async (req, res) => {
+    const { id } = req.params;
+    const { status, adminNote } = req.body;
+    const userId = req.userId;
+
+    try {
+        const admin = await UsersModel.findById(userId);
+        if (!admin || admin.role !== "admin") {
+            return res
+                .status(403)
+                .json("Only admins can approve/reject withdrawals");
+        }
+        const withdrawal = await Withdrawal.findById(id).populate("userId");
+        if (!withdrawal) {
+            return res.status(404).json("Withdrawal not found");
+        }
+
+        // Validate status transition
+        if (!["approved", "rejected"].includes(status)) {
+            return res.status(400).json("Invalid status");
+        }
+
+        // Update withdrawal
+        withdrawal.status = status;
+        withdrawal.adminNote = adminNote || "";
+
+        if (status === "rejected") {
+            // Return funds to user if rejected
+            const user = await UsersModel.findById(withdrawal.userId._id);
+            user.balance += withdrawal.amount;
+
+            await user.save();
+
+            await withdrawal.save();
+
+            // user notification
+            await createNotification(
+                withdrawal.user._id,
+                `Your withdrawal of $${withdrawal.amount.toFixed(
+                    2
+                )} was rejected. ${adminNote}`
+            );
+
+            // admin notification
+            await createNotification(
+                userId,
+                `You rejected a withdrawal of $${withdrawal.amount.toFixed(2)}`
+            );
+
+            return res.json("Withdrawal rejected and funds returned");
+        }
+
+        // If approved, mark as processed (actual payment would happen via cron job or external service)
+        withdrawal.status = "approved";
+        await withdrawal.save();
+
+        // user notification
+        await createNotification(
+            withdrawal.user._id,
+            `Your withdrawal of $${withdrawal.amount.toFixed(
+                2
+            )} was approved and will be processed shortly`
+        );
+
+        // admin notification
+        await createNotification(
+            userId,
+            `You approved a withdrawal of $${withdrawal.amount.toFixed(2)}`
+        );
+
+        res.json("Withdrawal approved");
+    } catch (error) {
+        console.error("Admin withdrawal error:", error);
+        res.status(500).json("Failed to process withdrawal");
     }
 });
 

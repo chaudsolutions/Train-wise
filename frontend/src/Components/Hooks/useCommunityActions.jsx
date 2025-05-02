@@ -7,12 +7,13 @@ export const useCommunityActions = () => {
     const { token } = useToken();
     const [loading, setLoading] = useState(false);
 
-    const joinCommunity = async (communityId, paymentId = null) => {
+    const joinCommunity = async (communityId, subscriptionId) => {
         setLoading(true);
+        console.log({ communityId, subscriptionId });
         try {
             const res = await axios.put(
                 `${serVer}/user/joinCommunity/${communityId}`,
-                { paymentId },
+                { subscriptionId },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             toast.success(res.data);
