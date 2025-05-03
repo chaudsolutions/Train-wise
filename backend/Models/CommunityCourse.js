@@ -1,33 +1,33 @@
 const mongoose = require("mongoose");
 
-// define courses schema
 const coursesSchema = new mongoose.Schema(
     {
-        name: { type: String, required: true },
-        duration: { type: Number, required: true },
-        videos: [String],
+        name: { type: String },
+        duration: { type: Number },
+        summary: { type: String },
+        lessons: [
+            {
+                type: { type: String },
+                content: { type: String },
+                summary: { type: String },
+            },
+        ],
     },
-    {
-        timestamps: true,
-    }
+    { timestamps: true }
 );
 
-// Define the Community Course Schema
-const communitySchema = new mongoose.Schema(
+const communityCourseSchema = new mongoose.Schema(
     {
-        communityId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Community",
-            required: true,
-        },
+        communityId: { type: mongoose.Schema.Types.ObjectId, ref: "Community" },
         courses: [coursesSchema],
     },
-    {
-        timestamps: true,
-    }
+    { timestamps: true }
 );
 
 // Create the Community Course model
-const CommunityCourse = mongoose.model("CommunityCourse", communitySchema);
+const CommunityCourse = mongoose.model(
+    "CommunityCourse",
+    communityCourseSchema
+);
 
 module.exports = CommunityCourse;

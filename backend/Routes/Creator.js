@@ -10,6 +10,7 @@ const { uploadToCloudinary, upload } = require("../utils/uploadMedia");
 const CommunityMessage = require("../Models/CommunityMessage");
 const Payment = require("../Models/Payment");
 const { createNotification } = require("../utils/notifications");
+const { createCourse } = require("../controllers/course.controller");
 
 const router = express.Router();
 
@@ -172,76 +173,8 @@ router.post(
 // endpoint to create a community course
 router.post(
     "/createCourse/:communityId",
-    upload.fields([
-        { name: "videos", maxCount: 5 }, // Allow up to 5 video files
-    ]),
-    async (req, res) => {
-        const userId = req.userId;
-        const { communityId } = req.params;
-        const { name, duration } = req.body;
-
-        try {
-            // Find the user creating the course
-            const creator = await UsersModel.findById(userId);
-            const community = await Community.findById(communityId);
-
-            if (creator.id !== community.createdBy.toString()) {
-                return res
-                    .status(403)
-                    .json("Unauthorized to create course in this community");
-            }
-
-            // find the course schema
-            const communityCourse = await CommunityCourse.findOne({
-                communityId: community._id,
-            });
-
-            if (!communityCourse) {
-                return res
-                    .status(403)
-                    .json("Cant find course for this community");
-            }
-
-            // Upload video files to Cloudinary
-            const videosBuffer = req.files["videos"];
-            const videosResult = await Promise.all(
-                videosBuffer.map(async (file) => {
-                    const videoName = file.originalname;
-                    return await uploadToCloudinary(
-                        file.buffer,
-                        videoName,
-                        "video"
-                    );
-                })
-            );
-
-            // create the community course obj and push into community course schema
-            const communityCourseObj = {
-                name,
-                duration,
-                videos: videosResult.map((video) => video.secure_url),
-            };
-
-            await communityCourse.courses.push(communityCourseObj);
-
-            // create a community notification
-            const message = `New Course Added: ${communityCourseObj.name}`;
-
-            // add notification to community
-            await community.notifications.push({ message });
-
-            // save the updated community course schema
-            await communityCourse.save();
-
-            // save the updated community
-            await community.save();
-
-            res.status(200).json("Course Created Successfully");
-        } catch (error) {
-            console.error("Error creating community course:", error);
-            res.status(500).json("Failed to create community course");
-        }
-    }
+    upload.any(), // Handle multipart/form-data
+    createCourse
 );
 
 // endpoint to delete a community
