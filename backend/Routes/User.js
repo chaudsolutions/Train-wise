@@ -302,7 +302,7 @@ router.get("/courses/community/:communityId", async (req, res) => {
         // check if user might be creator of community
         const isCreator = community.createdBy.toString() === user.id;
 
-        if (!isMember && !isCreator) {
+        if (!isMember && !isCreator && user.role !== "admin") {
             return res
                 .status(403)
                 .json("User not authorized to access this resource.");

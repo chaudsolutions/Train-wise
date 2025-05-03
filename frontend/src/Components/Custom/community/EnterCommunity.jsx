@@ -294,7 +294,7 @@ export const CommunityClassroom = ({
                                 </CardContent>
                                 <Button
                                     component={Link}
-                                    to={`/course/${course._id}/community/${communityId}`}
+                                    to={`course/${course._id}`}
                                     startIcon={<PlayIcon />}
                                     sx={{
                                         mx: 2,

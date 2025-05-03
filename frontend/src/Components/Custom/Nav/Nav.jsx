@@ -32,7 +32,7 @@ const Nav = () => {
     // responsive hook
     const { isMobile } = useResponsive();
 
-    const { useMatch, Link } = useReactRouter();
+    const { Link, useLocation } = useReactRouter();
 
     // states
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -40,10 +40,9 @@ const Nav = () => {
     const [desktopMenuAnchor, setDesktopMenuAnchor] = useState(null);
     const desktopMenuOpen = Boolean(desktopMenuAnchor);
 
-    const matchOne = useMatch("/community/:communityId");
-    const matchTwo = useMatch("/community/access/:communityId");
-    const matchThree = useMatch("/course/:courseId/community/:communityId");
-    const isCommunity = !!matchOne || !!matchTwo || !!matchThree;
+    const location = useLocation();
+
+    const isCommunity = location.pathname.startsWith("/community");
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);

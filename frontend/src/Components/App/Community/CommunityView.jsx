@@ -374,12 +374,15 @@ const CommunityView = () => {
 export const CommunityName = () => {
     const theme = useTheme();
 
-    const { useNavigate } = useReactRouter();
+    const { useNavigate, useLocation } = useReactRouter();
+
+    const location = useLocation();
 
     const { isMobile } = useResponsive();
 
     const pathnameArr = location.pathname.split("/");
-    const communityId = pathnameArr[pathnameArr?.length - 1];
+
+    const communityId = pathnameArr.find((p) => p.startsWith("680"));
 
     const { community, isCommunityLoading } = useCommunityByIdData({
         id: communityId,

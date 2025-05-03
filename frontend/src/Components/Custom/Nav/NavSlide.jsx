@@ -4,6 +4,7 @@ import { useAuthContext } from "../../Context/AuthContext";
 import { useUserData } from "../../Hooks/useQueryFetch/useQueryData";
 import { Avatar, Box, Button, Typography } from "@mui/material";
 import { ChevronRight } from "@mui/icons-material";
+import { useReactRouter } from "../../Hooks/useReactRouter";
 
 export const AuthContainer = ({ setAuthOpen }) => {
     const { user } = useAuthContext();
@@ -25,6 +26,9 @@ export const AuthContainer = ({ setAuthOpen }) => {
 };
 
 export const UserProfile = () => {
+    const { useLocation } = useReactRouter();
+    const location = useLocation();
+
     const isProfilePage = location.pathname === "/profile";
 
     const { userData } = useUserData();
