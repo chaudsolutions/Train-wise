@@ -38,6 +38,7 @@ import {
 import { serVer, useToken } from "../../Hooks/useVariable";
 import PageLoader from "../../Animations/PageLoader";
 import useResponsive from "../../Hooks/useResponsive";
+import { jsPDF } from "jspdf";
 
 const Classroom = () => {
     const { token } = useToken();
@@ -241,52 +242,92 @@ const Classroom = () => {
                                         height: "100%",
                                         display: "flex",
                                         flexDirection: "column",
+                                        bgcolor: "background.paper",
                                     }}>
-                                    <Box sx={{ flex: 1 }}>
-                                        <object
-                                            data={currentLesson?.content}
-                                            type="application/pdf"
-                                            width="100%"
-                                            height="100%">
-                                            <Box
-                                                sx={{
-                                                    p: 3,
-                                                    color: "text.primary",
-                                                }}>
-                                                <Typography>
-                                                    Unable to display PDF.{" "}
-                                                    <a
-                                                        href={
-                                                            currentLesson?.content
-                                                        }
-                                                        style={{
-                                                            color: "secondary.main",
-                                                        }}>
-                                                        Download
-                                                    </a>{" "}
-                                                    instead.
-                                                </Typography>
-                                            </Box>
-                                        </object>
-                                    </Box>
+                                    {/* PDF Header and Download Button */}
                                     <Box
                                         sx={{
-                                            p: 3,
-                                            bgcolor: "background.paper",
-                                            borderTop: "1px solid",
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
+                                            p: 2,
+                                            borderBottom: "1px solid",
                                             borderColor: "divider",
-                                            overflowY: "auto",
-                                            maxHeight: 300,
                                         }}>
-                                        <Typography variant="h6" gutterBottom>
-                                            Lesson Summary
+                                        <Typography variant="h6">
+                                            PDF Document
                                         </Typography>
-                                        <Typography
-                                            variant="body2"
-                                            whiteSpace="pre-wrap"
-                                            sx={{ color: "text.secondary" }}>
-                                            {currentLesson?.summary}
-                                        </Typography>
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={() => {
+                                                const pdf = new jsPDF();
+                                                const content =
+                                                    currentLesson?.content ||
+                                                    "";
+                                                const lines =
+                                                    pdf.splitTextToSize(
+                                                        content,
+                                                        180
+                                                    );
+                                                pdf.text(15, 20, lines);
+                                                pdf.save(
+                                                    `${
+                                                        currentLesson?.title ||
+                                                        "document"
+                                                    }.pdf`
+                                                );
+                                            }}
+                                            startIcon={<PictureAsPdf />}>
+                                            Download PDF
+                                        </Button>
+                                    </Box>
+
+                                    {/* PDF Content */}
+                                    <Box
+                                        sx={{
+                                            flex: 1,
+                                            p: 3,
+                                            overflowY: "auto",
+                                            bgcolor: "grey.100",
+                                        }}>
+                                        <Box
+                                            sx={{
+                                                maxWidth: 800,
+                                                mx: "auto",
+                                                bgcolor: "background.paper",
+                                                boxShadow: 3,
+                                                minHeight: "100%",
+                                            }}>
+                                            <pre
+                                                style={{
+                                                    whiteSpace: "pre-wrap",
+                                                    fontFamily: "inherit",
+                                                    margin: 0,
+                                                    padding: "2rem",
+                                                }}>
+                                                {currentLesson?.content
+                                                    ?.split("\f")
+                                                    .map((page, index) => (
+                                                        <Box
+                                                            key={index}
+                                                            sx={{
+                                                                minHeight:
+                                                                    "29.7cm", // A4 height
+                                                                pageBreakAfter:
+                                                                    "always",
+                                                                "&:last-child":
+                                                                    {
+                                                                        pageBreakAfter:
+                                                                            "avoid",
+                                                                    },
+                                                                p: 3,
+                                                            }}>
+                                                            {page}
+                                                        </Box>
+                                                    ))}
+                                            </pre>
+                                        </Box>
                                     </Box>
                                 </Box>
                             )}
@@ -294,8 +335,7 @@ const Classroom = () => {
 
                         <Box m={2}>
                             {/* Summary Toggle Button */}
-                            {(currentLesson?.type === "video" ||
-                                currentLesson?.type === "youtube") && (
+                            {currentLesson?.type !== "summary" && (
                                 <Button
                                     variant="contained"
                                     onClick={toggleSummary}
