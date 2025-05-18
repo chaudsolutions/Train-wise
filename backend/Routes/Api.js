@@ -1,9 +1,7 @@
 const express = require("express");
-const bodyParser = require("body-parser");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const mongoose = require("mongoose");
 
 const Community = require("../Models/Community.js");
-const UsersModel = require("../Models/Users.js");
 const CommunityMessage = require("../Models/CommunityMessage.js");
 const Category = require("../Models/Category.js");
 
@@ -114,143 +112,121 @@ router.get("/communities/:communityId/messages/stream", async (req, res) => {
             })}\n\n`
         );
 
-        // Watch for changes (using polling)
-        const pollInterval = setInterval(async () => {
-            // Check for new messages
-            const updatedMessages = await CommunityMessage.findOne({
-                communityId: community._id,
-            }).populate("messages.sender", "name avatar");
+        // Set up MongoDB change stream for CommunityMessage
+        const changeStream = CommunityMessage.watch(
+            [
+                {
+                    $match: {
+                        "fullDocument.communityId": new mongoose.Types.ObjectId(
+                            communityId
+                        ),
+                    },
+                },
+            ],
+            { fullDocument: "updateLookup" }
+        );
 
-            if (
-                updatedMessages.messages.length >
-                communityMessage.messages.length
-            ) {
-                const newMessages = updatedMessages.messages.slice(
-                    communityMessage.messages.length
-                );
-                communityMessage = updatedMessages;
-                newMessages.forEach((message) => {
-                    res.write(
-                        `event: newMessage\ndata: ${JSON.stringify(
-                            message
-                        )}\n\n`
-                    );
-                });
+        changeStream.on("change", async (change) => {
+            try {
+                if (change.operationType === "update" && change.fullDocument) {
+                    // Fetch the updated document with populated sender
+                    const updatedDoc = await CommunityMessage.findOne({
+                        communityId: new mongoose.Types.ObjectId(communityId),
+                    }).populate("messages.sender", "name avatar");
+
+                    if (!updatedDoc) {
+                        console.error("Updated document not found");
+                        return;
+                    }
+
+                    // Check for new messages
+                    if (
+                        updatedDoc.messages.length >
+                        communityMessage.messages.length
+                    ) {
+                        const newMessages = updatedDoc.messages.slice(
+                            communityMessage.messages.length
+                        );
+                        communityMessage = updatedDoc;
+                        newMessages.forEach((message) => {
+                            res.write(
+                                `event: newMessage\ndata: ${JSON.stringify(
+                                    message
+                                )}\n\n`
+                            );
+                        });
+                    }
+
+                    // Check for deleted messages
+                    if (
+                        updatedDoc.messages.length <
+                        communityMessage.messages.length
+                    ) {
+                        const oldMessageIds = communityMessage.messages.map(
+                            (msg) => msg._id.toString()
+                        );
+                        const newMessageIds = updatedDoc.messages.map((msg) =>
+                            msg._id.toString()
+                        );
+                        const deletedMessageIds = oldMessageIds.filter(
+                            (id) => !newMessageIds.includes(id)
+                        );
+
+                        communityMessage = updatedDoc;
+                        deletedMessageIds.forEach((messageId) => {
+                            res.write(
+                                `event: deleteMessage\ndata: ${JSON.stringify({
+                                    _id: messageId,
+                                })}\n\n`
+                            );
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error("Change stream error:", error);
             }
+        });
 
-            // Check for online status changes
+        changeStream.on("error", (error) => {
+            console.error("Change stream failed:", error);
+            changeStream.close();
+            res.write(
+                `event: error\ndata: ${JSON.stringify({
+                    message: "Stream error",
+                })}\n\n`
+            );
+        });
+
+        // Poll for online status changes
+        let lastOnlineUsers = JSON.stringify(getOnlineUsers());
+        const onlineStatusPoll = setInterval(async () => {
             await community.populate(
                 "members.userId",
                 "name avatar onlineStatus"
             );
             const currentOnlineUsers = getOnlineUsers();
-            if (
-                JSON.stringify(currentOnlineUsers) !==
-                JSON.stringify(getOnlineUsers())
-            ) {
+            const currentOnlineUsersStr = JSON.stringify(currentOnlineUsers);
+            if (currentOnlineUsersStr !== lastOnlineUsers) {
+                lastOnlineUsers = currentOnlineUsersStr;
                 res.write(
                     `event: onlineUsers\ndata: ${JSON.stringify(
                         currentOnlineUsers
                     )}\n\n`
                 );
             }
-        }, 1000); // Poll every second
+        }, 5000);
 
         // Handle client disconnect
         req.on("close", () => {
-            clearInterval(pollInterval);
+            changeStream.close();
+            clearInterval(onlineStatusPoll);
             res.end();
+            console.log("SSE client disconnected");
         });
     } catch (error) {
         console.error("SSE error:", error);
         res.status(500).json({ message: "Server error" });
     }
 });
-
-// Stripe webhook endpoint
-router.post(
-    "/stripe-webhook",
-    bodyParser.raw({ type: "application/json" }),
-    async (req, res) => {
-        const sig = req.headers["stripe-signature"];
-
-        try {
-            const event = stripe.webhooks.constructEvent(
-                req.body,
-                sig,
-                process.env.STRIPE_WEBHOOK_SECRET
-            );
-
-            switch (event.type) {
-                case "invoice.paid":
-                    await handleInvoicePaid(event.data.object);
-                    break;
-                case "invoice.payment_failed":
-                    await handlePaymentFailed(event.data.object);
-                    break;
-                case "customer.subscription.deleted":
-                    await handleSubscriptionDeleted(event.data.object);
-                    break;
-            }
-
-            res.json({ received: true });
-        } catch (err) {
-            res.status(400).send(`Webhook Error: ${err.message}`);
-        }
-    }
-);
-
-async function handleInvoicePaid(invoice) {
-    const subscription = invoice.subscription;
-    const periodEnd = new Date(invoice.period_end * 1000);
-
-    // Update user's subscription
-    await UsersModel.updateOne(
-        { "activeSubscriptions.subscriptionId": subscription },
-        {
-            $set: {
-                "activeSubscriptions.$.currentPeriodEnd": periodEnd,
-                "activeSubscriptions.$.status": "active",
-            },
-        }
-    );
-
-    // Update community membership
-    await Community.updateOne(
-        { "members.stripeSubscriptionId": subscription },
-        {
-            $set: {
-                "members.$.currentPeriodEnd": periodEnd,
-                "members.$.status": "active",
-            },
-        }
-    );
-}
-
-async function handlePaymentFailed(invoice) {
-    const subscription = invoice.subscription;
-
-    await UsersModel.updateOne(
-        { "activeSubscriptions.subscriptionId": subscription },
-        { $set: { "activeSubscriptions.$.status": "past_due" } }
-    );
-
-    await Community.updateOne(
-        { "members.stripeSubscriptionId": subscription },
-        { $set: { "members.$.status": "past_due" } }
-    );
-}
-
-async function handleSubscriptionDeleted(subscription) {
-    await UsersModel.updateOne(
-        { "activeSubscriptions.subscriptionId": subscription.id },
-        { $set: { "activeSubscriptions.$.status": "canceled" } }
-    );
-
-    await Community.updateOne(
-        { "members.stripeSubscriptionId": subscription.id },
-        { $set: { "members.$.status": "canceled" } }
-    );
-}
 
 module.exports = { Api: router };

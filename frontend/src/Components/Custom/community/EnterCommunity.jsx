@@ -20,6 +20,11 @@ import {
     Avatar,
     TextField,
     CircularProgress,
+    Dialog,
+    DialogTitle,
+    DialogContentText,
+    DialogContent,
+    DialogActions,
 } from "@mui/material";
 import {
     Info as InfoIcon,
@@ -29,6 +34,7 @@ import {
     Circle as OnlineIcon,
     People,
 } from "@mui/icons-material";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import { useReactRouter } from "../../Hooks/useReactRouter";
@@ -349,7 +355,12 @@ export const CommunityClassroom = ({
     );
 };
 
-export const CommunityChatroom = ({ communityId, userId, createdBy }) => {
+export const CommunityChatroom = ({
+    isSuperAdmin,
+    communityId,
+    userId,
+    createdBy,
+}) => {
     const theme = useTheme();
     const [messages, setMessages] = useState([]);
     const [onlineUsers, setOnlineUsers] = useState([]);
@@ -359,6 +370,9 @@ export const CommunityChatroom = ({ communityId, userId, createdBy }) => {
     const [isConnected, setIsConnected] = useState(false);
     const [sending, setIsSending] = useState(false);
     const [showOnlineUsers, setShowOnlineUsers] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [messageToDelete, setMessageToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const { token } = useToken();
     const { isMobile } = useResponsive();
@@ -390,17 +404,26 @@ export const CommunityChatroom = ({ communityId, userId, createdBy }) => {
 
             eventSource.addEventListener("initial", (e) => {
                 const { messages, onlineUsers } = JSON.parse(e.data);
+
                 setMessages(messages);
                 setOnlineUsers(onlineUsers);
             });
 
             eventSource.addEventListener("newMessage", (e) => {
                 const newMessage = JSON.parse(e.data);
+
                 setMessages((prev) => [...prev, newMessage]);
+            });
+
+            eventSource.addEventListener("deleteMessage", (e) => {
+                const { _id } = JSON.parse(e.data);
+
+                setMessages((prev) => prev.filter((msg) => msg._id !== _id));
             });
 
             eventSource.addEventListener("onlineUsers", (e) => {
                 const updatedOnlineUsers = JSON.parse(e.data);
+
                 setOnlineUsers(updatedOnlineUsers);
             });
 
@@ -464,6 +487,44 @@ export const CommunityChatroom = ({ communityId, userId, createdBy }) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             handleSendMessage();
+        }
+    };
+
+    // Handle opening delete confirmation dialog
+    const handleOpenDeleteDialog = (messageId) => {
+        setMessageToDelete(messageId);
+        setDeleteDialogOpen(true);
+    };
+
+    // Handle closing delete confirmation dialog
+    const handleCloseDeleteDialog = () => {
+        setDeleteDialogOpen(false);
+        setMessageToDelete(null);
+    };
+
+    // Handle deleting a message
+    const handleDeleteMessage = async () => {
+        if (!messageToDelete) return;
+
+        setIsDeleting(true);
+
+        try {
+            const response = await axios.delete(
+                `${serVer}/creator/${communityId}/delete-message/${messageToDelete}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            toast.success(response.data);
+        } catch (error) {
+            console.error("Failed to delete message:", error);
+            toast.error(error.response?.data || "Failed to delete message");
+        } finally {
+            setIsDeleting(false);
+            handleCloseDeleteDialog();
         }
     };
 
@@ -635,6 +696,7 @@ export const CommunityChatroom = ({ communityId, userId, createdBy }) => {
                                         <ListItem
                                             sx={{
                                                 display: "flex",
+                                                alignItems: "center",
                                                 justifyContent:
                                                     msg.sender._id === userId
                                                         ? "flex-end"
@@ -712,6 +774,18 @@ export const CommunityChatroom = ({ communityId, userId, createdBy }) => {
                                                     {formatTime(msg.createdAt)}
                                                 </Typography>
                                             </Box>
+                                            {/* delete button for admin and community creator */}
+                                            {isSuperAdmin && (
+                                                <IconButton
+                                                    color="error"
+                                                    onClick={() =>
+                                                        handleOpenDeleteDialog(
+                                                            msg._id
+                                                        )
+                                                    }>
+                                                    <DeleteForeverIcon color="error" />
+                                                </IconButton>
+                                            )}
                                         </ListItem>
                                         <Divider
                                             variant="inset"
@@ -784,6 +858,38 @@ export const CommunityChatroom = ({ communityId, userId, createdBy }) => {
                     </Paper>
                 </Box>
             </Box>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={handleCloseDeleteDialog}
+                aria-labelledby="delete-message-dialog-title"
+                aria-describedby="delete-message-dialog-description">
+                <DialogTitle id="delete-message-dialog-title">
+                    Delete Message
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="delete-message-dialog-description">
+                        Are you sure you want to delete this message? This
+                        action cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        variant="outlined"
+                        onClick={handleCloseDeleteDialog}
+                        color="primary">
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleDeleteMessage}
+                        color="error"
+                        autoFocus>
+                        {isDeleting ? <CircularProgress size={20} /> : "Delete"}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

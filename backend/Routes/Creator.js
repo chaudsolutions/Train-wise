@@ -274,4 +274,42 @@ router.put("/withdraw/:communityId", async (req, res) => {
     }
 });
 
+// Endpoint to delete a community message
+router.delete("/:communityId/delete-message/:messageId", async (req, res) => {
+    const { communityId, messageId } = req.params;
+    try {
+        // Find the CommunityMessage document for the community
+        const communityMessage = await CommunityMessage.findOne({
+            communityId,
+        });
+
+        if (!communityMessage) {
+            return res.status(404).json("Community messages not found");
+        }
+
+        // Check if the message exists
+        const messageExists = communityMessage.messages.some(
+            (msg) => msg._id.toString() === messageId
+        );
+        if (!messageExists) {
+            return res.status(404).json("Message not found");
+        }
+
+        // Delete the message using $pull
+        const result = await CommunityMessage.updateOne(
+            { communityId },
+            { $pull: { messages: { _id: messageId } } }
+        );
+
+        if (result.modifiedCount === 0) {
+            return res.status(500).json("Failed to delete message");
+        }
+
+        res.status(200).json("Message deleted successfully");
+    } catch (error) {
+        console.error("Error deleting message:", error);
+        res.status(500).json("Failed to delete message");
+    }
+});
+
 module.exports = { Creator: router };

@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
+const bcrypt = require("bcrypt");
 
 const Schema = mongoose.Schema;
 
@@ -46,13 +47,14 @@ const UsersSchema = new Schema(
                 endDate: { type: Date },
             },
         ],
+        passwordResetOTP: { type: String },
+        passwordResetExpiry: { type: Date },
     },
     { timestamps: true }
 );
 
 // Static sign up method and hashing password
 UsersSchema.statics.signup = async function ({ email, name, password, role }) {
-    console.log({ email, name, role, password });
     // validation
     if (!name || !email || !password) {
         throw Error("All Fields must be filled");
@@ -68,11 +70,14 @@ UsersSchema.statics.signup = async function ({ email, name, password, role }) {
         throw Error("User already exists");
     }
 
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(password, salt);
+
     const user = await this.create({
         name,
         email,
         role,
-        password,
+        password: hash,
     });
 
     return user;
@@ -92,7 +97,7 @@ UsersSchema.statics.login = async function ({ email, password }) {
         throw Error("User does not exist");
     }
 
-    const match = password === user.password;
+    const match = await bcrypt.compare(password, user.password);
     if (!match) {
         throw Error("Incorrect password");
     }

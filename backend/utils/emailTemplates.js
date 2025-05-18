@@ -1,0 +1,145 @@
+const baseEmailTemplate = (title, content, note) => `
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* Base styles */
+        .email-container { 
+            max-width: 600px;
+            margin: 0 auto;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+            line-height: 1.6; 
+            color: #333333; 
+            padding: 0.5rem;
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eeeeee;
+            margin-bottom: 1rem;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        .logo {
+            height: 5rem;
+            object-fit: contain;
+            margin-bottom: 5px;
+        }
+        .content {
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            color: #666666;
+            font-size: 0.9em;
+            border-top: 2px solid #eeeeee;
+        }
+        .note {
+            color: #666666;
+            font-size: 0.9em;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <img src="https://train-wise-frontend.vercel.app/logo.png" alt="Company Logo" class="logo">
+            <h1>${title}</h1>
+        </div>
+        
+        <div class="content">
+            ${content}
+            ${note ? `<p class="note">${note}</p>` : ""}
+        </div>
+
+        <div class="footer">
+            <p>&copy; ${new Date().getFullYear()} TrainWise. All rights reserved.</p>
+            <p>Built with passion in 2025</p>
+            <p>Need help? <a href="mailto:support@trainwise.com">Contact our support team</a></p>
+        </div>
+    </div>
+</body>
+</html>
+`;
+
+// Password Reset Email
+exports.passwordResetOTPEmail = (otpCode) => {
+    const subject = "Your Password Reset OTP";
+    const content = `
+        <p>We received a request to reset your password. Use the following OTP to verify your identity:</p>
+        <div style="
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #2c3e50;
+            background-color: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+            display: inline-block;
+            font-family: monospace;
+        ">
+            ${otpCode}
+        </div>
+        <p>This OTP is valid for 2 hrs. Do not share this code with anyone.</p>
+        <p>If you didn't request this password reset, please ignore this email.</p>
+    `;
+    const note =
+        "Note: This code contains both letters and numbers, and is case-sensitive.";
+
+    return {
+        subject,
+        html: baseEmailTemplate(subject, content, note),
+        text: `Your Password Reset OTP: ${otpCode}\nThis code expires in 2hrs. Do not share it.`,
+    };
+};
+
+// Welcome Email
+exports.welcomeEmail = (userName) => {
+    const subject = `Welcome to Our Service, ${userName}!`;
+    const content = `
+        <p>Thank you for joining our community!</p>
+        <p>Get started by exploring our features:</p>
+        <a href="https://yourdomain.com/dashboard" class="button">Go to Dashboard</a>
+        <p>Need help getting started? Check out our <a href="https://yourdomain.com/guides">getting started guides</a>.</p>
+    `;
+
+    return {
+        subject,
+        html: baseEmailTemplate(subject, content),
+        text: `Welcome to Our Service!\n\nGet started: https://yourdomain.com/dashboard`,
+    };
+};
+
+// Email Verification Email
+exports.verifyEmail = (verificationLink) => {
+    const subject = "Verify Your Email Address";
+    const content = `
+        <p>Please verify your email address to complete your registration:</p>
+        <a href="${verificationLink}" class="button">Verify Email</a>
+        <p>If you didn't create an account, you can safely ignore this email.</p>
+    `;
+    const note = "This verification link will expire in 24 hours.";
+
+    return {
+        subject,
+        html: baseEmailTemplate(subject, content, note),
+        text: `Email Verification Link: ${verificationLink}`,
+    };
+};

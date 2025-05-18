@@ -32,6 +32,7 @@ import Withdrawals from "./Components/App/Profile/Withdrawals";
 import WithdrawalsDash from "./Components/App/admin/WithdrawalsDash";
 import AdminLayout from "./layout/AdminLayout";
 import CommunityCreatorLayout from "./layout/CommunityCreatorLayout";
+import PasswordReset from "./Components/App/auth/PasswordReset";
 
 function App() {
     const { user } = useAuthContext();
@@ -69,6 +70,18 @@ function App() {
 
                         {/* contact us */}
                         <Route path="/contact-us" element={<ContactUs />} />
+
+                        {/* auth / password reset */}
+                        <Route
+                            path="/forgot-password"
+                            element={
+                                !user ? (
+                                    <PasswordReset />
+                                ) : (
+                                    <Navigate to="/profile" />
+                                )
+                            }
+                        />
 
                         {/* profile */}
                         <Route

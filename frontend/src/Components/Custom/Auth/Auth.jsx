@@ -87,7 +87,7 @@ const Auth = ({ setAuthContain, authContain }) => {
                 </Box>
 
                 {/* Toggle between login/register */}
-                <DialogContentText textAlign="center">
+                <DialogContentText component="div" textAlign="center">
                     <Box component="div" fontSize=".9rem">
                         {view === "login"
                             ? "Don't have an account?"

@@ -77,11 +77,13 @@ const EnterCommunity = () => {
         createdBy,
         createdAt,
         notifications,
+        role,
     } = community || {};
 
     const { _id, coursesWatched } = userData || {};
     const { courses } = coursesData || {};
     const isCommunityAdmin = createdBy?._id === _id;
+    const isSuperAdmin = role === "admin";
 
     const handleTabChange = (event, newValue) => {
         setActiveTab(newValue);
@@ -290,6 +292,9 @@ const EnterCommunity = () => {
 
                             {activeTab === "chatroom" && (
                                 <CommunityChatroom
+                                    isSuperAdmin={
+                                        isSuperAdmin || isCommunityAdmin
+                                    }
                                     communityId={communityId}
                                     userId={_id}
                                     createdBy={createdBy}

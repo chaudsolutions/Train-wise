@@ -17,6 +17,7 @@ import {
 import { useAuthContext } from "../../Context/AuthContext";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import axios from "axios";
+import { Link as NavLink } from "react-router-dom";
 
 export const LoginForm = ({ setAuthContainer }) => {
     const theme = useTheme();
@@ -126,7 +127,9 @@ export const LoginForm = ({ setAuthContainer }) => {
             {/* Forgot Password Link */}
             <Box textAlign="right" mt={1}>
                 <Link
-                    href="/forgot-password"
+                    component={NavLink}
+                    onClick={() => setAuthContainer(false)}
+                    to="/forgot-password"
                     variant="body2"
                     color="text.secondary"
                     sx={{

@@ -19,14 +19,12 @@ const NotFound = () => {
     };
 
     return (
-        <Container maxWidth="sm" sx={{ py: 8 }}>
+        <Container maxWidth="sm" sx={{ py: 2 }}>
             <Box
                 sx={{
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    justifyContent: "center",
-                    minHeight: "60vh",
                     textAlign: "center",
                     gap: 3,
                 }}>
@@ -37,7 +35,6 @@ const NotFound = () => {
                     sx={{
                         width: 100,
                         height: 100,
-                        mb: 2,
                     }}
                 />
 
@@ -45,7 +42,7 @@ const NotFound = () => {
                 <Typography
                     variant="h1"
                     sx={{
-                        fontSize: "6rem",
+                        fontSize: "3rem",
                         fontWeight: 700,
                         color: theme.palette.text.primary,
                         lineHeight: 1,
@@ -55,9 +52,9 @@ const NotFound = () => {
 
                 <Typography
                     variant="h4"
+                    fontSize="1.1rem"
                     sx={{
                         fontWeight: 600,
-                        mb: 1,
                     }}>
                     Page Not Found
                 </Typography>

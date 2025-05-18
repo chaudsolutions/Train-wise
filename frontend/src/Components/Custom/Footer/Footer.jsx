@@ -6,16 +6,20 @@ import {
     Typography,
     Divider,
     useTheme,
+    IconButton,
+    Stack,
 } from "@mui/material";
 import { Logo } from "../Nav/Nav";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import { useAuthContext } from "../../Context/AuthContext";
+import { Facebook, Twitter, Instagram } from "@mui/icons-material";
+import useResponsive from "../../Hooks/useResponsive";
 
 const Footer = () => {
     const { user } = useAuthContext();
     const { NavLink } = useReactRouter();
-
     const theme = useTheme();
+    const { isMobile } = useResponsive();
 
     const footerLinks = [
         { name: "Contact Us", link: "/contact-us" },
@@ -24,100 +28,161 @@ const Footer = () => {
         { name: "Pricing", link: "/pricing" },
     ];
 
+    const socialLinks = [
+        { icon: <Twitter />, link: "#" },
+        { icon: <Facebook />, link: "#" },
+        { icon: <Instagram />, link: "#" },
+    ];
+
     return (
         <Box
             component="footer"
             sx={{
-                backgroundColor: theme.palette.info.dark,
-                color: theme.palette.info.contrastText,
-                py: 6,
+                background: `linear-gradient(180deg, ${theme.palette.grey[900]} 0%, ${theme.palette.grey[900]} 100%)`,
+                color: theme.palette.common.white,
+                py: isMobile ? 2 : 6,
                 mt: "auto",
             }}>
             <Container maxWidth="lg">
                 <Grid container spacing={4}>
+                    {/* Brand Column */}
                     <Grid size={{ xs: 12, md: 6 }}>
-                        <Box width="fit-content">
-                            <Logo />
-                        </Box>
-
-                        <Typography variant="body1" paragraph>
-                            Connecting people through shared interests and
-                            passions.
-                        </Typography>
+                        <Stack spacing={3}>
+                            <Box>
+                                <Logo />
+                            </Box>
+                            <Typography
+                                variant="body1"
+                                sx={{
+                                    opacity: 0.8,
+                                    maxWidth: 400,
+                                    fontSize: ".8rem",
+                                }}>
+                                Connecting people through shared interests and
+                                passions. Join our growing community today.
+                            </Typography>
+                        </Stack>
                     </Grid>
 
-                    <Grid size={{ xs: 6, md: 3 }}>
+                    {/* Quick Links Column */}
+                    <Grid size={{ xs: 12, md: 3 }}>
                         <Typography
                             variant="h6"
+                            textAlign="center"
                             gutterBottom
-                            sx={{ fontWeight: 600 }}>
+                            sx={{
+                                fontWeight: 700,
+                                letterSpacing: 0.5,
+                            }}>
                             Quick Links
                         </Typography>
-                        <Box
-                            component="ul"
-                            sx={{ listStyle: "none", p: 0, m: 0 }}>
+                        <Stack
+                            spacing={1.5}
+                            direction="row"
+                            justifyContent="center">
                             {footerLinks.map((link, i) => (
-                                <li
+                                <Link
                                     key={i}
-                                    style={{
-                                        marginBottom: theme.spacing(1),
+                                    component={NavLink}
+                                    to={link.link}
+                                    color="inherit"
+                                    underline="none"
+                                    sx={{
+                                        whiteSpace: "nowrap",
+                                        opacity: 0.8,
+                                        transition: "all 0.3s ease",
+                                        "&:hover": {
+                                            opacity: 1,
+                                            color: theme.palette.primary.main,
+                                        },
+                                        "&.active": {
+                                            color: theme.palette.primary.main,
+                                            fontWeight: 600,
+                                        },
                                     }}>
-                                    <Link
-                                        component={NavLink}
-                                        to={link.link}
-                                        color="inherit"
-                                        underline="hover"
-                                        sx={{
-                                            "&.active": {
-                                                color: theme.palette.info.light,
-                                                fontWeight: 500,
-                                            },
-                                        }}>
-                                        {link.name}
-                                    </Link>
-                                </li>
+                                    {link.name}
+                                </Link>
                             ))}
                             {user && (
-                                <li>
-                                    <Link
-                                        component={NavLink}
-                                        to="/profile"
-                                        color="inherit"
-                                        underline="hover"
-                                        sx={{
-                                            "&.active": {
-                                                color: theme.palette.info.light,
-                                                fontWeight: 500,
-                                            },
-                                        }}>
-                                        Profile
-                                    </Link>
-                                </li>
+                                <Link
+                                    component={NavLink}
+                                    to="/profile"
+                                    color="inherit"
+                                    underline="none"
+                                    sx={{
+                                        opacity: 0.8,
+                                        transition: "all 0.3s ease",
+                                        "&:hover": {
+                                            opacity: 1,
+                                            color: theme.palette.primary.main,
+                                            transform: "translateX(4px)",
+                                        },
+                                    }}>
+                                    Profile
+                                </Link>
                             )}
-                        </Box>
+                        </Stack>
                     </Grid>
 
-                    <Grid size={{ xs: 6, md: 3 }}>
+                    {/* Social Links Column */}
+                    <Grid size={{ xs: 12, md: 3 }}>
                         <Typography
                             variant="h6"
+                            textAlign="center"
                             gutterBottom
-                            sx={{ fontWeight: 600 }}>
+                            sx={{
+                                fontWeight: 700,
+                                letterSpacing: 0.5,
+                            }}>
                             Follow Us
                         </Typography>
+                        <Stack
+                            direction="row"
+                            spacing={2}
+                            alignItems="center"
+                            justifyContent="center">
+                            {socialLinks.map((social, index) => (
+                                <IconButton
+                                    key={index}
+                                    href={social.link}
+                                    target="_blank"
+                                    rel="noopener"
+                                    sx={{
+                                        color: theme.palette.common.white,
+                                        opacity: 0.8,
+                                        transition: "all 0.3s ease",
+                                        "&:hover": {
+                                            opacity: 1,
+                                            color: theme.palette.primary.main,
+                                            transform: "translateY(-2px)",
+                                        },
+                                    }}>
+                                    {social.icon}
+                                </IconButton>
+                            ))}
+                        </Stack>
                     </Grid>
                 </Grid>
 
                 <Divider
                     sx={{
-                        my: 4,
-                        backgroundColor: theme.palette.info.light,
-                        opacity: 0.2,
+                        my: 2,
+                        bgcolor: "white",
                     }}
                 />
 
-                <Typography variant="body2" align="center">
+                <Typography
+                    variant="body2"
+                    align="center"
+                    sx={{
+                        opacity: 0.6,
+                        letterSpacing: 0.5,
+                        fontSize: "0.7rem",
+                    }}>
                     © {new Date().getFullYear()} CommunityHub. All rights
                     reserved.
+                    <br />
+                    Built with passion in {new Date().getFullYear()}
                 </Typography>
             </Container>
         </Box>
