@@ -12,6 +12,7 @@ const Notification = require("../Models/Notification");
 const Withdrawal = require("../Models/Withdrawal");
 const Payment = require("../Models/Payment");
 const PaymentDetails = require("../Models/PaymentDetails");
+const Settings = require("../Models/Settings");
 
 const router = express.Router();
 
@@ -679,6 +680,22 @@ router.put("/payment-details", async (req, res) => {
     } catch (error) {
         console.error("Payment details error:", error);
         res.status(500).json({ error: "Failed to update payment details" });
+    }
+});
+
+// Get current settings
+router.get("/settings", async (req, res) => {
+    try {
+        const settings = await Settings.findOne().lean();
+
+        if (!settings) {
+            return res.status(404).json("Settings not found");
+        }
+
+        res.status(200).json(settings);
+    } catch (error) {
+        res.status(500).json("Error fetching settings");
+        console.log(error);
     }
 });
 

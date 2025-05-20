@@ -20,6 +20,7 @@ import { serVer, useToken } from "../../Hooks/useVariable";
 import {
     useCategoriesData,
     useCommunitiesData,
+    useSettingsData,
     useUserData,
 } from "../../Hooks/useQueryFetch/useQueryData";
 import PageLoader from "../../Animations/PageLoader";
@@ -127,9 +128,11 @@ const CreateCommunity = () => {
     const theme = useTheme();
     const { useNavigate } = useReactRouter();
     const { token } = useToken();
+    const { settingsData, isSettingsLoading } = useSettingsData();
     const { isCommunitiesLoading, refetchCommunities } = useCommunitiesData();
     const { categories, isCategoriesLoading } = useCategoriesData();
     const { userData, isUserDataLoading } = useUserData();
+    const { communityCreationFee } = settingsData || {};
 
     const {
         register,
@@ -149,7 +152,10 @@ const CreateCommunity = () => {
 
     const userRole = userData?.role; // "admin", "creator", or "user"
 
-    const PaymentBenefitsCard = () => (
+    const PaymentBenefitsCard = ({
+        communityCreationFee,
+        isSettingsLoading,
+    }) => (
         <Paper
             elevation={3}
             sx={{
@@ -182,8 +188,14 @@ const CreateCommunity = () => {
                 One-time setup fee for regular users:{" "}
                 <Box
                     component="span"
+                    display="inline-flex"
+                    alignItems="center"
                     sx={{ color: "success.main", fontSize: "1.2rem" }}>
-                    $100
+                    {isSettingsLoading ? (
+                        <CircularProgress color="error" size={15} />
+                    ) : (
+                        <>${(communityCreationFee / 100).toLocaleString()}</>
+                    )}
                 </Box>
                 {userRole === "admin" || userRole === "creator" ? (
                     <Box component="span" sx={{ ml: 1, color: "info.main" }}>
@@ -256,7 +268,10 @@ const CreateCommunity = () => {
         <Elements stripe={stripePromise}>
             <Container maxWidth="md" sx={{ py: 4 }}>
                 <Paper elevation={3} sx={{ p: 4, borderRadius: 4 }}>
-                    <PaymentBenefitsCard />
+                    <PaymentBenefitsCard
+                        communityCreationFee={communityCreationFee}
+                        isSettingLoading={isSettingsLoading}
+                    />
                     <Typography
                         variant="h4"
                         component="h1"

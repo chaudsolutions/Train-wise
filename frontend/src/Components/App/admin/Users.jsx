@@ -15,6 +15,12 @@ import {
     Paper,
     Divider,
     Grid,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
+    CircularProgress,
 } from "@mui/material";
 import { People, GroupAdd, SwitchAccount, Groups } from "@mui/icons-material";
 import { useState } from "react";
@@ -26,24 +32,41 @@ import { serVer, useToken } from "../../Hooks/useVariable";
 import toast from "react-hot-toast";
 
 const Users = () => {
-    const { analyticsData, isAnalyticsDataLoading } = useAdminAnalyticsData();
+    const { analyticsData, isAnalyticsDataLoading, refetchAnalyticsData } =
+        useAdminAnalyticsData();
     const [tabValue, setTabValue] = useState(0);
+    const [openDialog, setOpenDialog] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [newRole, setNewRole] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
     const { users } = analyticsData || {};
     const { creatorRoles, userRoles } = users || {};
 
     const { token } = useToken();
 
-    const handleChangeRole = async (userId, newRole) => {
+    const handleRoleChangeClick = (userId, role) => {
+        setSelectedUser(userId);
+        setNewRole(role);
+        setOpenDialog(true);
+    };
+
+    const handleConfirmRoleChange = async () => {
+        setIsLoading(true);
         try {
             await axios.put(
-                `${serVer}/admin/role-change/${userId}`,
+                `${serVer}/admin/role-change/${selectedUser}`,
                 { newRole },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
+
             toast.success(`Role changed to ${newRole}`);
             // Refetch analytics data if needed
+            refetchAnalyticsData();
+            setOpenDialog(false);
         } catch (error) {
             toast.error(error?.response.data || "Failed to change role");
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -285,7 +308,7 @@ const Users = () => {
                                                                     <SwitchAccount />
                                                                 }
                                                                 onClick={() =>
-                                                                    handleChangeRole(
+                                                                    handleRoleChangeClick(
                                                                         user._id,
                                                                         "creator"
                                                                     )
@@ -341,7 +364,8 @@ const Users = () => {
                                     gap: 1,
                                     fontWeight: 500,
                                 }}>
-                                <GroupAdd /> Content Creators
+                                <GroupAdd />
+                                Creators
                             </Typography>
                             {creatorRoles?.length > 0 ? (
                                 <List>
@@ -541,7 +565,7 @@ const Users = () => {
                                                                     <SwitchAccount />
                                                                 }
                                                                 onClick={() =>
-                                                                    handleChangeRole(
+                                                                    handleRoleChangeClick(
                                                                         user._id,
                                                                         "user"
                                                                     )
@@ -589,6 +613,44 @@ const Users = () => {
                     )}
                 </CardContent>
             </Card>
+
+            {/* Role Change Dialog */}
+            <Dialog
+                open={openDialog}
+                onClose={() => setOpenDialog(false)}
+                aria-labelledby="role-change-dialog">
+                <DialogTitle id="role-change-dialog">
+                    Confirm Role Change
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to change this user&apos;s role to{" "}
+                        {newRole}?
+                    </DialogContentText>
+                    <DialogContentText sx={{ mt: 2, color: "warning.main" }}>
+                        Note: This action will immediately affect the
+                        user&apos;s permissions.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        onClick={() => setOpenDialog(false)}
+                        color="inherit">
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleConfirmRoleChange}
+                        color="primary"
+                        variant="contained"
+                        autoFocus>
+                        {isLoading ? (
+                            <CircularProgress color="inherit" size={20} />
+                        ) : (
+                            "Confirm"
+                        )}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

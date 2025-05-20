@@ -11,6 +11,7 @@ const CommunityMessage = require("../Models/CommunityMessage");
 const Payment = require("../Models/Payment");
 const { createNotification } = require("../utils/notifications");
 const { createCourse } = require("../controllers/course.controller");
+const Settings = require("../Models/Settings");
 
 const router = express.Router();
 
@@ -60,6 +61,8 @@ router.post(
                 return res.status(404).json("User not found");
             }
 
+            const settings = await Settings.findOne().lean();
+
             // Check payment or role
             if (!paymentId) {
                 // If no paymentId, user must be admin or creator
@@ -76,7 +79,7 @@ router.post(
                 if (
                     paymentIntent.status !== "succeeded" ||
                     paymentIntent.amount !==
-                        parseInt(process.env.COMMUNITY_CREATION_FEE)
+                        parseInt(settings.communityCreationFee)
                 ) {
                     return res
                         .status(400)

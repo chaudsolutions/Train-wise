@@ -7,6 +7,7 @@ const Community = require("../Models/Community");
 const UsersModel = require("../Models/Users");
 const { createNotification } = require("../utils/notifications");
 const Withdrawal = require("../Models/Withdrawal");
+const Settings = require("../Models/Settings");
 
 const router = express.Router();
 
@@ -295,6 +296,11 @@ router.get("/dashboard/analytics", async (req, res) => {
         const creatorRoles = leanUsers.filter((u) => u.role === "creator");
         const userRoles = leanUsers.filter((u) => u.role === "user");
 
+        // get settings
+        const settings = await Settings.findOne().lean();
+        const communityCreationFee = settings.communityCreationFee / 100;
+        const withdrawalLimit = settings.withdrawalLimit;
+
         const analytics = {
             revenue: {
                 totalRevenue,
@@ -319,12 +325,38 @@ router.get("/dashboard/analytics", async (req, res) => {
                 rejectedWithdrawals,
                 confirmedWithdrawals,
             },
+            settings: {
+                communityCreationFee,
+                withdrawalLimit,
+            },
         };
 
         res.status(200).json(analytics);
     } catch (error) {
         console.error("Error fetching analytics:", error);
         res.status(500).send("Internal server error.");
+    }
+});
+
+// Update settings
+router.put("/settings", async (req, res) => {
+    try {
+        const updateData = {
+            $set: req.body,
+        };
+
+        // save the creation fee in cents for stripe
+        await Settings.findOneAndUpdate({}, updateData, {
+            new: true,
+            upsert: true,
+            setDefaultsOnInsert: true,
+        });
+
+        res.json("Settings Updated");
+    } catch (error) {
+        res.status(400).json({
+            message: error.message || "Error updating settings",
+        });
     }
 });
 

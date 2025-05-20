@@ -35,6 +35,7 @@ import PageLoader from "../../Animations/PageLoader";
 import axios from "axios";
 import { serVer, useToken } from "../../Hooks/useVariable";
 import toast from "react-hot-toast";
+import useResponsive from "../../Hooks/useResponsive";
 
 const CommunityDash = () => {
     const { analyticsData, isAnalyticsDataLoading, refetchAnalyticsData } =
@@ -47,6 +48,8 @@ const CommunityDash = () => {
         freeCommunities,
         paidCommunities,
     } = communities || {};
+
+    const { isMobile } = useResponsive();
 
     // State for confirmation dialog
     const [openDialog, setOpenDialog] = useState(false);
@@ -308,7 +311,7 @@ const CommunityDash = () => {
                     variant="fullWidth"
                     sx={{ borderRadius: 2 }}>
                     <Tab
-                        label={`All Communities (${
+                        label={`All ${isMobile ? "" : "Communities"} (${
                             allCommunities?.length || 0
                         })`}
                         icon={<Groups />}
@@ -320,7 +323,7 @@ const CommunityDash = () => {
                         }}
                     />
                     <Tab
-                        label={`Free Communities (${
+                        label={`Free ${isMobile ? "" : "Communities"} (${
                             freeCommunities?.length || 0
                         })`}
                         icon={<FreeBreakfast />}
@@ -332,7 +335,7 @@ const CommunityDash = () => {
                         }}
                     />
                     <Tab
-                        label={`Paid Communities (${
+                        label={`Paid ${isMobile ? "" : "Communities"} (${
                             paidCommunities?.length || 0
                         })`}
                         icon={<MonetizationOn />}

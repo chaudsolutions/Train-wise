@@ -33,6 +33,7 @@ import WithdrawalsDash from "./Components/App/admin/WithdrawalsDash";
 import AdminLayout from "./layout/AdminLayout";
 import CommunityCreatorLayout from "./layout/CommunityCreatorLayout";
 import PasswordReset from "./Components/App/auth/PasswordReset";
+import Settings from "./Components/App/admin/Settings";
 
 function App() {
     const { user } = useAuthContext();
@@ -175,6 +176,7 @@ function App() {
                                 path="withdrawals"
                                 element={<WithdrawalsDash />}
                             />
+                            <Route path="settings" element={<Settings />} />
                         </Route>
 
                         <Route path="/buggy" element={<BuggyComponent />} />

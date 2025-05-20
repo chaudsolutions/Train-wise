@@ -17,6 +17,7 @@ import {
     ChevronLeft as ChevronLeftIcon,
 } from "@mui/icons-material";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { Logo } from "../Nav/Nav";
 
 const SideNav = ({ isMobile, drawerOpen, handleDrawerToggle, drawerWidth }) => {
@@ -41,6 +42,11 @@ const SideNav = ({ isMobile, drawerOpen, handleDrawerToggle, drawerWidth }) => {
             text: "Categories",
             icon: <CategoryIcon />,
             path: "categories",
+        },
+        {
+            text: "Settings",
+            icon: <SettingsIcon />,
+            path: "settings",
         },
     ];
 

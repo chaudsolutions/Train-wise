@@ -8,6 +8,7 @@ import {
     fetchCommunityCourses,
     fetchCommunitySingleCourse,
     fetchNotifications,
+    fetchSettings,
     fetchUser,
     fetchUserAnalytics,
     fetchUserMembership,
@@ -285,5 +286,28 @@ export const useUserWithdrawals = () => {
         isWithdrawalsDataLoading,
         isWithdrawalsDataError,
         refetchWithdrawalsData,
+    };
+};
+
+// use settings data
+export const useSettingsData = () => {
+    const { user } = useAuthContext();
+
+    const {
+        data: settingsData,
+        isLoading: isSettingsLoading,
+        isError: isSettingsError,
+        refetch: refetchSettings,
+    } = useQuery({
+        queryKey: ["settings"], // Use the new object-based syntax
+        queryFn: fetchSettings,
+        enabled: !!user,
+    });
+
+    return {
+        settingsData,
+        isSettingsLoading,
+        isSettingsError,
+        refetchSettings,
     };
 };
