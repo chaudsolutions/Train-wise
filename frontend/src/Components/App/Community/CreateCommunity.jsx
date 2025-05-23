@@ -26,104 +26,11 @@ import {
 import PageLoader from "../../Animations/PageLoader";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { useState } from "react";
 import { PaymentDialog } from "../../Custom/payment/PaymentDialog";
 
 // Initialize Stripe with your publishable key
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PK);
-
-const PaymentForm = ({
-    formData,
-    token,
-    createCommunity,
-    theme,
-    onSuccess,
-}) => {
-    const stripe = useStripe();
-    const elements = useElements();
-    const [paymentProcessing, setPaymentProcessing] = useState(false);
-
-    const handlePaymentSubmit = async () => {
-        if (!formData || !stripe || !elements) {
-            toast.error("Stripe is not initialized or form data is missing");
-            return;
-        }
-        setPaymentProcessing(true);
-        try {
-            const paymentResponse = await axios.post(
-                `${serVer}/payment/create-payment-intent`,
-                { amount: 100, type: "community_creation" },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            const { clientSecret } = paymentResponse.data;
-
-            const { error, paymentIntent } = await stripe.confirmCardPayment(
-                clientSecret,
-                {
-                    payment_method: {
-                        card: elements.getElement(CardElement),
-                        billing_details: { name: "Community Creator" },
-                    },
-                }
-            );
-
-            if (error) throw error;
-
-            if (paymentIntent.status === "succeeded") {
-                await createCommunity({
-                    ...formData,
-                    paymentId: paymentIntent.id,
-                });
-                onSuccess(); // Close PaymentForm after success
-            }
-        } catch (error) {
-            toast.error(`Payment failed: ${error.message}`);
-            toast.error("Payment Failed");
-        } finally {
-            setPaymentProcessing(false);
-        }
-    };
-
-    return (
-        <Box
-            sx={{
-                mt: 4,
-                p: 3,
-                border: `1px solid ${theme.palette.divider}`,
-                borderRadius: 2,
-            }}>
-            <Typography variant="h6" gutterBottom>
-                Payment Information
-            </Typography>
-            <CardElement
-                options={{
-                    style: {
-                        base: {
-                            fontSize: "16px",
-                            color: theme.palette.text.primary,
-                            "::placeholder": {
-                                color: theme.palette.text.secondary,
-                            },
-                        },
-                    },
-                }}
-            />
-            <Button
-                variant="contained"
-                color="info"
-                disabled={paymentProcessing}
-                onClick={handlePaymentSubmit}
-                sx={{ mt: 3 }}>
-                {paymentProcessing ? (
-                    <CircularProgress size={24} color="inherit" />
-                ) : (
-                    "Pay $100 & Create Community"
-                )}
-            </Button>
-        </Box>
-    );
-};
 
 const CreateCommunity = () => {
     const theme = useTheme();

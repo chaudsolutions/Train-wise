@@ -59,7 +59,7 @@ router.put("/joinCommunity/:communityId", async (req, res) => {
         if (isMember) {
             return res.status(200).json("Welcome Back");
         }
-        if (user.role === "admin") {
+        if (user.role === "admin" || community.createdBy === userId) {
             return res.status(200).json("Welcome Admin");
         }
 
