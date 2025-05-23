@@ -18,6 +18,14 @@ const CommunitiesList = ({ community }) => {
     const { Link } = useReactRouter();
     const theme = useTheme();
 
+    // Add this format function
+    const formatCreatorName = (fullName) => {
+        if (!fullName) return "";
+        const names = fullName.split(" ");
+        if (names.length === 1) return names[0];
+        return `${names[0]} ${names[1][0]}.`;
+    };
+
     return (
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <Card
@@ -99,16 +107,29 @@ const CommunitiesList = ({ community }) => {
                                     borderColor: theme.palette.info.light,
                                 }}
                             />
-                            <Typography
-                                variant="h6"
-                                component="h3"
-                                noWrap
-                                sx={{
-                                    fontWeight: 600,
-                                    color: theme.palette.text.primary,
-                                }}>
-                                {community?.name}
-                            </Typography>
+                            <Box>
+                                <Typography
+                                    variant="h6"
+                                    component="h3"
+                                    fontSize="1.1rem"
+                                    noWrap
+                                    sx={{
+                                        fontWeight: 600,
+                                        color: theme.palette.text.primary,
+                                    }}>
+                                    {community?.name}
+                                </Typography>
+                                <Typography
+                                    variant="caption"
+                                    sx={{
+                                        color: theme.palette.text.secondary,
+                                        display: "block",
+                                        lineHeight: 1.2,
+                                    }}>
+                                    Created by{" "}
+                                    {formatCreatorName(community?.creatorName)}
+                                </Typography>
+                            </Box>
                         </Box>
 
                         <Typography

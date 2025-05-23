@@ -22,18 +22,34 @@ const CommunityLayout = () => {
 
     const { onlineStatus } = userData || {};
 
+    console.log(userMembershipData);
+
     useEffect(() => {
         // Redirect if the user is not a member
-        if (userMembershipData && userMembershipData === "") {
-            toast.error(
-                "You're not not a member of this community or your subscription has expired"
-            );
+        if (userMembershipData && userMembershipData === null) {
+            toast.error("You're not not a member of this community");
 
             navigate("/"); // Redirect to a "not authorized" page
         } else {
             setIsLoad(false);
         }
     }, [userMembershipData, isUserMembershipLoading, navigate]);
+
+    // update membership status if due date for subscription based communities and trigger a dialog to ask if user wants to renew subscription or cancel
+    useEffect(() => {
+        const currentDate = new Date();
+        if (userMembershipData && userMembershipData.currentPeriodEnd) {
+            const membershipDueDate = new Date(
+                userMembershipData.currentPeriodEnd
+            );
+            if (membershipDueDate < currentDate) {
+                // show dialog
+                toast.error(
+                    "Your membership has expired. Please renew your subscription."
+                );
+            }
+        }
+    }, [userMembershipData]);
 
     // function to toggle user online status
     useOnlineStatus({ onlineStatus, isUserDataLoading });

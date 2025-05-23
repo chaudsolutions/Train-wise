@@ -82,6 +82,7 @@ const CommunityView = () => {
         bannerImage,
         members,
         createdBy,
+        creatorName,
     } = community || {};
 
     const { _id } = userData || {};
@@ -186,9 +187,7 @@ const CommunityView = () => {
                                     />
                                     <Chip
                                         icon={<PersonIcon />}
-                                        label={
-                                            isCreator ? "You" : createdBy?.name
-                                        }
+                                        label={isCreator ? "You" : creatorName}
                                         color="info"
                                         variant="outlined"
                                         deleteIcon={<StarIcon color="info" />}

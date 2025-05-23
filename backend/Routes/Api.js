@@ -29,7 +29,7 @@ router.get("/community/:id", async (req, res) => {
         //   get community by id
         const community = await Community.findById(id)
             .select(
-                "name description balance rules visions category createdBy logo bannerImage subscriptionFee members createdAt"
+                "name description balance rules visions category createdBy creatorName logo bannerImage subscriptionFee members createdAt"
             )
             .populate("createdBy", "name avatar") // Populate creator name
             .populate("members.userId", "name avatar") // Populate member names and id

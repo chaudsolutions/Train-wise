@@ -35,8 +35,6 @@ router.post(
             paymentId,
         } = req.body;
 
-        console.log(req.body);
-
         const bannerImage = req.files["bannerImage"]?.[0];
         const logo = req.files["logo"]?.[0];
 
@@ -118,9 +116,15 @@ router.post(
                 bannerImage: bannerImageResult.secure_url,
                 logo: logoResult.secure_url,
                 createdBy: creator._id,
+                creatorName: creator.name,
+                canExplore: true,
             };
             if (paymentId) {
                 communityData.paymentId = paymentId;
+                // add 1yr to date
+                const currentDate = new Date();
+                currentDate.setFullYear(currentDate.getFullYear() + 1);
+                communityData.renewalDate = currentDate;
             }
 
             const community = await Community.create(communityData);

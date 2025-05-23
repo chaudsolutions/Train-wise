@@ -15,7 +15,7 @@ const FAQComponent = () => {
     const FAQs = [
         {
             title: "How do I create a community?",
-            info: "Admins can create communities by clicking 'Create Community' in their dashboard, choosing between free/paid options, and setting up their community details.",
+            info: "Users can create communities by clicking 'Create Community' in their dashboard, and setting up their community details.",
         },
         {
             title: "Can I switch a free community to paid later?",
@@ -32,10 +32,6 @@ const FAQComponent = () => {
         {
             title: "Are there platform fees?",
             info: "We charge a 5% platform fee on all paid community transactions. Free communities have no fees.",
-        },
-        {
-            title: "Can I customize my community's layout?",
-            info: "Yes! Admins get drag-and-drop tools to organize courses, forums, and resources in their community space.",
         },
         {
             title: "How do I manage community members?",
@@ -64,10 +60,6 @@ const FAQComponent = () => {
         {
             title: "How are payments processed?",
             info: "We use PCI-compliant payment gateways (Stripe/PayPal) to ensure secure transactions for both admins and members.",
-        },
-        {
-            title: "Can I preview content before joining?",
-            info: "Admins can choose to display free preview lessons or community descriptions to non-members.",
         },
         {
             title: "How do I report inappropriate content?",

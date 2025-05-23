@@ -30,8 +30,6 @@ const { Creator } = require("./Routes/Creator");
 const { Api } = require("./Routes/Api");
 const { VerifyPayments } = require("./Routes/VerifyPayments");
 const { Admin } = require("./Routes/Admin");
-const Community = require("./Models/Community");
-const { createNotification } = require("./utils/notifications");
 
 //connect to DB
 const connectDB = async () => {
@@ -93,52 +91,6 @@ app.use("/admin", Admin);
 // Use payments verification route
 app.use("/payment", requireAuth);
 app.use("/payment", VerifyPayments);
-
-app.put("/cron", async (req, res) => {
-    console.log("Checking expired community memberships...");
-    try {
-        const communities = await Community.find({
-            "members.currentPeriodEnd": { $exists: true, $ne: null },
-        });
-
-        const now = new Date();
-        const threeDaysFromNow = new Date(
-            now.getTime() + 3 * 24 * 60 * 60 * 1000
-        );
-
-        for (const community of communities) {
-            for (const member of community.members) {
-                if (!member.currentPeriodEnd) continue;
-
-                // Notify users 3 days before expiration
-                if (
-                    member.currentPeriodEnd <= threeDaysFromNow &&
-                    member.currentPeriodEnd > now
-                ) {
-                    await createNotification(
-                        member.userId,
-                        `Your membership in ${
-                            community.name
-                        } expires on ${member.currentPeriodEnd.toLocaleDateString()}. Please renew your payment.`
-                    );
-                }
-
-                // Remove expired members
-                if (member.currentPeriodEnd <= now) {
-                    member.status = "expired";
-                    await createNotification(
-                        member.userId,
-                        `Your membership in ${community.name} has expired. Please renew to regain access.`
-                    );
-                }
-            }
-            await community.save();
-        }
-        console.log("Membership check complete");
-    } catch (error) {
-        console.error("Cron job error:", error);
-    }
-});
 
 app.listen(serverPort, () => {
     console.log(`server is running on port ${serverPort}`);

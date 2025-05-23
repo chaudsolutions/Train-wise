@@ -48,6 +48,10 @@ router.put("/joinCommunity/:communityId", async (req, res) => {
             return res.status(404).json("Community or user not found");
         }
 
+        if (community.canExplore === false) {
+            return res.status(403).json("Community cannot be explored");
+        }
+
         // Check if already a member
         const isMember = community.members.some(
             (m) => m.userId.toString() === userId.toString()
@@ -255,7 +259,7 @@ router.get("/verify-membership/:communityId", async (req, res) => {
             return res.status(403).send("User or community not found.");
         }
 
-        let membership = "";
+        let membership = null;
         if (user.role === "admin") {
             membership = "active";
         } else if (community.createdBy.toString() === user.id) {
@@ -266,7 +270,7 @@ router.get("/verify-membership/:communityId", async (req, res) => {
                 (member) => member.userId.toString() === user.id
             );
 
-            membership = userMembership.status;
+            membership = userMembership;
         }
 
         // Return the membership status

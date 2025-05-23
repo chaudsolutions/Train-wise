@@ -73,8 +73,6 @@ const communitySchema = new mongoose.Schema(
             type: String,
             required: [true, "Category is required"],
         },
-        stripeProductId: { type: String }, // Add this
-        stripePriceId: { type: String },
         bannerImage: {
             type: String, // Store the file path or URL
             required: [true, "Banner image is required"],
@@ -88,7 +86,16 @@ const communitySchema = new mongoose.Schema(
             ref: "User", // Reference to the User model (if you have one)
             required: [true, "Creator ID is required"],
         },
+        creatorName: {
+            type: String,
+            required: [true, "Creator name is required"],
+        },
+        canExplore: {
+            type: Boolean,
+            default: false,
+        },
         paymentId: { type: String },
+        renewalDate: { type: Date, default: null },
         members: [communityMembersSchema], // Array of members in the community
         notifications: [notificationsSchema], // Array of notifications
     },
