@@ -45,7 +45,6 @@ import { loadStripe } from "@stripe/stripe-js";
 import { useCommunityActions } from "../../Hooks/useCommunityActions";
 import { Elements } from "@stripe/react-stripe-js";
 import { PaymentDialog } from "../../Custom/payment/PaymentDialog";
-import toast from "react-hot-toast";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PK);
 
@@ -102,11 +101,17 @@ const CommunityView = () => {
             return setAuthOpen(true);
         }
 
-        if (!canExplore) {
-            return toast.error("Cannot join this community at the moment");
-        }
+        // if (!canExplore) {
+        //     return toast.error("Cannot join this community at the moment");
+        // }
 
-        if (subscriptionFee === 0 || isUserMember || isCreator || isAdmin) {
+        if (
+            subscriptionFee === 0 ||
+            isUserMember ||
+            isCreator ||
+            isAdmin ||
+            !canExplore
+        ) {
             const success = await joinCommunity(communityId);
             if (success) {
                 refetchCommunity();

@@ -122,12 +122,28 @@ const CommunitiesList = ({ community }) => {
                                 <Typography
                                     variant="caption"
                                     sx={{
-                                        color: theme.palette.text.secondary,
                                         display: "block",
                                         lineHeight: 1.2,
                                     }}>
-                                    Created by{" "}
-                                    {formatCreatorName(community?.creatorName)}
+                                    <Typography
+                                        component="span"
+                                        variant="caption"
+                                        sx={{
+                                            color: theme.palette.text.secondary,
+                                        }}>
+                                        Created by{" "}
+                                    </Typography>
+                                    <Typography
+                                        component="span"
+                                        variant="caption"
+                                        sx={{
+                                            color: theme.palette.grey[900],
+                                            fontWeight: 600,
+                                        }}>
+                                        {formatCreatorName(
+                                            community?.creatorName
+                                        )}
+                                    </Typography>
                                 </Typography>
                             </Box>
                         </Box>
