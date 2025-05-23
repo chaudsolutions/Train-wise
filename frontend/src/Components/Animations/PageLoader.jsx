@@ -20,7 +20,7 @@ const PageLoader = () => {
             }}>
             <CircularProgress
                 size={60}
-                thickness={3}
+                thickness={2}
                 sx={{
                     color: theme.palette.info.main,
                     "& .MuiCircularProgress-circle": {

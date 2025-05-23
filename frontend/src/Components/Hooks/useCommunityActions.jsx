@@ -9,7 +9,6 @@ export const useCommunityActions = () => {
 
     const joinCommunity = async (communityId, subscriptionId) => {
         setLoading(true);
-        console.log({ communityId, subscriptionId });
         try {
             const res = await axios.put(
                 `${serVer}/user/joinCommunity/${communityId}`,

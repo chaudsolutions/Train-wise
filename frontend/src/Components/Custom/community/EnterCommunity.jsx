@@ -25,6 +25,7 @@ import {
     DialogContentText,
     DialogContent,
     DialogActions,
+    Tooltip,
 } from "@mui/material";
 import {
     Info as InfoIcon,
@@ -190,8 +191,8 @@ export const CommunityClassroom = ({
     const theme = useTheme();
     const { Link } = useReactRouter();
 
-    const getThumbnailUrl = (videos) => {
-        if (videos && videos.length > 0) {
+    const getThumbnailUrl = (lessons) => {
+        if (lessons && lessons.length > 0) {
             const firstVideoUrl = videos[0];
             const videoExtensions = [
                 ".mp4",
@@ -215,14 +216,14 @@ export const CommunityClassroom = ({
     };
 
     const getProgress = (course) => {
-        if (!coursesWatched || !course?.videos) return 0;
+        if (!coursesWatched || !course?.lessons) return 0;
         const courseWatched = coursesWatched.find(
             (cw) => cw.courseId.toString() === course._id.toString()
         );
-        if (!courseWatched || !courseWatched.videos) return 0;
-        const totalVideos = course.videos.length;
-        const watchedVideos = courseWatched.videos.length;
-        const progress = (watchedVideos / totalVideos) * 100;
+        if (!courseWatched || !courseWatched.lessons) return 0;
+        const totalLessons = course.lessons.length;
+        const watchedLessons = courseWatched.lessons.length;
+        const progress = (watchedLessons / totalLessons) * 100;
         return Math.round(progress);
     };
 
@@ -251,7 +252,7 @@ export const CommunityClassroom = ({
                                 <CardMedia
                                     component="img"
                                     height="160"
-                                    image={getThumbnailUrl(course?.videos)}
+                                    image={getThumbnailUrl(course?.lessons)}
                                     alt={course.name}
                                 />
                                 <CardContent sx={{ flexGrow: 1 }}>
@@ -277,20 +278,31 @@ export const CommunityClassroom = ({
                                             alignItems: "center",
                                             mb: 1,
                                         }}>
-                                        <LinearProgress
-                                            variant="determinate"
-                                            value={getProgress(course)}
-                                            sx={{
-                                                flexGrow: 1,
-                                                height: 8,
-                                                borderRadius: 4,
-                                                mr: 1,
-                                                "& .MuiLinearProgress-bar": {
-                                                    backgroundColor:
-                                                        theme.palette.info.main,
-                                                },
-                                            }}
-                                        />
+                                        <Tooltip
+                                            title={`${
+                                                (getProgress(course) / 100) *
+                                                course?.lessons.length
+                                            }/${
+                                                course?.lessons.length
+                                            } lessons completed`}
+                                            arrow>
+                                            <LinearProgress
+                                                variant="determinate"
+                                                value={getProgress(course)}
+                                                sx={{
+                                                    flexGrow: 1,
+                                                    height: 8,
+                                                    borderRadius: 4,
+                                                    mr: 1,
+                                                    "& .MuiLinearProgress-bar":
+                                                        {
+                                                            backgroundColor:
+                                                                theme.palette
+                                                                    .info.main,
+                                                        },
+                                                }}
+                                            />
+                                        </Tooltip>
                                         <Typography
                                             variant="body2"
                                             color="text.secondary">

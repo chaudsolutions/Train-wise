@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     Box,
     Typography,
@@ -45,11 +45,13 @@ import {
 import toast from "react-hot-toast";
 import axios from "axios";
 import { serVer, useToken } from "../../Hooks/useVariable";
+import { useSearchParams } from "react-router-dom";
 
 const EnterCommunity = () => {
     const [activeTab, setActiveTab] = useState("community");
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [btn, setBtn] = useState(false);
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const theme = useTheme();
     const { isMobile } = useResponsive();
@@ -87,7 +89,12 @@ const EnterCommunity = () => {
 
     const handleTabChange = (event, newValue) => {
         setActiveTab(newValue);
+        setSearchParams({ tab: newValue });
     };
+
+    useEffect(() => {
+        setActiveTab(searchParams.get("tab") || "community");
+    }, [searchParams]);
 
     const tabs = [
         { id: "community", label: "Community", icon: <NotificationsIcon /> },

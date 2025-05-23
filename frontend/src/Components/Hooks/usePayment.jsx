@@ -10,7 +10,7 @@ export const usePayment = () => {
     const [paymentProcessing, setPaymentProcessing] = useState(false);
     const { token } = useToken();
 
-    const handlePayment = async (amount, onSuccess, type) => {
+    const handlePayment = async ({ amount, onSuccess, type, data }) => {
         if (!stripe || !elements) {
             toast.error("Payment system not initialized");
             return false;
@@ -34,7 +34,10 @@ export const usePayment = () => {
                     payment_method: {
                         card: elements.getElement(CardElement),
                         billing_details: {
-                            name: "Community Member",
+                            name:
+                                type === "community_subscription"
+                                    ? "Community Member"
+                                    : "Community Creator",
                         },
                     },
                 }
@@ -46,7 +49,10 @@ export const usePayment = () => {
 
             if (paymentIntent.status === "succeeded") {
                 // Step 4: Call onSuccess with subscriptionId
-                await onSuccess(paymentIntent.id);
+                await onSuccess(
+                    type === "community_subscription" ? paymentIntent.id : data,
+                    paymentIntent.id
+                );
                 return true; // Indicate success
             }
         } catch (error) {

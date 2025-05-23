@@ -14,6 +14,7 @@ export const PaymentDialog = ({
     open,
     onClose,
     amount,
+    data,
     onPaymentSuccess,
     type,
 }) => {
@@ -21,7 +22,12 @@ export const PaymentDialog = ({
     const { handlePayment, paymentProcessing } = usePayment();
 
     const handleSubmit = async () => {
-        const success = await handlePayment(amount, onPaymentSuccess, type);
+        const success = await handlePayment({
+            amount,
+            onSuccess: onPaymentSuccess,
+            type,
+            data,
+        });
         if (success) {
             onClose();
         }
@@ -29,7 +35,13 @@ export const PaymentDialog = ({
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-            <DialogTitle>Pay ${amount}/month to Join Community</DialogTitle>
+            <DialogTitle>
+                Pay ${amount}
+                {type === "community_subscription"
+                    ? "/month to join"
+                    : " to create"}{" "}
+                Community
+            </DialogTitle>
             <DialogContent>
                 <CardElement
                     options={{

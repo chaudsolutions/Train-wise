@@ -35,6 +35,8 @@ router.post(
             paymentId,
         } = req.body;
 
+        console.log(req.body);
+
         const bannerImage = req.files["bannerImage"]?.[0];
         const logo = req.files["logo"]?.[0];
 

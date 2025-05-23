@@ -354,10 +354,10 @@ router.get("/course/community/:communityId/:courseId", async (req, res) => {
 
 // endpoint to mark a video as watched
 router.put(
-    "/community/:communityId/course/:courseId/:video",
+    "/mark-watched/:communityId/course/:courseId/:lessonIndex",
     async (req, res) => {
         const userId = req.userId;
-        const { communityId, courseId, video } = req.params;
+        const { communityId, courseId, lessonIndex } = req.params;
 
         try {
             const community = await Community.findById(communityId);
@@ -387,14 +387,14 @@ router.put(
 
             if (watchedCourse) {
                 // Add video if not already watched
-                if (!watchedCourse.videos.includes(video)) {
-                    watchedCourse.videos.push(video);
+                if (!watchedCourse.lessons.includes(lessonIndex)) {
+                    watchedCourse.lessons.push(lessonIndex);
                 }
             } else {
                 // Create new watched course entry
                 user.coursesWatched.push({
                     courseId,
-                    videos: [video],
+                    lessons: [lessonIndex],
                 });
             }
 

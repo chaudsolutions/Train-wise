@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     Box,
     Typography,
@@ -20,7 +20,6 @@ import {
     PlayCircle,
     ArrowBack,
     ArrowForward,
-    CheckCircle,
     YouTube,
     PictureAsPdf,
     Description,
@@ -28,6 +27,8 @@ import {
     KeyboardArrowDown,
     KeyboardArrowUp,
 } from "@mui/icons-material";
+import LockIcon from "@mui/icons-material/Lock";
+import CheckCircle from "@mui/icons-material/CheckCircle";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useReactRouter } from "../../Hooks/useReactRouter";
@@ -39,11 +40,18 @@ import { serVer, useToken } from "../../Hooks/useVariable";
 import PageLoader from "../../Animations/PageLoader";
 import useResponsive from "../../Hooks/useResponsive";
 import { jsPDF } from "jspdf";
+import { useSearchParams } from "react-router-dom";
+import ReactConfetti from "react-confetti";
+import { useWindowSize } from "react-use";
 
 const Classroom = () => {
+    const { width, height } = useWindowSize();
+    const [hasCelebrated, setHasCelebrated] = useState(false);
+
     const { token } = useToken();
     const { isMobile } = useResponsive();
     const { useParams } = useReactRouter();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { communityId, courseId } = useParams();
     const { singleCourseData, isSingleCourseLoading } =
         useCommunitySingleCourseData({ communityId, courseId });
@@ -55,16 +63,34 @@ const Classroom = () => {
         (course) => course?.courseId === courseId
     );
 
-    const [selectedVideo, setSelectedVideo] = useState(0);
+    const [selectedLesson, setSelectedLesson] = useState(0);
     const [showLessonSummary, setShowLessonSummary] = useState(false);
 
-    const toggleSummary = () => setShowLessonSummary(!showLessonSummary);
+    const toggleSummary = () => setShowLessonSummary((prev) => !prev);
 
     // Create display lessons array with summary first
     const displayLessons = [
         { type: "summary", content: summary, summary },
         ...(lessons || []),
     ];
+
+    const currentLesson = displayLessons[selectedLesson];
+    const completionPercentage = currentCourse?.lessons
+        ? (currentCourse.lessons.length / lessons?.length) * 100
+        : 0;
+
+    useEffect(() => {
+        if (searchParams.get("lesson")) {
+            setSelectedLesson(parseInt(searchParams.get("lesson")));
+        }
+    }, [searchParams]);
+
+    // Add this useEffect for confetti control
+    useEffect(() => {
+        if (completionPercentage >= 100 && !hasCelebrated) {
+            setHasCelebrated(true);
+        }
+    }, [completionPercentage, hasCelebrated]);
 
     const handleContextMenu = (e) => {
         e.preventDefault();
@@ -75,35 +101,42 @@ const Classroom = () => {
         return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
     };
 
-    const handleLessonComplete = async () => {
-        // Only handle completion for actual lessons (index > 0)
-        if (selectedVideo === 0) return;
-        if (currentCourse?.videos?.includes((selectedVideo - 1).toString()))
-            return;
+    useEffect(() => {
+        // Only handle actual lessons (index > 0)
+        if (selectedLesson === 0) return;
 
-        try {
-            await axios.put(
-                `${serVer}/user/community/${communityId}/course/${courseId}/${
-                    selectedVideo - 1
-                }`,
-                {},
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            toast.success("Lesson marked as completed");
-            refetchUserData();
-        } catch (error) {
-            console.error("Error marking lesson as completed:", error);
-        }
-    };
+        const lessonIndex = selectedLesson - 1;
+
+        // Check if lesson is already completed
+        if (currentCourse?.lessons?.includes(lessonIndex.toString())) return;
+
+        const markLessonAsWatched = async () => {
+            try {
+                await axios.put(
+                    `${serVer}/user/mark-watched/${communityId}/course/${courseId}/${lessonIndex}`,
+                    {},
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                toast.success("Lesson marked as completed");
+                refetchUserData();
+            } catch (error) {
+                toast.error(error.response?.data || "Failed to mark lesson");
+            }
+        };
+
+        markLessonAsWatched();
+    }, [
+        selectedLesson,
+        currentCourse,
+        communityId,
+        courseId,
+        token,
+        refetchUserData,
+    ]);
 
     if (isSingleCourseLoading || isUserDataLoading) {
         return <PageLoader />;
     }
-
-    const currentLesson = displayLessons[selectedVideo];
-    const completionPercentage = currentCourse?.videos
-        ? (currentCourse.videos.length / lessons?.length) * 100
-        : 0;
 
     return (
         <Box
@@ -114,6 +147,27 @@ const Classroom = () => {
                 bgcolor: "background.default",
                 minHeight: "100vh",
             }}>
+            {/* confetti */}
+
+            {completionPercentage >= 100 && (
+                <ReactConfetti
+                    width={width}
+                    height={height}
+                    recycle={false}
+                    numberOfPieces={500}
+                    initialVelocityY={15}
+                    tweenDuration={10000}
+                    gravity={0.2}
+                    colors={[
+                        "#41b6e6", // Blue
+                        "#ff585d", // Red
+                        "#2dde98", // Green
+                        "#ffd300", // Yellow
+                    ]}
+                    style={{ position: "fixed" }}
+                />
+            )}
+
             {/* Header Section */}
             <Card
                 sx={{
@@ -123,6 +177,22 @@ const Classroom = () => {
                     borderRadius: 2,
                 }}>
                 <CardContent>
+                    {completionPercentage >= 100 && (
+                        <Typography
+                            variant="h5"
+                            textAlign="center"
+                            sx={{
+                                color: "common.white",
+                                animation: "pulse 2s infinite",
+                                "@keyframes pulse": {
+                                    "0%": { opacity: 1 },
+                                    "50%": { opacity: 0.6 },
+                                    "100%": { opacity: 1 },
+                                },
+                            }}>
+                            🎉 Course Completed! 🎉
+                        </Typography>
+                    )}
                     <Typography variant="h4" gutterBottom color="common.white">
                         {name}
                     </Typography>
@@ -171,8 +241,9 @@ const Classroom = () => {
                                         : "56.25%",
                                 bgcolor: "common.black",
                                 height:
-                                    currentLesson?.type === "pdf"
-                                        ? 800
+                                    currentLesson?.type === "pdf" ||
+                                    currentLesson?.type === "summary"
+                                        ? 400
                                         : "auto",
                             }}>
                             {currentLesson?.type === "summary" && (
@@ -198,11 +269,10 @@ const Classroom = () => {
                             {currentLesson?.type === "video" && (
                                 <video
                                     controls
-                                    key={selectedVideo}
+                                    key={selectedLesson}
                                     controlsList="nodownload"
                                     disablePictureInPicture
                                     onContextMenu={handleContextMenu}
-                                    onEnded={handleLessonComplete}
                                     style={{
                                         position: "absolute",
                                         top: 0,
@@ -304,7 +374,7 @@ const Classroom = () => {
                                                     whiteSpace: "pre-wrap",
                                                     fontFamily: "inherit",
                                                     margin: 0,
-                                                    padding: "2rem",
+                                                    padding: "1rem",
                                                 }}>
                                                 {currentLesson?.content
                                                     ?.split("\f")
@@ -398,10 +468,13 @@ const Classroom = () => {
                                 borderColor: "divider",
                             }}>
                             <IconButton
-                                disabled={selectedVideo === 0}
-                                onClick={() =>
-                                    setSelectedVideo((prev) => prev - 1)
-                                }
+                                disabled={selectedLesson === 0}
+                                onClick={() => {
+                                    setSelectedLesson((prev) => prev - 1);
+                                    setSearchParams({
+                                        lesson: selectedLesson - 1,
+                                    });
+                                }}
                                 color="primary"
                                 sx={{ fontWeight: 600 }}>
                                 <ArrowBack />
@@ -416,17 +489,21 @@ const Classroom = () => {
                                 variant="subtitle1"
                                 fontSize=".9rem"
                                 sx={{ mt: 0.5 }}>
-                                Lesson {selectedVideo + 1} of{" "}
+                                Lesson {selectedLesson + 1} of{" "}
                                 {displayLessons?.length}
                             </Typography>
 
                             <IconButton
                                 disabled={
-                                    selectedVideo === displayLessons?.length - 1
+                                    selectedLesson ===
+                                    displayLessons?.length - 1
                                 }
-                                onClick={() =>
-                                    setSelectedVideo((prev) => prev + 1)
-                                }
+                                onClick={() => {
+                                    setSelectedLesson((prev) => prev + 1);
+                                    setSearchParams({
+                                        lesson: selectedLesson + 1,
+                                    });
+                                }}
                                 color="primary"
                                 sx={{ fontWeight: 600 }}>
                                 {!isMobile && (
@@ -452,93 +529,138 @@ const Classroom = () => {
                             <Divider />
 
                             <List dense sx={{ p: 1 }}>
-                                {displayLessons?.map((lesson, displayIndex) => (
-                                    <ListItem
-                                        key={displayIndex}
-                                        button
-                                        selected={
-                                            selectedVideo === displayIndex
-                                        }
-                                        onClick={() =>
-                                            setSelectedVideo(displayIndex)
-                                        }
-                                        sx={{
-                                            borderRadius: 1,
-                                            cursor: "pointer",
-                                            transition: "all 0.2s",
-                                            bgcolor:
-                                                selectedVideo === displayIndex
+                                {displayLessons?.map((lesson, displayIndex) => {
+                                    const isSummary = displayIndex === 0;
+                                    const lessonIndex = displayIndex - 1;
+                                    const isCompleted =
+                                        currentCourse?.lessons?.includes(
+                                            lessonIndex.toString()
+                                        );
+                                    const isLocked =
+                                        !isSummary &&
+                                        displayIndex > 1 &&
+                                        !currentCourse?.lessons?.includes(
+                                            (lessonIndex - 1).toString()
+                                        );
+                                    const isCurrent =
+                                        selectedLesson === displayIndex;
+
+                                    return (
+                                        <ListItem
+                                            key={displayIndex}
+                                            button
+                                            selected={
+                                                selectedLesson === displayIndex
+                                            }
+                                            onClick={() => {
+                                                if (!isLocked) {
+                                                    setSelectedLesson(
+                                                        displayIndex
+                                                    );
+                                                    setSearchParams({
+                                                        lesson: displayIndex,
+                                                    });
+                                                }
+                                            }}
+                                            disabled={isLocked}
+                                            sx={{
+                                                borderRadius: 1,
+                                                cursor: isLocked
+                                                    ? "not-allowed"
+                                                    : "pointer",
+                                                transition: "all 0.2s",
+                                                bgcolor: isCurrent
                                                     ? "action.hover"
                                                     : "",
-                                            borderLeft:
-                                                selectedVideo === displayIndex
+                                                borderLeft: isCurrent
                                                     ? "4px solid"
                                                     : "",
-                                            borderColor:
-                                                selectedVideo === displayIndex
+                                                borderColor: isCurrent
                                                     ? "primary.main"
                                                     : "",
-                                            "&.Mui-selected": {
-                                                bgcolor: "primary.light",
-                                                borderLeft: "4px solid",
-                                                borderColor: "primary.main",
-                                            },
-                                            "&:hover": {
-                                                bgcolor: "action.hover",
-                                            },
-                                        }}>
-                                        <ListItemIcon sx={{ minWidth: 40 }}>
-                                            {displayIndex === 0 ? (
-                                                <Description color="info" />
-                                            ) : currentCourse?.videos?.includes(
-                                                  (displayIndex - 1).toString()
-                                              ) ? (
-                                                <CheckCircle color="success" />
-                                            ) : lesson.type === "video" ? (
-                                                <PlayCircle color="warning" />
-                                            ) : lesson.type === "youtube" ? (
-                                                <YouTube color="error" />
-                                            ) : (
-                                                <PictureAsPdf color="error" />
-                                            )}
-                                        </ListItemIcon>
+                                                opacity: isLocked ? 0.6 : 1,
+                                                "&.Mui-selected": {
+                                                    bgcolor: "primary.light",
+                                                    borderLeft: "4px solid",
+                                                    borderColor: "primary.main",
+                                                },
+                                                "&:hover": {
+                                                    bgcolor: isLocked
+                                                        ? "inherit"
+                                                        : "action.hover",
+                                                },
+                                            }}>
+                                            <ListItemIcon sx={{ minWidth: 40 }}>
+                                                {isLocked ? (
+                                                    <LockIcon color="disabled" />
+                                                ) : displayIndex === 0 ? (
+                                                    <Description color="info" />
+                                                ) : lesson.type === "video" ? (
+                                                    <PlayCircle
+                                                        color={
+                                                            isCurrent
+                                                                ? "primary"
+                                                                : "action"
+                                                        }
+                                                    />
+                                                ) : lesson.type ===
+                                                  "youtube" ? (
+                                                    <YouTube color="error" />
+                                                ) : (
+                                                    <PictureAsPdf color="error" />
+                                                )}
+                                            </ListItemIcon>
 
-                                        <ListItemText
-                                            primary={
-                                                <Typography
-                                                    variant="body2"
-                                                    sx={{
-                                                        fontWeight: 500,
-                                                        color:
-                                                            selectedVideo ===
-                                                            displayIndex
-                                                                ? "primary.main"
-                                                                : "inherit",
-                                                    }}>
-                                                    Lesson {displayIndex + 1}
-                                                </Typography>
-                                            }
-                                            secondary={
-                                                <Typography
-                                                    variant="caption"
-                                                    noWrap
-                                                    sx={{
-                                                        color:
-                                                            selectedVideo ===
-                                                            displayIndex
+                                            <ListItemText
+                                                primary={
+                                                    <Box
+                                                        sx={{
+                                                            display: "flex",
+                                                            alignItems:
+                                                                "center",
+                                                            justifyContent:
+                                                                "space-between",
+                                                            gap: 1,
+                                                        }}>
+                                                        <Typography
+                                                            variant="body2"
+                                                            sx={{
+                                                                fontWeight: 500,
+                                                                color: isCurrent
+                                                                    ? "primary.main"
+                                                                    : "inherit",
+                                                            }}>
+                                                            Lesson{" "}
+                                                            {displayIndex + 1}
+                                                        </Typography>
+                                                        {isCompleted && (
+                                                            <CheckCircle
+                                                                color="success"
+                                                                fontSize="small"
+                                                            />
+                                                        )}
+                                                    </Box>
+                                                }
+                                                secondary={
+                                                    <Typography
+                                                        variant="caption"
+                                                        noWrap
+                                                        sx={{
+                                                            color: isCurrent
                                                                 ? "primary.main"
                                                                 : "text.secondary",
-                                                    }}>
-                                                    {displayIndex === 0
-                                                        ? "Course Overview"
-                                                        : lesson.summary.split(
-                                                              "\n"
-                                                          )[0]}
-                                                </Typography>
-                                            }
-                                        />
-                                    </ListItem>
-                                ))}
+                                                        }}>
+                                                        {displayIndex === 0
+                                                            ? "Course Overview"
+                                                            : lesson.summary.split(
+                                                                  "\n"
+                                                              )[0]}
+                                                    </Typography>
+                                                }
+                                            />
+                                        </ListItem>
+                                    );
+                                })}
                             </List>
                         </CardContent>
                     </Card>

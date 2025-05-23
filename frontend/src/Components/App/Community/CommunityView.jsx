@@ -393,7 +393,14 @@ export const CommunityName = () => {
     const navigate = useNavigate();
 
     const goBack = () => {
-        navigate(-1);
+        const hasHistory = window.history.state?.idx > 0;
+        const isFirstPage = window.history.length === 1;
+
+        if (hasHistory && !isFirstPage) {
+            navigate(-1);
+        } else {
+            navigate("/", { replace: true }); // Replace current entry in history
+        }
     };
 
     return (

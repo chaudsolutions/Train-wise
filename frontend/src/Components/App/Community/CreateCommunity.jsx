@@ -28,6 +28,7 @@ import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { useState } from "react";
+import { PaymentDialog } from "../../Custom/payment/PaymentDialog";
 
 // Initialize Stripe with your publishable key
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PK);
@@ -152,10 +153,7 @@ const CreateCommunity = () => {
 
     const userRole = userData?.role; // "admin", "creator", or "user"
 
-    const PaymentBenefitsCard = ({
-        communityCreationFee,
-        isSettingsLoading,
-    }) => (
+    const PaymentBenefitsCard = () => (
         <Paper
             elevation={3}
             sx={{
@@ -180,7 +178,6 @@ const CreateCommunity = () => {
                 }}>
                 <li>🎓 Monetize your expertise</li>
                 <li>🤝 Build an engaged community</li>
-                <li>💵 Earn $100/month per active member</li>
                 <li>📈 Access detailed analytics</li>
                 <li>🔒 Secure payment processing</li>
             </Box>
@@ -206,7 +203,7 @@ const CreateCommunity = () => {
         </Paper>
     );
 
-    const createCommunity = async (data) => {
+    const handleCreateCommunity = async (data, paymentId) => {
         try {
             const rules = [data.rule1, data.rule2, data.rule3];
             const visions = [data.vision1, data.vision2, data.vision3];
@@ -224,8 +221,8 @@ const CreateCommunity = () => {
             );
             formData.append("bannerImage", data.image1[0]);
             formData.append("logo", data.image2[0]);
-            if (data.paymentId) {
-                formData.append("paymentId", data.paymentId);
+            if (paymentId) {
+                formData.append("paymentId", paymentId);
             }
 
             const response = await axios.post(
@@ -253,7 +250,7 @@ const CreateCommunity = () => {
         setFormData(data);
         if (userRole === "admin" || userRole === "creator") {
             // Admins and creators create directly without payment
-            await createCommunity(data);
+            await handleCreateCommunity(data);
         } else {
             // Regular users proceed to payment
             setShowPayment(true);
@@ -268,10 +265,7 @@ const CreateCommunity = () => {
         <Elements stripe={stripePromise}>
             <Container maxWidth="md" sx={{ py: 4 }}>
                 <Paper elevation={3} sx={{ p: 4, borderRadius: 4 }}>
-                    <PaymentBenefitsCard
-                        communityCreationFee={communityCreationFee}
-                        isSettingLoading={isSettingsLoading}
-                    />
+                    <PaymentBenefitsCard />
                     <Typography
                         variant="h4"
                         component="h1"
@@ -594,15 +588,15 @@ const CreateCommunity = () => {
                             </Button>
                         </Box>
                     </Box>
-                    {showPayment && userRole === "user" && (
-                        <PaymentForm
-                            formData={formData}
-                            token={token}
-                            createCommunity={createCommunity}
-                            theme={theme}
-                            onSuccess={() => setShowPayment(false)}
-                        />
-                    )}
+
+                    <PaymentDialog
+                        open={showPayment}
+                        onClose={() => setShowPayment(false)}
+                        amount={communityCreationFee / 100}
+                        data={formData}
+                        onPaymentSuccess={handleCreateCommunity}
+                        type="community_creation"
+                    />
                 </Paper>
             </Container>
         </Elements>
