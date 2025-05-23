@@ -192,27 +192,49 @@ export const CommunityClassroom = ({
     const { Link } = useReactRouter();
 
     const getThumbnailUrl = (lessons) => {
-        if (lessons && lessons.length > 0) {
-            const firstVideoUrl = videos[0];
-            const videoExtensions = [
-                ".mp4",
-                ".mov",
-                ".avi",
-                ".mkv",
-                ".webm",
-                ".flv",
-                ".wmv",
-                ".mpeg",
-                ".mpg",
-                ".3gp",
-            ];
-            const videoPattern = new RegExp(
-                `(${videoExtensions.join("|")})$`,
-                "i"
-            );
-            return firstVideoUrl.replace(videoPattern, ".jpg");
+        if (!lessons || lessons.length === 0) return CourseStockImg;
+
+        // Search for first available video or youtube lesson
+        const videoLesson = lessons.find(
+            (lesson) => lesson.type === "video" || lesson.type === "youtube"
+        );
+
+        if (videoLesson) {
+            // Handle YouTube thumbnail
+            if (videoLesson.type === "youtube") {
+                const videoId = videoLesson.content.match(
+                    /(?:v=|\/)([a-zA-Z0-9_-]{11})/
+                )?.[1];
+                return videoId
+                    ? `https://img.youtube.com/vi/${videoId}/0.jpg`
+                    : CourseStockImg;
+            }
+
+            // Handle video file thumbnail
+            if (videoLesson.type === "video") {
+                const videoExtensions = [
+                    ".mp4",
+                    ".mov",
+                    ".avi",
+                    ".mkv",
+                    ".webm",
+                    ".flv",
+                    ".wmv",
+                    ".mpeg",
+                    ".mpg",
+                    ".3gp",
+                ];
+                const videoPattern = new RegExp(
+                    `(${videoExtensions.join("|")})$`,
+                    "i"
+                );
+                return videoLesson.content.replace(videoPattern, ".jpg");
+            }
         }
-        return CourseStockImg;
+
+        // Fallback to PDF thumbnail or default image
+        const pdfLesson = lessons.find((lesson) => lesson.type === "pdf");
+        return pdfLesson ? CourseStockImg : CourseStockImg;
     };
 
     const getProgress = (course) => {
