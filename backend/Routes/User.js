@@ -48,7 +48,7 @@ router.put("/joinCommunity/:communityId", async (req, res) => {
             return res.status(404).json("Community or user not found");
         }
 
-        if (community.canExplore === false) {
+        if (!community.canExplore) {
             return res.status(403).json("Community cannot be explored");
         }
 
@@ -59,7 +59,10 @@ router.put("/joinCommunity/:communityId", async (req, res) => {
         if (isMember) {
             return res.status(200).json("Welcome Back");
         }
-        if (user.role === "admin" || community.createdBy === userId) {
+        if (
+            user.role === "admin" ||
+            community.createdBy.toString() === userId.toString()
+        ) {
             return res.status(200).json("Welcome Admin");
         }
 

@@ -101,10 +101,6 @@ const CommunityView = () => {
             return setAuthOpen(true);
         }
 
-        // if (!canExplore) {
-        //     return toast.error("Cannot join this community at the moment");
-        // }
-
         if (
             subscriptionFee === 0 ||
             isUserMember ||
