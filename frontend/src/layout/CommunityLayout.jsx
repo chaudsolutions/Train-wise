@@ -8,16 +8,23 @@ import {
 import toast from "react-hot-toast";
 import PageLoader from "../Components/Animations/PageLoader";
 import { useOnlineStatus } from "../Components/Hooks/useToggleOnlineStatus";
+import { RenewSubscriptionDialog } from "../Components/Custom/payment/PaymentDialog";
+import { Elements } from "@stripe/react-stripe-js";
+import { stripePromise } from "../Components/Hooks/useVariable";
 
 const CommunityLayout = () => {
     const [isLoad, setIsLoad] = useState(true);
+    const [isRenewDialogOpen, setIsRenewDialogOpen] = useState(false);
     const { useNavigate, useParams } = useReactRouter();
 
     const navigate = useNavigate();
     const { communityId } = useParams();
 
-    const { userMembershipData, isUserMembershipLoading } =
-        useUserMembershipData(communityId);
+    const {
+        userMembershipData,
+        isUserMembershipLoading,
+        refetchUserMembership,
+    } = useUserMembershipData(communityId);
     const { userData, isUserDataLoading } = useUserData();
 
     const { onlineStatus } = userData || {};
@@ -38,15 +45,16 @@ const CommunityLayout = () => {
     // update membership status if due date for subscription based communities and trigger a dialog to ask if user wants to renew subscription or cancel
     useEffect(() => {
         const currentDate = new Date();
-        if (userMembershipData && userMembershipData.currentPeriodEnd) {
+        if (
+            userMembershipData &&
+            userMembershipData?.communitySubFee > 0 &&
+            userMembershipData?.currentPeriodEnd
+        ) {
             const membershipDueDate = new Date(
-                userMembershipData.currentPeriodEnd
+                userMembershipData?.currentPeriodEnd
             );
-            if (membershipDueDate < currentDate) {
-                // show dialog
-                toast.error(
-                    "Your membership has expired. Please renew your subscription."
-                );
+            if (membershipDueDate <= currentDate) {
+                setIsRenewDialogOpen(true);
             }
         }
     }, [userMembershipData]);
@@ -58,7 +66,20 @@ const CommunityLayout = () => {
         return <PageLoader />;
     }
 
-    return <Outlet />;
+    return (
+        <Elements stripe={stripePromise}>
+            <Outlet />
+
+            <RenewSubscriptionDialog
+                open={isRenewDialogOpen}
+                onClose={() => setIsRenewDialogOpen(false)}
+                status={userMembershipData?.status}
+                amount={userMembershipData?.communitySubFee || 0}
+                communityId={communityId}
+                refetchUserMembership={refetchUserMembership}
+            />
+        </Elements>
+    );
 };
 
 export default CommunityLayout;

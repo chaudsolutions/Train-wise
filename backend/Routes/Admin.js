@@ -56,7 +56,7 @@ router.get("/dashboard/analytics", async (req, res) => {
         const communities = await Community.find({})
             .sort({ createdAt: -1 })
             .select(
-                "name description balance category createdBy logo bannerImage subscriptionFee members createdAt"
+                "name description balance category createdBy logo bannerImage subscriptionFee members reports createdAt"
             )
             .populate("createdBy", "name") // Populate createdBy with name field
             .lean();

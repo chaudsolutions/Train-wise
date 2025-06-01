@@ -35,18 +35,15 @@ import useResponsive from "../../Hooks/useResponsive";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import { useAuthContext } from "../../Context/AuthContext";
 import Auth from "../../Custom/Auth/Auth";
-import { redirectSessionKey } from "../../Hooks/useVariable";
+import { redirectSessionKey, stripePromise } from "../../Hooks/useVariable";
 import {
     useCommunityByIdData,
     useUserData,
 } from "../../Hooks/useQueryFetch/useQueryData";
 import PageLoader from "../../Animations/PageLoader";
-import { loadStripe } from "@stripe/stripe-js";
 import { useCommunityActions } from "../../Hooks/useCommunityActions";
 import { Elements } from "@stripe/react-stripe-js";
 import { PaymentDialog } from "../../Custom/payment/PaymentDialog";
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PK);
 
 const CommunityView = () => {
     const [authOpen, setAuthOpen] = useState(false);
@@ -75,7 +72,6 @@ const CommunityView = () => {
         name,
         description,
         category,
-        role,
         rules,
         visions,
         subscriptionFee,
@@ -86,7 +82,7 @@ const CommunityView = () => {
         canExplore,
     } = community || {};
 
-    const { _id } = userData || {};
+    const { _id, role } = userData || {};
 
     // check if user is part of community
     const isUserMember =

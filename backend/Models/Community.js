@@ -12,11 +12,25 @@ const communityMembersSchema = new mongoose.Schema(
         stripeSubscriptionId: { type: String },
         status: {
             type: String,
-            enum: ["active", "expired", "canceled", "unpaid"],
+            enum: ["active", "expired", "canceled"],
             default: "active",
         },
         currentPeriodEnd: { type: Date },
         paymentMethodId: { type: String },
+    },
+    {
+        timestamps: true,
+    }
+);
+
+const communityReportsSchema = new mongoose.Schema(
+    {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+        },
+        reason: { type: String, required: true },
     },
     {
         timestamps: true,
@@ -98,6 +112,7 @@ const communitySchema = new mongoose.Schema(
         renewalDate: { type: Date, default: null },
         members: [communityMembersSchema], // Array of members in the community
         notifications: [notificationsSchema], // Array of notifications
+        reports: [communityReportsSchema], // Array of reports
     },
     {
         timestamps: true, // Automatically add createdAt and updatedAt fields

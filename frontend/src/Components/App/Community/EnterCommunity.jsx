@@ -46,11 +46,13 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { serVer, useToken } from "../../Hooks/useVariable";
 import { useSearchParams } from "react-router-dom";
+import { ReportCommunityForm } from "../../Custom/Forms/Forms";
 
 const EnterCommunity = () => {
     const [activeTab, setActiveTab] = useState("community");
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [btn, setBtn] = useState(false);
+    const [reportDialog, setReportDialog] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
 
     const theme = useTheme();
@@ -418,6 +420,12 @@ const EnterCommunity = () => {
                                     startIcon={<PeopleIcon />}>
                                     Invite Members
                                 </Button>
+                                <Button
+                                    variant="outlined"
+                                    color="error"
+                                    onClick={() => setReportDialog(true)}>
+                                    Report Community
+                                </Button>
                             </Stack>
                         </Paper>
                     </Stack>
@@ -436,6 +444,13 @@ const EnterCommunity = () => {
                     link copied!
                 </Alert>
             </Snackbar>
+
+            {/* report community dialog */}
+            <ReportCommunityForm
+                open={reportDialog}
+                onClose={() => setReportDialog(false)}
+                communityId={communityId}
+            />
         </Box>
     );
 };

@@ -87,7 +87,7 @@ const Settings = () => {
             <Paper elevation={3} sx={{ p: 3, maxWidth: 800, mx: "auto" }}>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
                                 label="Community Creation Fee"
@@ -105,7 +105,7 @@ const Settings = () => {
                             </FormHelperText>
                         </Grid>
 
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
                                 label="Withdrawal Limit"
@@ -123,7 +123,7 @@ const Settings = () => {
                             </FormHelperText>
                         </Grid>
 
-                        <Grid item xs={12}>
+                        <Grid size={12}>
                             <Button
                                 type="submit"
                                 variant="contained"

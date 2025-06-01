@@ -6,6 +6,10 @@ import {
     Link,
     CircularProgress,
     useTheme,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
 } from "@mui/material";
 import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
@@ -13,6 +17,7 @@ import {
     companyName,
     redirectSessionKey,
     serVer,
+    useToken,
 } from "../../Hooks/useVariable";
 import { useAuthContext } from "../../Context/AuthContext";
 import { useReactRouter } from "../../Hooks/useReactRouter";
@@ -327,5 +332,92 @@ export const RegisterForm = ({ setAuthContainer }) => {
                 Policy
             </Typography>
         </Box>
+    );
+};
+
+// Report Community Form
+export const ReportCommunityForm = ({ open, onClose, communityId }) => {
+    const { token } = useToken();
+    // react form
+    const form = useForm();
+    const { register, handleSubmit, formState, reset } = form;
+    const { errors, isSubmitting } = formState;
+
+    //  function to register
+    const onSubmit = async (data) => {
+        const url = `${serVer}/user/report-community/${communityId}`;
+        const { reason } = data;
+
+        try {
+            const response = await axios.put(
+                url,
+                { reason },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            toast.success(response.data);
+            reset();
+            onClose();
+        } catch (error) {
+            const { response } = error;
+            toast.error(response.data);
+        }
+    };
+
+    return (
+        <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+            <DialogTitle>Report Community</DialogTitle>
+            {/* Wrap entire content in form */}
+            <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
+                <DialogContent>
+                    <Box sx={{ mt: 2 }}>
+                        <TextField
+                            fullWidth
+                            margin="normal"
+                            label="Reason"
+                            variant="outlined"
+                            multiline
+                            rows={1} // Increased rows for better UX
+                            {...register("reason", {
+                                required: "Reason is required",
+                                minLength: {
+                                    value: 10, // More reasonable minimum
+                                    message:
+                                        "Reason must be at least 10 characters",
+                                },
+                            })}
+                            error={!!errors.reason}
+                            helperText={errors.reason?.message}
+                            sx={{
+                                "& .MuiOutlinedInput-root": {
+                                    borderRadius: 2,
+                                },
+                            }}
+                        />
+                    </Box>
+                </DialogContent>
+
+                <DialogActions>
+                    <Button onClick={onClose} color="error" variant="outlined">
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        color="primary"
+                        variant="contained"
+                        disabled={isSubmitting}>
+                        {isSubmitting ? (
+                            <CircularProgress size={24} color="inherit" />
+                        ) : (
+                            "Submit Report"
+                        )}
+                    </Button>
+                </DialogActions>
+            </Box>
+        </Dialog>
     );
 };

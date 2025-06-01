@@ -23,15 +23,14 @@ import {
     DialogActions,
     TextField,
 } from "@mui/material";
-import {
-    Groups,
-    Circle as CircleIcon,
-    GroupAdd,
-    Edit as EditIcon,
-    CameraAlt as CameraIcon,
-} from "@mui/icons-material";
+import CircleIcon from "@mui/icons-material/Circle";
+import GroupAdd from "@mui/icons-material/GroupAdd";
+import EditIcon from "@mui/icons-material/Edit";
+import Groups from "@mui/icons-material/Groups";
+import CameraIcon from "@mui/icons-material/CameraAlt";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import NoProfilePhoto from "../../../assets/no-profile.png";
 
 const ProfileContainer = ({
     categories,
@@ -121,7 +120,7 @@ const ProfileContainer = ({
                 }}>
                 <Box sx={{ position: "relative" }}>
                     <Avatar
-                        src={avatar}
+                        src={avatar || NoProfilePhoto}
                         sx={{
                             width: 120,
                             height: 120,

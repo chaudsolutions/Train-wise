@@ -6,14 +6,9 @@ import {
     Card,
     CardContent,
     Avatar,
-    List,
-    ListItem,
-    ListItemAvatar,
-    ListItemText,
     Button,
     Chip,
     Paper,
-    Divider,
     Grid,
     Dialog,
     DialogTitle,
@@ -21,6 +16,7 @@ import {
     DialogContentText,
     DialogActions,
     CircularProgress,
+    Stack,
 } from "@mui/material";
 import { People, GroupAdd, SwitchAccount, Groups } from "@mui/icons-material";
 import { useState } from "react";
@@ -30,6 +26,121 @@ import PageLoader from "../../Animations/PageLoader";
 import axios from "axios";
 import { serVer, useToken } from "../../Hooks/useVariable";
 import toast from "react-hot-toast";
+import useResponsive from "../../Hooks/useResponsive";
+
+// Reusable User Card Component
+const UserCard = ({ user, isCreatorTab, onRoleChange }) => {
+    const { isMobile } = useResponsive();
+
+    return (
+        <Card
+            sx={{
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                transition: "transform 0.2s, box-shadow 0.2s",
+                "&:hover": {
+                    transform: "translateY(-5px)",
+                    boxShadow: 3,
+                },
+            }}>
+            <CardContent sx={{ flexGrow: 1, width: "100%" }}>
+                <Stack
+                    alignItems="center"
+                    spacing={1}
+                    textAlign="center"
+                    width="100%"
+                    sx={{ mb: 2 }}>
+                    <Avatar
+                        src={user.avatar}
+                        alt={user.name}
+                        sx={{
+                            width: 80,
+                            height: 80,
+                            bgcolor: "info.main",
+                            mb: 1,
+                        }}>
+                        {user.name?.charAt(0)}
+                    </Avatar>
+
+                    <Box>
+                        <Typography variant="h6" fontWeight={500} noWrap>
+                            {user.name}
+                            {isCreatorTab && (
+                                <Chip
+                                    label="Creator"
+                                    size="small"
+                                    color="primary"
+                                    variant="outlined"
+                                    sx={{ ml: 1 }}
+                                />
+                            )}
+                        </Typography>
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            noWrap
+                            sx={{ maxWidth: "100%" }}>
+                            {user.email}
+                        </Typography>
+                    </Box>
+                </Stack>
+
+                <Stack
+                    direction="row"
+                    spacing={1}
+                    justifyContent="center"
+                    sx={{ mt: 2 }}>
+                    <Chip
+                        icon={<Groups fontSize="small" />}
+                        label={`Created: ${
+                            user.communitiesCreated?.length || 0
+                        }`}
+                        size="small"
+                        variant="outlined"
+                    />
+                    <Chip
+                        icon={<Groups fontSize="small" />}
+                        label={`Joined: ${user.communitiesJoined?.length || 0}`}
+                        size="small"
+                        variant="outlined"
+                    />
+                </Stack>
+            </CardContent>
+
+            <Box sx={{ p: 2, pt: 0 }}>
+                <Stack
+                    direction={isMobile ? "column" : "row"}
+                    spacing={1}
+                    justifyContent="center">
+                    <Button
+                        variant="outlined"
+                        startIcon={<SwitchAccount />}
+                        onClick={() =>
+                            onRoleChange(
+                                user._id,
+                                isCreatorTab ? "user" : "creator"
+                            )
+                        }
+                        color={isCreatorTab ? "secondary" : "primary"}
+                        size="small"
+                        fullWidth={isMobile}>
+                        Make {isCreatorTab ? "User" : "Creator"}
+                    </Button>
+                    <Button
+                        variant="contained"
+                        component={Link}
+                        to={`/admin/dashboard/user/${user._id}`}
+                        color="info"
+                        size="small"
+                        fullWidth={isMobile}>
+                        View Details
+                    </Button>
+                </Stack>
+            </Box>
+        </Card>
+    );
+};
 
 const Users = () => {
     const { analyticsData, isAnalyticsDataLoading, refetchAnalyticsData } =
@@ -60,7 +171,6 @@ const Users = () => {
             );
 
             toast.success(`Role changed to ${newRole}`);
-            // Refetch analytics data if needed
             refetchAnalyticsData();
             setOpenDialog(false);
         } catch (error) {
@@ -73,6 +183,11 @@ const Users = () => {
     if (isAnalyticsDataLoading) {
         return <PageLoader />;
     }
+
+    // Determine which data to show based on active tab
+    const currentUsers = tabValue === 0 ? userRoles : creatorRoles;
+    const title = tabValue === 0 ? "Regular Users" : "Creators";
+    const icon = tabValue === 0 ? <People /> : <GroupAdd />;
 
     return (
         <Box sx={{ p: { xs: 2, sm: 3 } }}>
@@ -109,507 +224,40 @@ const Users = () => {
                 </Tabs>
             </Paper>
 
-            <Card
-                elevation={3}
-                sx={{
-                    borderRadius: 2,
-                    bgcolor: "background.paper",
-                }}>
+            <Card elevation={3} sx={{ borderRadius: 2 }}>
                 <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                    {tabValue === 0 ? (
-                        <>
-                            <Typography
-                                variant="h6"
-                                sx={{
-                                    mb: 2,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1,
-                                    fontWeight: 500,
-                                }}>
-                                <People /> Regular Users
-                            </Typography>
-                            {userRoles?.length > 0 ? (
-                                <List>
-                                    {userRoles.map((user) => (
-                                        <Paper
-                                            key={user._id}
-                                            elevation={1}
-                                            sx={{
-                                                mb: 2,
-                                                borderRadius: 2,
-                                                transition:
-                                                    "transform 0.2s, box-shadow 0.2s",
-                                                "&:hover": {
-                                                    transform:
-                                                        "translateY(-2px)",
-                                                    boxShadow:
-                                                        "0 4px 12px rgba(0,0,0,0.1)",
-                                                },
-                                            }}>
-                                            <ListItem
-                                                sx={{
-                                                    py: { xs: 1.5, sm: 2 },
-                                                    px: { xs: 1, sm: 2 },
-                                                }}>
-                                                <Grid
-                                                    container
-                                                    alignItems="center"
-                                                    spacing={{ xs: 1, sm: 2 }}>
-                                                    <Grid
-                                                        size={{
-                                                            xs: 12,
-                                                            sm: 6,
-                                                            md: 7,
-                                                            lg: 8,
-                                                        }}>
-                                                        <Box
-                                                            sx={{
-                                                                display: "flex",
-                                                                alignItems:
-                                                                    "center",
-                                                                gap: 2,
-                                                            }}>
-                                                            <ListItemAvatar>
-                                                                <Avatar
-                                                                    src={
-                                                                        user.avatar
-                                                                    }
-                                                                    alt={
-                                                                        user.name
-                                                                    }
-                                                                    sx={{
-                                                                        width: 48,
-                                                                        height: 48,
-                                                                        bgcolor:
-                                                                            "info.main",
-                                                                    }}>
-                                                                    {user.name?.charAt(
-                                                                        0
-                                                                    )}
-                                                                </Avatar>
-                                                            </ListItemAvatar>
-                                                            <ListItemText
-                                                                primary={
-                                                                    user.name
-                                                                }
-                                                                secondary={
-                                                                    user.email
-                                                                }
-                                                                primaryTypographyProps={{
-                                                                    fontWeight: 500,
-                                                                    variant:
-                                                                        "body1",
-                                                                    noWrap: true,
-                                                                }}
-                                                                secondaryTypographyProps={{
-                                                                    variant:
-                                                                        "body2",
-                                                                    color: "text.secondary",
-                                                                    noWrap: true,
-                                                                }}
-                                                            />
-                                                        </Box>
-                                                    </Grid>
-                                                    {(user.communitiesCreated
-                                                        ?.length ||
-                                                        user.communitiesJoined
-                                                            ?.length) > 0 && (
-                                                        <Grid
-                                                            size={{
-                                                                xs: 12,
-                                                                sm: 6,
-                                                                md: 7,
-                                                                lg: 8,
-                                                            }}>
-                                                            <Divider
-                                                                sx={{
-                                                                    my: 1,
-                                                                    display: {
-                                                                        xs: "block",
-                                                                        md: "none",
-                                                                    },
-                                                                }}
-                                                            />
-                                                            <Box
-                                                                sx={{
-                                                                    display:
-                                                                        "flex",
-                                                                    flexWrap:
-                                                                        "wrap",
-                                                                    gap: 1,
-                                                                    px: {
-                                                                        xs: 0,
-                                                                        sm: 2,
-                                                                    },
-                                                                }}>
-                                                                <Chip
-                                                                    icon={
-                                                                        <Groups fontSize="small" />
-                                                                    }
-                                                                    label={`Created: ${
-                                                                        user
-                                                                            .communitiesCreated
-                                                                            ?.length ||
-                                                                        0
-                                                                    }`}
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    sx={{
-                                                                        bgcolor:
-                                                                            "background.paper",
-                                                                    }}
-                                                                />
-                                                                <Chip
-                                                                    icon={
-                                                                        <Groups fontSize="small" />
-                                                                    }
-                                                                    label={`Joined: ${
-                                                                        user
-                                                                            .communitiesJoined
-                                                                            ?.length ||
-                                                                        0
-                                                                    }`}
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    sx={{
-                                                                        bgcolor:
-                                                                            "background.paper",
-                                                                    }}
-                                                                />
-                                                            </Box>
-                                                        </Grid>
-                                                    )}
-                                                    <Grid
-                                                        size={{
-                                                            xs: 12,
-                                                            sm: 6,
-                                                            md: 5,
-                                                            lg: 4,
-                                                        }}>
-                                                        <Box
-                                                            sx={{
-                                                                display: "flex",
-                                                                flexDirection: {
-                                                                    xs: "column",
-                                                                    md: "row",
-                                                                },
-                                                                gap: 1,
-                                                                justifyContent:
-                                                                    "flex-end",
-                                                                alignItems: {
-                                                                    xs: "stretch",
-                                                                    md: "center",
-                                                                },
-                                                            }}>
-                                                            <Button
-                                                                variant="outlined"
-                                                                startIcon={
-                                                                    <SwitchAccount />
-                                                                }
-                                                                onClick={() =>
-                                                                    handleRoleChangeClick(
-                                                                        user._id,
-                                                                        "creator"
-                                                                    )
-                                                                }
-                                                                color="primary"
-                                                                size="small"
-                                                                sx={{
-                                                                    flex: {
-                                                                        xs: "1 0 100%",
-                                                                        md: "0 1 auto",
-                                                                    },
-                                                                }}>
-                                                                Make Creator
-                                                            </Button>
-                                                            <Button
-                                                                variant="contained"
-                                                                component={Link}
-                                                                to={`/admin/dashboard/user/${user._id}`}
-                                                                color="info"
-                                                                size="small"
-                                                                sx={{
-                                                                    flex: {
-                                                                        xs: "1 0 100%",
-                                                                        md: "0 1 auto",
-                                                                    },
-                                                                }}>
-                                                                View Details
-                                                            </Button>
-                                                        </Box>
-                                                    </Grid>
-                                                </Grid>
-                                            </ListItem>
-                                        </Paper>
-                                    ))}
-                                </List>
-                            ) : (
-                                <Typography
-                                    variant="body1"
-                                    color="text.secondary"
-                                    sx={{ p: 2 }}>
-                                    No regular users found
-                                </Typography>
-                            )}
-                        </>
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            mb: 3,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            fontWeight: 500,
+                        }}>
+                        {icon} {title}
+                    </Typography>
+
+                    {currentUsers?.length > 0 ? (
+                        <Grid container spacing={3}>
+                            {currentUsers.map((user) => (
+                                <Grid size={{ xs: 12, md: 4 }} key={user._id}>
+                                    <UserCard
+                                        user={user}
+                                        isCreatorTab={tabValue === 1}
+                                        onRoleChange={handleRoleChangeClick}
+                                    />
+                                </Grid>
+                            ))}
+                        </Grid>
                     ) : (
-                        <>
-                            <Typography
-                                variant="h6"
-                                sx={{
-                                    mb: 2,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1,
-                                    fontWeight: 500,
-                                }}>
-                                <GroupAdd />
-                                Creators
-                            </Typography>
-                            {creatorRoles?.length > 0 ? (
-                                <List>
-                                    {creatorRoles.map((user) => (
-                                        <Paper
-                                            key={user._id}
-                                            elevation={1}
-                                            sx={{
-                                                mb: 2,
-                                                borderRadius: 2,
-                                                transition:
-                                                    "transform 0.2s, box-shadow 0.2s",
-                                                "&:hover": {
-                                                    transform:
-                                                        "translateY(-2px)",
-                                                    boxShadow:
-                                                        "0 4px 12px rgba(0,0,0,0.1)",
-                                                },
-                                            }}>
-                                            <ListItem
-                                                sx={{
-                                                    py: { xs: 1.5, sm: 2 },
-                                                    px: { xs: 1, sm: 2 },
-                                                }}>
-                                                <Grid
-                                                    container
-                                                    alignItems="center"
-                                                    spacing={{ xs: 1, sm: 2 }}>
-                                                    <Grid
-                                                        size={{
-                                                            xs: 12,
-                                                            sm: 6,
-                                                            md: 7,
-                                                            lg: 8,
-                                                        }}>
-                                                        <Box
-                                                            sx={{
-                                                                display: "flex",
-                                                                alignItems:
-                                                                    "center",
-                                                                gap: 2,
-                                                            }}>
-                                                            <ListItemAvatar>
-                                                                <Avatar
-                                                                    src={
-                                                                        user.avatar
-                                                                    }
-                                                                    alt={
-                                                                        user.name
-                                                                    }
-                                                                    sx={{
-                                                                        width: 48,
-                                                                        height: 48,
-                                                                        bgcolor:
-                                                                            "info.main",
-                                                                    }}>
-                                                                    {user.name?.charAt(
-                                                                        0
-                                                                    )}
-                                                                </Avatar>
-                                                            </ListItemAvatar>
-                                                            <ListItemText
-                                                                primary={
-                                                                    <Box
-                                                                        sx={{
-                                                                            display:
-                                                                                "flex",
-                                                                            alignItems:
-                                                                                "center",
-                                                                            gap: 1,
-                                                                            flexWrap:
-                                                                                "wrap",
-                                                                        }}>
-                                                                        {
-                                                                            user.name
-                                                                        }
-                                                                        <Chip
-                                                                            label="Creator"
-                                                                            size="small"
-                                                                            color="primary"
-                                                                            variant="outlined"
-                                                                        />
-                                                                    </Box>
-                                                                }
-                                                                secondary={
-                                                                    user.email
-                                                                }
-                                                                primaryTypographyProps={{
-                                                                    fontWeight: 500,
-                                                                    variant:
-                                                                        "body1",
-                                                                    noWrap: true,
-                                                                }}
-                                                                secondaryTypographyProps={{
-                                                                    variant:
-                                                                        "body2",
-                                                                    color: "text.secondary",
-                                                                    noWrap: true,
-                                                                }}
-                                                            />
-                                                        </Box>
-                                                    </Grid>
-                                                    {(user.communitiesCreated
-                                                        ?.length ||
-                                                        user.communitiesJoined
-                                                            ?.length) > 0 && (
-                                                        <Grid
-                                                            size={{
-                                                                xs: 12,
-                                                                sm: 6,
-                                                                md: 7,
-                                                                lg: 8,
-                                                            }}>
-                                                            <Divider
-                                                                sx={{
-                                                                    my: 1,
-                                                                    display: {
-                                                                        xs: "block",
-                                                                        md: "none",
-                                                                    },
-                                                                }}
-                                                            />
-                                                            <Box
-                                                                sx={{
-                                                                    display:
-                                                                        "flex",
-                                                                    flexWrap:
-                                                                        "wrap",
-                                                                    gap: 1,
-                                                                    px: {
-                                                                        xs: 0,
-                                                                        sm: 2,
-                                                                    },
-                                                                }}>
-                                                                <Chip
-                                                                    icon={
-                                                                        <Groups fontSize="small" />
-                                                                    }
-                                                                    label={`Created: ${
-                                                                        user
-                                                                            .communitiesCreated
-                                                                            ?.length ||
-                                                                        0
-                                                                    }`}
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    sx={{
-                                                                        bgcolor:
-                                                                            "background.paper",
-                                                                    }}
-                                                                />
-                                                                <Chip
-                                                                    icon={
-                                                                        <Groups fontSize="small" />
-                                                                    }
-                                                                    label={`Joined: ${
-                                                                        user
-                                                                            .communitiesJoined
-                                                                            ?.length ||
-                                                                        0
-                                                                    }`}
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    sx={{
-                                                                        bgcolor:
-                                                                            "background.paper",
-                                                                    }}
-                                                                />
-                                                            </Box>
-                                                        </Grid>
-                                                    )}
-                                                    <Grid
-                                                        size={{
-                                                            xs: 12,
-                                                            sm: 6,
-                                                            md: 5,
-                                                            lg: 4,
-                                                        }}>
-                                                        <Box
-                                                            sx={{
-                                                                display: "flex",
-                                                                flexDirection: {
-                                                                    xs: "column",
-                                                                    md: "row",
-                                                                },
-                                                                gap: 1,
-                                                                justifyContent:
-                                                                    "flex-end",
-                                                                alignItems: {
-                                                                    xs: "stretch",
-                                                                    md: "center",
-                                                                },
-                                                            }}>
-                                                            <Button
-                                                                variant="outlined"
-                                                                startIcon={
-                                                                    <SwitchAccount />
-                                                                }
-                                                                onClick={() =>
-                                                                    handleRoleChangeClick(
-                                                                        user._id,
-                                                                        "user"
-                                                                    )
-                                                                }
-                                                                color="secondary"
-                                                                size="small"
-                                                                sx={{
-                                                                    flex: {
-                                                                        xs: "1 0 100%",
-                                                                        md: "0 1 auto",
-                                                                    },
-                                                                }}>
-                                                                Make User
-                                                            </Button>
-                                                            <Button
-                                                                variant="contained"
-                                                                component={Link}
-                                                                to={`/admin/dashboard/user/${user._id}`}
-                                                                color="info"
-                                                                size="small"
-                                                                sx={{
-                                                                    flex: {
-                                                                        xs: "1 0 100%",
-                                                                        md: "0 1 auto",
-                                                                    },
-                                                                }}>
-                                                                View Details
-                                                            </Button>
-                                                        </Box>
-                                                    </Grid>
-                                                </Grid>
-                                            </ListItem>
-                                        </Paper>
-                                    ))}
-                                </List>
-                            ) : (
-                                <Typography
-                                    variant="body1"
-                                    color="text.secondary"
-                                    sx={{ p: 2 }}>
-                                    No creators found
-                                </Typography>
-                            )}
-                        </>
+                        <Typography
+                            variant="body1"
+                            color="text.secondary"
+                            textAlign="center"
+                            sx={{ p: 3 }}>
+                            No {title.toLowerCase()} found
+                        </Typography>
                     )}
                 </CardContent>
             </Card>
@@ -642,7 +290,8 @@ const Users = () => {
                         onClick={handleConfirmRoleChange}
                         color="primary"
                         variant="contained"
-                        autoFocus>
+                        autoFocus
+                        disabled={isLoading}>
                         {isLoading ? (
                             <CircularProgress color="inherit" size={20} />
                         ) : (

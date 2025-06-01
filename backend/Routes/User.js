@@ -52,13 +52,6 @@ router.put("/joinCommunity/:communityId", async (req, res) => {
             return res.status(403).json("Community cannot be explored");
         }
 
-        // Check if already a member
-        const isMember = community.members.some(
-            (m) => m.userId.toString() === userId.toString()
-        );
-        if (isMember) {
-            return res.status(200).json("Welcome Back");
-        }
         if (
             user.role === "admin" ||
             community.createdBy.toString() === userId.toString()
@@ -66,67 +59,112 @@ router.put("/joinCommunity/:communityId", async (req, res) => {
             return res.status(200).json("Welcome Admin");
         }
 
-        // For paid communities, verify payment
-        if (community.subscriptionFee > 0) {
-            if (!subscriptionId) {
-                return res.status(400).json("Payment required");
+        // Check for existing membership
+        const existingMembership = community.members.find(
+            (m) => m.userId.toString() === userId.toString()
+        );
+        const isExistingMember = !!existingMembership;
+
+        // Handle free communities
+        if (community.subscriptionFee === 0) {
+            if (isExistingMember) {
+                return res.status(200).json("Welcome Back");
             }
 
-            // Verify PaymentIntent
-            const paymentIntent = await stripe.paymentIntents.retrieve(
-                subscriptionId
-            );
-
-            if (paymentIntent.customer !== user.stripeCustomerId) {
-                return res.status(403).json("Payment doesn't belong to user");
-            }
-
-            if (paymentIntent.status !== "succeeded") {
-                return res.status(400).json("Payment not successful");
-            }
-
-            // Save payment record
-            await Payment.create({
-                paymentId: paymentIntent.id,
-                amount: paymentIntent.amount / 100, // Convert cents to dollars
-                currency: paymentIntent.currency,
-                userId,
-                communityId: community._id,
-                paymentType: "community_subscription",
-                status: paymentIntent.status,
+            // Add as new member for free community
+            community.members.push({
+                userId: user._id,
+                status: "active",
             });
 
-            // Notify payment success
             await createNotification(
                 userId,
-                `Payment of $${paymentIntent.amount / 100} for community ${
-                    community.name
-                } subscription`
+                `You joined the free community ${community.name}`
             );
+
+            await community.save();
+            return res.status(200).json("Successfully joined free community");
         }
 
-        // Add to community members
+        // PAID COMMUNITIES BELOW THIS POINT
         const currentPeriodEnd =
             community.subscriptionFee > 0
                 ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
                 : null;
 
-        community.members.push({
-            userId: user._id,
-            stripeCustomerId: user.stripeCustomerId,
-            stripeSubscriptionId: subscriptionId, // Store paymentIntent.id
-            status: "active",
-            currentPeriodEnd,
-        });
+        // Payment verification is required for paid communities
+        if (!subscriptionId) {
+            return res.status(400).json("Payment required for this community");
+        }
 
-        // Notify user
-        await createNotification(
-            userId,
-            `You successfully joined the community ${community.name}`
+        // Verify PaymentIntent
+        const paymentIntent = await stripe.paymentIntents.retrieve(
+            subscriptionId
         );
 
+        if (paymentIntent.customer !== user.stripeCustomerId) {
+            return res.status(403).json("Payment doesn't belong to user");
+        }
+
+        if (paymentIntent.status !== "succeeded") {
+            return res.status(400).json("Payment not successful");
+        }
+
+        // Save payment record
+        await Payment.create({
+            paymentId: paymentIntent.id,
+            amount: paymentIntent.amount / 100, // Convert cents to dollars
+            currency: paymentIntent.currency,
+            userId,
+            communityId: community._id,
+            paymentType: "community_subscription",
+            status: paymentIntent.status,
+        });
+
+        // Notify payment success
+        await createNotification(
+            userId,
+            `Payment for $${paymentIntent.amount / 100} for community ${
+                community.name
+            } ${isExistingMember ? "renewal" : "subscription"}`
+        );
+
+        // Update or create membership
+        if (isExistingMember) {
+            // Renew existing subscription
+            existingMembership.status = "active";
+            existingMembership.stripeSubscriptionId = subscriptionId;
+            existingMembership.currentPeriodEnd = currentPeriodEnd;
+
+            await createNotification(
+                userId,
+                `Renewed subscription for ${community.name} - $${
+                    paymentIntent.amount / 100
+                }`
+            );
+        } else {
+            // Create new membership
+            community.members.push({
+                userId: user._id,
+                stripeCustomerId: user.stripeCustomerId,
+                stripeSubscriptionId: subscriptionId,
+                status: "active",
+                currentPeriodEnd,
+            });
+
+            await createNotification(
+                userId,
+                `Joined ${community.name} - $${paymentIntent.amount / 100}`
+            );
+        }
+
         await community.save();
-        res.status(200).json("Successfully joined community");
+
+        res.status(200).json(
+            isExistingMember
+                ? "Subscription renewed successfully"
+                : "Successfully joined community"
+        );
     } catch (error) {
         console.error("Join error:", error);
         res.status(500).json("Internal server error");
@@ -256,24 +294,28 @@ router.get("/verify-membership/:communityId", async (req, res) => {
 
         // Retrieve the user and community from the database
         const user = await UsersModel.findById(userId);
-        const community = await Community.findById(communityId);
+        const community = await Community.findById(communityId).lean();
 
         if (!user || !community) {
             return res.status(403).send("User or community not found.");
         }
 
         let membership = null;
-        if (user.role === "admin") {
-            membership = "active";
-        } else if (community.createdBy.toString() === user.id) {
-            membership = "active";
+        if (
+            user.role === "admin" ||
+            community.createdBy.toString() === user.id
+        ) {
+            membership = { status: "active" };
         } else {
             // Find the user in the community members array
             let userMembership = community.members.find(
                 (member) => member.userId.toString() === user.id
             );
 
-            membership = userMembership;
+            membership = {
+                ...userMembership,
+                communitySubFee: community.subscriptionFee,
+            };
         }
 
         // Return the membership status
@@ -703,6 +745,94 @@ router.get("/settings", async (req, res) => {
     } catch (error) {
         res.status(500).json("Error fetching settings");
         console.log(error);
+    }
+});
+
+// endpoint to cancel community subscription
+router.put("/cancel-subscription/:communityId", async (req, res) => {
+    const { communityId } = req.params;
+    const userId = req.userId;
+
+    try {
+        const user = await UsersModel.findById(userId);
+
+        if (!user) {
+            return res.status(404).json("User not found");
+        }
+
+        const community = await Community.findById(communityId);
+
+        if (!community) {
+            return res.status(403).json("community not found");
+        }
+
+        // Find the user's membership
+        const membership = community.members.find(
+            (m) => m.userId.toString() === userId.toString()
+        );
+
+        if (!membership) {
+            return res.status(404).json("Membership not found");
+        }
+
+        // Update membership status in database
+        membership.status = "canceled";
+
+        // Save the updated community
+        await community.save();
+
+        res.status(200).json("Subscription cancelled successfully");
+    } catch (error) {
+        console.error("Error cancelling subscription:", error);
+        res.status(500).json("Failed to cancel subscription");
+    }
+});
+
+// endpoint to report community
+router.put("/report-community/:communityId", async (req, res) => {
+    const { communityId } = req.params;
+    const { reason } = req.body;
+    const userId = req.userId;
+
+    try {
+        const user = await UsersModel.findById(userId);
+
+        if (!user) {
+            return res.status(404).json("User not found");
+        }
+
+        const community = await Community.findById(communityId);
+
+        if (!community) {
+            return res.status(403).json("community not found");
+        }
+
+        // Find the user's membership
+        const membership = community.members.some(
+            (m) => m.userId.toString() === userId.toString()
+        );
+
+        if (!membership) {
+            return res.status(404).json("Only members can report");
+        }
+
+        // check reports if user has reported before
+        const hasReported = community.reports.some(
+            (report) => report.userId.toString() === userId.toString()
+        );
+        if (hasReported) {
+            return res
+                .status(403)
+                .json("You have already reported this community");
+        }
+
+        community.reports.push({ userId, reason });
+        await community.save();
+
+        res.status(200).json("Report submitted successfully");
+    } catch (error) {
+        console.error("Error reporting community:", error);
+        res.status(500).json("Failed to report community");
     }
 });
 

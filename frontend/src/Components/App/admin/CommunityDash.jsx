@@ -28,6 +28,7 @@ import {
     MonetizationOn,
     FreeBreakfast,
     AccountBalance,
+    Report,
 } from "@mui/icons-material";
 import { useAdminAnalyticsData } from "../../Hooks/useQueryFetch/useQueryData";
 import { Link } from "react-router-dom";
@@ -212,6 +213,15 @@ const CommunityDash = () => {
                                             label={`Fee: $${community.subscriptionFee.toFixed(
                                                 2
                                             )}/mo`}
+                                            size="small"
+                                            variant="outlined"
+                                            sx={{ bgcolor: "background.paper" }}
+                                        />
+                                        <Chip
+                                            icon={<Report fontSize="small" />}
+                                            label={`Reports: ${
+                                                community.reports?.length || 0
+                                            }`}
                                             size="small"
                                             variant="outlined"
                                             sx={{ bgcolor: "background.paper" }}

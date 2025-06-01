@@ -16,15 +16,16 @@ import {
     ListItemText,
     Paper,
     Divider,
+    Badge,
+    Stack,
 } from "@mui/material";
-import {
-    Groups,
-    MonetizationOn,
-    AccountBalance,
-    Category,
-    Person,
-    Event,
-} from "@mui/icons-material";
+import Report from "@mui/icons-material/Report";
+import Groups from "@mui/icons-material/Groups";
+import MonetizationOn from "@mui/icons-material/MonetizationOn";
+import AccountBalance from "@mui/icons-material/AccountBalance";
+import Category from "@mui/icons-material/Category";
+import Person from "@mui/icons-material/Person";
+import Event from "@mui/icons-material/Event";
 import PageLoader from "../../Animations/PageLoader";
 
 const SingleCommunityDash = () => {
@@ -48,6 +49,8 @@ const SingleCommunityDash = () => {
             </Typography>
         );
     }
+
+    console.log(community);
 
     return (
         <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: 1200, mx: "auto" }}>
@@ -113,7 +116,7 @@ const SingleCommunityDash = () => {
                                 {community.description}
                             </Typography>
                             <Grid container spacing={1}>
-                                <Grid size={{ xs: 6, sm: 4 }}>
+                                <Grid size={{ xs: 12, sm: 6 }}>
                                     <Chip
                                         icon={<Groups fontSize="small" />}
                                         label={`Members: ${
@@ -126,7 +129,7 @@ const SingleCommunityDash = () => {
                                         }}
                                     />
                                 </Grid>
-                                <Grid size={{ xs: 6, sm: 4 }}>
+                                <Grid size={{ xs: 12, sm: 6 }}>
                                     <Chip
                                         icon={
                                             <MonetizationOn fontSize="small" />
@@ -141,7 +144,7 @@ const SingleCommunityDash = () => {
                                         }}
                                     />
                                 </Grid>
-                                <Grid size={{ xs: 6, sm: 4 }}>
+                                <Grid size={{ xs: 12, sm: 6 }}>
                                     <Chip
                                         icon={
                                             <AccountBalance fontSize="small" />
@@ -157,7 +160,7 @@ const SingleCommunityDash = () => {
                                         }}
                                     />
                                 </Grid>
-                                <Grid size={{ xs: 6, sm: 4 }}>
+                                <Grid size={{ xs: 12, sm: 6 }}>
                                     <Chip
                                         icon={<Category fontSize="small" />}
                                         label={`Category: ${community.category}`}
@@ -168,7 +171,7 @@ const SingleCommunityDash = () => {
                                         }}
                                     />
                                 </Grid>
-                                <Grid size={{ xs: 6, sm: 4 }}>
+                                <Grid size={{ xs: 12, sm: 6 }}>
                                     <Chip
                                         icon={<Person fontSize="small" />}
                                         label={`Creator: ${
@@ -182,7 +185,20 @@ const SingleCommunityDash = () => {
                                         }}
                                     />
                                 </Grid>
-                                <Grid size={{ xs: 6, sm: 4 }}>
+                                <Grid size={{ xs: 12, sm: 6 }}>
+                                    <Chip
+                                        icon={<Report fontSize="small" />}
+                                        label={`Reports: ${
+                                            community.reports?.length || 0
+                                        }`}
+                                        variant="outlined"
+                                        sx={{
+                                            width: "100%",
+                                            bgcolor: "background.paper",
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid size={{ xs: 12, sm: 6 }}>
                                     <Chip
                                         icon={<Event fontSize="small" />}
                                         label={`Created: ${new Date(
@@ -250,6 +266,107 @@ const SingleCommunityDash = () => {
                         </Typography>
                     )}
                 </List>
+            </Paper>
+
+            {/* Community Reports */}
+            <Paper elevation={2} sx={{ borderRadius: 4 }}>
+                <Stack
+                    direction="row"
+                    alignItems="center"
+                    spacing={1}
+                    sx={{
+                        p: 2,
+                        bgcolor: "background.paper",
+                        borderTopLeftRadius: 4,
+                        borderTopRightRadius: 4,
+                    }}>
+                    <Report color="error" />
+                    <Typography variant="h6" fontWeight={500}>
+                        Community Reports
+                    </Typography>
+                    <Chip
+                        label={`${community.reports?.length || 0} reports`}
+                        color="error"
+                        size="small"
+                        sx={{ ml: 1 }}
+                    />
+                </Stack>
+                <Divider />
+
+                {community.reports?.length > 0 ? (
+                    <List>
+                        {community.reports.map((report, index) => (
+                            <Box key={index}>
+                                <ListItem
+                                    alignItems="flex-start"
+                                    sx={{ py: 2 }}>
+                                    <ListItemAvatar>
+                                        <Badge
+                                            color="error"
+                                            overlap="circular"
+                                            badgeContent={
+                                                <Report fontSize="small" />
+                                            }>
+                                            <Avatar
+                                                src={report.userId?.avatar}
+                                                alt={report.userId?.name}
+                                                sx={{
+                                                    width: 48,
+                                                    height: 48,
+                                                    bgcolor: "info.main",
+                                                }}>
+                                                {report.userId?.name?.charAt(
+                                                    0
+                                                ) || "R"}
+                                            </Avatar>
+                                        </Badge>
+                                    </ListItemAvatar>
+                                    <ListItemText
+                                        primary={
+                                            <Typography fontWeight={500}>
+                                                {report.userId?.name ||
+                                                    "Anonymous"}
+                                            </Typography>
+                                        }
+                                        secondary={
+                                            <>
+                                                <Typography
+                                                    component="span"
+                                                    variant="body2"
+                                                    color="text.primary"
+                                                    display="block"
+                                                    sx={{ mt: 0.5 }}>
+                                                    {report.reason}
+                                                </Typography>
+                                                <Typography
+                                                    variant="caption"
+                                                    color="text.secondary"
+                                                    display="block"
+                                                    sx={{ mt: 0.5 }}>
+                                                    Reported on:{" "}
+                                                    {new Date(
+                                                        report.createdAt
+                                                    ).toLocaleDateString()}
+                                                </Typography>
+                                            </>
+                                        }
+                                        sx={{ ml: 1 }}
+                                    />
+                                </ListItem>
+                                {index < community.reports.length - 1 && (
+                                    <Divider variant="inset" />
+                                )}
+                            </Box>
+                        ))}
+                    </List>
+                ) : (
+                    <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ p: 3, textAlign: "center" }}>
+                        No reports for this community
+                    </Typography>
+                )}
             </Paper>
         </Box>
     );
