@@ -52,15 +52,15 @@ const ContactUs = () => {
                     Contact Us
                 </Typography>
                 <Typography variant="subtitle1" color="text.secondary">
-                    We'd love to hear from you! Reach out through any of these
-                    channels
+                    We&apos;d love to hear from you! Reach out through any of
+                    these channels
                 </Typography>
             </Box>
 
             {/* Contact Information and Form */}
             <Grid container spacing={4}>
                 {/* Contact Info Column */}
-                <Grid item size={{ xs: 12, md: 6 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                     <Card
                         elevation={0}
                         sx={{
@@ -138,7 +138,7 @@ const ContactUs = () => {
                 </Grid>
 
                 {/* Contact Form Column */}
-                <Grid item size={{ xs: 12, md: 6 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                     <Card
                         elevation={0}
                         sx={{
@@ -159,7 +159,7 @@ const ContactUs = () => {
                                 onSubmit={handleSubmit(onSubmit)}
                                 sx={{ mt: 3 }}>
                                 <Grid container spacing={3}>
-                                    <Grid item size={{ xs: 12, sm: 6 }}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
                                         <TextField
                                             fullWidth
                                             label="Your Name"
@@ -171,7 +171,7 @@ const ContactUs = () => {
                                             helperText={errors.name?.message}
                                         />
                                     </Grid>
-                                    <Grid item size={{ xs: 12, sm: 6 }}>
+                                    <Grid size={{ xs: 12, sm: 6 }}>
                                         <TextField
                                             fullWidth
                                             label="Email Address"
@@ -189,7 +189,7 @@ const ContactUs = () => {
                                             helperText={errors.email?.message}
                                         />
                                     </Grid>
-                                    <Grid item size={12}>
+                                    <Grid size={12}>
                                         <TextField
                                             fullWidth
                                             label="Subject"
@@ -201,7 +201,7 @@ const ContactUs = () => {
                                             helperText={errors.subject?.message}
                                         />
                                     </Grid>
-                                    <Grid item size={12}>
+                                    <Grid size={12}>
                                         <TextField
                                             fullWidth
                                             label="Your Message"
