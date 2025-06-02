@@ -8,29 +8,23 @@ import {
     CardContent,
     CardMedia,
     Chip,
-    Avatar,
     List,
     ListItem,
     ListItemIcon,
     ListItemText,
-    useTheme,
     CircularProgress,
-    IconButton,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
 } from "@mui/material";
-import {
-    ArrowBack as ArrowBackIcon,
-    Lock as LockIcon,
-    People as PeopleIcon,
-    Tag as TagIcon,
-    Person as PersonIcon,
-    Star as StarIcon,
-    FiberManualRecord as DotIcon,
-    Category,
-} from "@mui/icons-material";
+import LockIcon from "@mui/icons-material/Lock";
+import PeopleIcon from "@mui/icons-material/People";
+import TagIcon from "@mui/icons-material/Tag";
+import PersonIcon from "@mui/icons-material/Person";
+import StarIcon from "@mui/icons-material/Star";
+import DotIcon from "@mui/icons-material/FiberManualRecord";
+import Category from "@mui/icons-material/Category";
 import useResponsive from "../../Hooks/useResponsive";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import { useAuthContext } from "../../Context/AuthContext";
@@ -370,91 +364,6 @@ const CommunityView = () => {
                 />
             </Container>
         </Elements>
-    );
-};
-
-export const CommunityName = () => {
-    const theme = useTheme();
-
-    const { useNavigate, useLocation } = useReactRouter();
-
-    const location = useLocation();
-
-    const { isMobile } = useResponsive();
-
-    const pathnameArr = location.pathname.split("/");
-
-    const communityId = pathnameArr.find((p) => p.startsWith("680"));
-
-    const { community, isCommunityLoading } = useCommunityByIdData({
-        id: communityId,
-    });
-
-    const { name, logo } = community || {};
-
-    const navigate = useNavigate();
-
-    const goBack = () => {
-        const hasHistory = window.history.state?.idx > 0;
-        const isFirstPage = window.history.length === 1;
-
-        if (hasHistory && !isFirstPage) {
-            navigate(-1);
-        } else {
-            navigate("/", { replace: true }); // Replace current entry in history
-        }
-    };
-
-    return (
-        <Box
-            sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-            }}>
-            {/* Back Button */}
-            <IconButton
-                onClick={goBack}
-                size="small"
-                sx={{
-                    color: theme.palette.info.main,
-                    "&:hover": {
-                        backgroundColor: theme.palette.action.hover,
-                    },
-                }}>
-                <ArrowBackIcon fontSize="small" />
-            </IconButton>
-
-            {/* Community Logo and Name */}
-            {isCommunityLoading ? (
-                <CircularProgress size={15} color="info" />
-            ) : (
-                <>
-                    <Avatar
-                        src={logo}
-                        alt="community logo"
-                        sx={{
-                            width: 30,
-                            height: 30,
-                            border: `1px solid ${theme.palette.divider}`,
-                        }}
-                    />
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            fontWeight: 600,
-                            fontSize: ".9rem",
-                            color: theme.palette.text.primary,
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            maxWidth: isMobile ? "150px" : "300px",
-                        }}>
-                        {name}
-                    </Typography>
-                </>
-            )}
-        </Box>
     );
 };
 

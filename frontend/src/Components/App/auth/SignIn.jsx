@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
     Box,
     Grid,
@@ -7,15 +6,14 @@ import {
     Button,
     Divider,
 } from "@mui/material";
-import { RegisterForm } from "../../Custom/Forms/Forms";
 import { Link } from "react-router-dom";
 import useResponsive from "../../Hooks/useResponsive";
+import { LoginForm } from "../../Custom/Forms/Forms";
 import AuthBg from "../../../assets/authBg.png";
 
-const SignUp = () => {
+const SignIn = () => {
     const theme = useTheme();
     const { isMobile } = useResponsive();
-    const [isBusiness, setIsBusiness] = useState(false);
 
     return (
         <Box
@@ -67,10 +65,7 @@ const SignUp = () => {
                 {/* Image Section - Hidden on mobile */}
                 {!isMobile && (
                     <Grid
-                        size={{
-                            xs: 12,
-                            md: 6,
-                        }}
+                        size={{ xs: 12, md: 6 }}
                         sx={{
                             position: "relative",
                             backgroundImage: `linear-gradient(rgba(25, 118, 210, 0.5), rgba(94, 53, 177, 0.5)), url(${AuthBg})`,
@@ -90,7 +85,7 @@ const SignUp = () => {
                                     mb: 3,
                                     textShadow: "0 2px 10px rgba(0,0,0,0.3)",
                                 }}>
-                                Join Our Community
+                                Welcome Back!
                             </Typography>
                             <Typography
                                 variant="h5"
@@ -98,7 +93,7 @@ const SignUp = () => {
                                     mb: 4,
                                     textShadow: "0 1px 5px rgba(0,0,0,0.2)",
                                 }}>
-                                Connect with learners and experts worldwide
+                                Continue your learning journey with us
                             </Typography>
                             <Box
                                 sx={{
@@ -122,7 +117,9 @@ const SignUp = () => {
                                         }}>
                                         <Box
                                             component="img"
-                                            src={`https://i.pravatar.cc/80?img=${item}`}
+                                            src={`https://i.pravatar.cc/80?img=${
+                                                item + 4
+                                            }`}
                                             alt="Community member"
                                             sx={{
                                                 width: "100%",
@@ -139,20 +136,19 @@ const SignUp = () => {
 
                 {/* Form Section */}
                 <Grid
-                    size={{
-                        xs: 12,
-                        md: 6,
-                    }}
+                    size={{ xs: 12, md: 6 }}
                     sx={{
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "center",
                         p: isMobile ? 3 : 6,
                         position: "relative",
-                        overflowY: "auto",
                     }}>
                     <Box
-                        sx={{ mb: 2, textAlign: isMobile ? "center" : "left" }}>
+                        sx={{
+                            mb: 4,
+                            textAlign: isMobile ? "center" : "left",
+                        }}>
                         <Typography
                             variant={isMobile ? "h4" : "h3"}
                             fontSize="1.5rem"
@@ -161,66 +157,32 @@ const SignUp = () => {
                                 color: theme.palette.primary.dark,
                                 mb: 1,
                             }}>
-                            Create an Account
+                            Sign In to Your Account
                         </Typography>
                         <Typography
                             variant="body1"
                             fontSize=".9rem"
                             color="text.secondary">
-                            Join thousands of learners and experts on our
-                            platform
+                            Access your communities and continue learning
                         </Typography>
                     </Box>
 
-                    {/* Account type selector */}
-                    <Box
-                        sx={{
-                            mb: 2,
-                            display: "flex",
-                            gap: 1,
-                            alignItems: "center",
-                        }}>
-                        <Button
-                            variant={isBusiness ? "outlined" : "contained"}
-                            onClick={() => setIsBusiness(false)}
-                            sx={{
-                                borderRadius: "50px",
-                                px: 4,
-                                fontWeight: 600,
-                                textTransform: "none",
-                            }}>
-                            Personal {isMobile ? "" : "Account"}
-                        </Button>
-                        <Button
-                            disabled={true}
-                            variant="outlined"
-                            sx={{
-                                borderRadius: "50px",
-                                px: 4,
-                                fontWeight: 600,
-                                textTransform: "none",
-                            }}>
-                            Creator {isMobile ? "" : "Account"}
-                        </Button>
-                    </Box>
-
-                    <RegisterForm />
+                    <LoginForm />
 
                     <Divider sx={{ my: 4 }}>
                         <Typography variant="body2" color="text.secondary">
-                            Or sign up with
+                            Or sign in with
                         </Typography>
                     </Divider>
 
                     <Typography
                         variant="body2"
                         color="text.secondary"
-                        textAlign="center"
-                        mt={2}>
-                        Already have an account?
+                        textAlign="center">
+                        Don&apos;t have an account?
                         <Button
                             component={Link}
-                            to="/sign-in"
+                            to="/sign-up"
                             variant="outlined"
                             sx={{
                                 ml: 0.5,
@@ -228,18 +190,8 @@ const SignUp = () => {
                                 textTransform: "none",
                                 color: theme.palette.primary.main,
                             }}>
-                            Sign in
+                            Sign Up
                         </Button>
-                    </Typography>
-
-                    <Typography
-                        variant="caption"
-                        color="text.disabled"
-                        textAlign="center"
-                        mt={3}
-                        display="block">
-                        By signing up, you agree to our Terms of Service and
-                        Privacy Policy
                     </Typography>
                 </Grid>
             </Grid>
@@ -247,4 +199,4 @@ const SignUp = () => {
     );
 };
 
-export default SignUp;
+export default SignIn;

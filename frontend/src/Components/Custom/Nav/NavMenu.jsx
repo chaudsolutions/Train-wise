@@ -6,6 +6,7 @@ import {
     CircularProgress,
     useTheme,
     Box,
+    Button,
 } from "@mui/material";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import { useUserData } from "../../Hooks/useQueryFetch/useQueryData";
@@ -14,6 +15,7 @@ import ExploreIcon from "@mui/icons-material/Explore";
 import AddIcon from "@mui/icons-material/Add";
 import { Notifications, Person, Settings } from "@mui/icons-material";
 import { useAuthContext } from "../../Context/AuthContext";
+import Logout from "../Buttons/Logout";
 
 const NavMenu = ({ handleDrawerToggle }) => {
     const theme = useTheme();
@@ -110,6 +112,23 @@ const NavMenu = ({ handleDrawerToggle }) => {
                         )
                 )
             )}
+
+            <Box display="flex" justifyContent="center" my={3}>
+                {user ? (
+                    <Logout handleDrawerToggle={handleDrawerToggle} />
+                ) : (
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        component={Link}
+                        size="large"
+                        to="/sign-in"
+                        onClick={handleDrawerToggle}
+                        startIcon={<Person />}>
+                        Login
+                    </Button>
+                )}
+            </Box>
         </List>
     );
 };

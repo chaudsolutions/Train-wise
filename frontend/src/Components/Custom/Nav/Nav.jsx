@@ -14,14 +14,11 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import MenuIcon from "@mui/icons-material/Menu";
-import logo from "/logo.png";
 import { useState } from "react";
-import { AuthContainer, UserProfile } from "./NavSlide";
+import { UserProfile } from "./NavSlide";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import NavMenu from "./NavMenu";
 import { useAuthContext } from "../../Context/AuthContext";
-import { CommunityName } from "../../App/Community/CommunityView";
-import Auth from "../Auth/Auth";
 import { companyName } from "../../Hooks/useVariable";
 
 const Nav = () => {
@@ -36,7 +33,6 @@ const Nav = () => {
 
     // states
     const [mobileOpen, setMobileOpen] = useState(false);
-    const [authOpen, setAuthOpen] = useState(false);
     const [desktopMenuAnchor, setDesktopMenuAnchor] = useState(null);
     const desktopMenuOpen = Boolean(desktopMenuAnchor);
 
@@ -69,22 +65,16 @@ const Nav = () => {
                 }}>
                 <Toolbar sx={{ justifyContent: "space-between" }}>
                     <Box display="flex" alignItems="center">
-                        {isCommunity ? (
-                            <CommunityName />
-                        ) : (
-                            <>
-                                {isMobile && (
-                                    <IconButton
-                                        color="inherit"
-                                        aria-label="open drawer"
-                                        edge="start"
-                                        onClick={handleDrawerToggle}>
-                                        <MenuIcon />
-                                    </IconButton>
-                                )}
-                                <Logo />
-                            </>
+                        {isMobile && (
+                            <IconButton
+                                color="inherit"
+                                aria-label="open drawer"
+                                edge="start"
+                                onClick={handleDrawerToggle}>
+                                <MenuIcon />
+                            </IconButton>
                         )}
+                        <Logo />
 
                         {/* Desktop Menu Button */}
                         {!isMobile && (
@@ -152,14 +142,11 @@ const Nav = () => {
                                 component={Link}
                                 to="/profile"
                                 color="inherit"
+                                variant="outlined"
                                 sx={{ textTransform: "none" }}>
                                 Profile
                             </Button>
                         )}
-                        <AuthContainer
-                            authOpen={authOpen}
-                            setAuthOpen={setAuthOpen}
-                        />
                     </Box>
                 </Toolbar>
             </AppBar>
@@ -195,9 +182,6 @@ const Nav = () => {
                     <NavMenu handleDrawerToggle={handleDrawerToggle} />
                 </Box>
             </Drawer>
-
-            {/* Auth Dialog */}
-            <Auth authContain={authOpen} setAuthContain={setAuthOpen} />
         </>
     );
 };
@@ -220,7 +204,7 @@ export const Logo = () => {
             }}
             onClick={() => navigate("/")}>
             <Avatar
-                src={logo}
+                src="/logo.png"
                 alt="logo"
                 sx={{
                     width: 30,

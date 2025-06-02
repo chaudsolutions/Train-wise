@@ -36,6 +36,7 @@ import Settings from "./Components/App/admin/Settings";
 import Communities from "./Components/App/Community/Communities";
 import AboutUs from "./Components/App/Others/AboutUs";
 import SignUp from "./Components/App/auth/SignUp";
+import SignIn from "./Components/App/auth/SignIn";
 
 function App() {
     const { user } = useAuthContext();
@@ -84,6 +85,12 @@ function App() {
                             }
                         />
                         <Route
+                            path="/sign-in"
+                            element={
+                                !user ? <SignIn /> : <Navigate to="/profile" />
+                            }
+                        />
+                        <Route
                             path="/forgot-password"
                             element={
                                 !user ? (
@@ -97,14 +104,20 @@ function App() {
                         {/* profile */}
                         <Route
                             path="/profile"
-                            element={user ? <Profile /> : <Navigate to="/" />}
+                            element={
+                                user ? <Profile /> : <Navigate to="/sign-up" />
+                            }
                         />
 
                         {/* withdrawals */}
                         <Route
                             path="/withdrawals"
                             element={
-                                user ? <Withdrawals /> : <Navigate to="/" />
+                                user ? (
+                                    <Withdrawals />
+                                ) : (
+                                    <Navigate to="/sign-up" />
+                                )
                             }
                         />
 
@@ -112,7 +125,11 @@ function App() {
                         <Route
                             path="/notifications"
                             element={
-                                user ? <Notifications /> : <Navigate to="/" />
+                                user ? (
+                                    <Notifications />
+                                ) : (
+                                    <Navigate to="/sign-up" />
+                                )
                             }
                         />
 
@@ -120,7 +137,11 @@ function App() {
                         <Route
                             path="/create-a-community"
                             element={
-                                user ? <CreateCommunity /> : <Navigate to="/" />
+                                user ? (
+                                    <CreateCommunity />
+                                ) : (
+                                    <Navigate to="/sign-up" />
+                                )
                             }
                         />
 
@@ -134,7 +155,11 @@ function App() {
                         <Route
                             path="/community/access/:communityId"
                             element={
-                                user ? <CommunityLayout /> : <Navigate to="/" />
+                                user ? (
+                                    <CommunityLayout />
+                                ) : (
+                                    <Navigate to="/sign-up" />
+                                )
                             }>
                             <Route index element={<EnterCommunity />} />
                             {/* community course classroom */}
@@ -151,7 +176,7 @@ function App() {
                                 user ? (
                                     <CommunityCreatorLayout />
                                 ) : (
-                                    <Navigate to="/" />
+                                    <Navigate to="/sign-up" />
                                 )
                             }>
                             {/* Create a community course */}
@@ -165,7 +190,11 @@ function App() {
                         <Route
                             path="/admin/dashboard"
                             element={
-                                user ? <AdminLayout /> : <Navigate to="/" />
+                                user ? (
+                                    <AdminLayout />
+                                ) : (
+                                    <Navigate to="/sign-up" />
+                                )
                             }>
                             <Route index element={<DashboardHome />} />
                             <Route path="users" element={<Users />} />
