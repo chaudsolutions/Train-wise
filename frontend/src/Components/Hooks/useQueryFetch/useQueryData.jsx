@@ -8,6 +8,7 @@ import {
     fetchCommunityCourses,
     fetchCommunitySingleCourse,
     fetchNotifications,
+    fetchRandomCommunities,
     fetchSettings,
     fetchUser,
     fetchUserAnalytics,
@@ -52,6 +53,26 @@ export const useCommunitiesData = () => {
         isCommunitiesLoading,
         isCommunitiesError,
         refetchCommunities,
+    };
+};
+
+// use communities data
+export const useRandomCommunitiesData = () => {
+    const {
+        data: randomCommunities,
+        isLoading: isRandomCommunitiesLoading,
+        isError: isRandomCommunitiesError,
+        refetch: refetchRandomCommunities,
+    } = useQuery({
+        queryKey: ["randomCommunities"], // Use the new object-based syntax
+        queryFn: fetchRandomCommunities,
+    });
+
+    return {
+        randomCommunities,
+        isRandomCommunitiesLoading,
+        isRandomCommunitiesError,
+        refetchRandomCommunities,
     };
 };
 

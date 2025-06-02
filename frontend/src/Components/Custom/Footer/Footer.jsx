@@ -25,7 +25,6 @@ const Footer = () => {
         { name: "Contact Us", link: "/contact-us" },
         { name: "FAQs", link: "/frequently-asked-questions" },
         { name: "Privacy", link: "/privacy" },
-        { name: "Pricing", link: "/pricing" },
     ];
 
     const socialLinks = [

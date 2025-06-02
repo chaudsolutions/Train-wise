@@ -11,7 +11,6 @@ import Home from "./Components/App/Home/Home";
 import NotFound from "./Components/App/404/NotFound";
 import FAQComponent from "./Components/App/Others/FAQComponent";
 import Privacy from "./Components/App/Others/Privacy";
-import Pricing from "./Components/App/Others/Pricing";
 import ContactUs from "./Components/App/Others/ContactUs";
 import CommunityView from "./Components/App/Community/CommunityView";
 import Profile from "./Components/App/Profile/Profile";
@@ -34,6 +33,9 @@ import AdminLayout from "./layout/AdminLayout";
 import CommunityCreatorLayout from "./layout/CommunityCreatorLayout";
 import PasswordReset from "./Components/App/auth/PasswordReset";
 import Settings from "./Components/App/admin/Settings";
+import Communities from "./Components/App/Community/Communities";
+import AboutUs from "./Components/App/Others/AboutUs";
+import SignUp from "./Components/App/auth/SignUp";
 
 function App() {
     const { user } = useAuthContext();
@@ -55,9 +57,14 @@ function App() {
                         {/* home */}
                         <Route path="/" exact element={<Home />} />
                         {/* discovery */}
-                        <Route path="/discovery" exact element={<Home />} />
+                        <Route
+                            path="/communities"
+                            exact
+                            element={<Communities />}
+                        />
 
                         {/* support */}
+                        <Route path="/about-us" element={<AboutUs />} />
                         <Route
                             path="/frequently-asked-questions"
                             element={<FAQComponent />}
@@ -66,13 +73,16 @@ function App() {
                         {/* privacy */}
                         <Route path="/privacy" element={<Privacy />} />
 
-                        {/* pricing */}
-                        <Route path="/pricing" element={<Pricing />} />
-
                         {/* contact us */}
                         <Route path="/contact-us" element={<ContactUs />} />
 
                         {/* auth / password reset */}
+                        <Route
+                            path="/sign-up"
+                            element={
+                                !user ? <SignUp /> : <Navigate to="/profile" />
+                            }
+                        />
                         <Route
                             path="/forgot-password"
                             element={

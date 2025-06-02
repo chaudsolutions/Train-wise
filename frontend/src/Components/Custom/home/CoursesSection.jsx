@@ -1,0 +1,279 @@
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
+import {
+    Box,
+    Typography,
+    Button,
+    Skeleton,
+    useTheme,
+    IconButton,
+    Grid,
+} from "@mui/material";
+import { Link } from "react-router-dom";
+import { useRandomCommunitiesData } from "../../Hooks/useQueryFetch/useQueryData";
+import CommunitiesList from "../List/CommunitiesList";
+import useResponsive from "../../Hooks/useResponsive";
+import ArrowBackIos from "@mui/icons-material/ArrowBackIos";
+import ArrowForwardIos from "@mui/icons-material/ArrowForwardIos";
+
+const CoursesSection = () => {
+    const { randomCommunities, isRandomCommunitiesLoading } =
+        useRandomCommunitiesData();
+    const theme = useTheme();
+    const { isMobile } = useResponsive();
+    const autoplayOptions = { delay: 5000, stopOnInteraction: false };
+    const [emblaRef, emblaApi] = useEmblaCarousel(
+        { loop: true, align: "start", skipSnaps: false },
+        [Autoplay(autoplayOptions)]
+    );
+
+    const scrollPrev = () => emblaApi && emblaApi.scrollPrev();
+    const scrollNext = () => emblaApi && emblaApi.scrollNext();
+
+    // Skeleton loader for when data is loading
+    if (isRandomCommunitiesLoading) {
+        return (
+            <Box sx={{ py: 8, px: { xs: 2, sm: 4, md: 6 } }}>
+                <Skeleton
+                    variant="text"
+                    width={300}
+                    height={60}
+                    sx={{ mx: "auto" }}
+                />
+                <Skeleton
+                    variant="text"
+                    width={400}
+                    height={40}
+                    sx={{ mx: "auto", mb: 4 }}
+                />
+                <Grid container spacing={4}>
+                    {[...Array(4)].map((_, index) => (
+                        <Grid
+                            size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
+                            key={index}>
+                            <CardSkeleton />
+                        </Grid>
+                    ))}
+                </Grid>
+            </Box>
+        );
+    }
+
+    return (
+        <Box
+            sx={{
+                py: 8,
+                px: { xs: 2, sm: 4, md: 6 },
+                background: "linear-gradient(to bottom, #ffffff, #f9fbfd)",
+                position: "relative",
+                overflow: "hidden",
+                "&::before": {
+                    content: '""',
+                    position: "absolute",
+                    top: -100,
+                    left: -100,
+                    width: 300,
+                    height: 300,
+                    borderRadius: "50%",
+                    background:
+                        "linear-gradient(120deg, rgba(25, 118, 210, 0.05) 0%, rgba(94, 53, 177, 0.05) 100%)",
+                    zIndex: 0,
+                },
+            }}>
+            <Box sx={{ position: "relative", zIndex: 1 }}>
+                <Typography
+                    variant={isMobile ? "h4" : "h3"}
+                    component="h2"
+                    sx={{
+                        fontWeight: 800,
+                        textAlign: "center",
+                        mb: 2,
+                        color: theme.palette.primary.dark,
+                    }}>
+                    Discover Vibrant Hubs
+                </Typography>
+
+                <Typography
+                    variant={isMobile ? "h6" : "h5"}
+                    component="p"
+                    fontSize="1rem"
+                    sx={{
+                        fontWeight: 400,
+                        textAlign: "center",
+                        mb: 6,
+                        maxWidth: 700,
+                        mx: "auto",
+                        color: theme.palette.text.secondary,
+                    }}>
+                    Explore these knowledge-sharing hubs where learners and
+                    experts come together
+                </Typography>
+
+                {randomCommunities?.length > 0 ? (
+                    <Box
+                        sx={{
+                            position: "relative",
+                            mx: "auto",
+                            maxWidth: "1400px",
+                        }}>
+                        {/* Navigation Arrows */}
+                        <IconButton
+                            onClick={scrollPrev}
+                            sx={{
+                                position: "absolute",
+                                left: { xs: -10, sm: -20, md: -30 },
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                zIndex: 10,
+                                background: "rgba(255,255,255,0.9)",
+                                boxShadow: theme.shadows[4],
+                                "&:hover": {
+                                    background: theme.palette.primary.main,
+                                    color: "white",
+                                },
+                                display: { xs: "none", sm: "flex" },
+                            }}>
+                            <ArrowBackIos />
+                        </IconButton>
+
+                        <IconButton
+                            onClick={scrollNext}
+                            color="primary"
+                            sx={{
+                                position: "absolute",
+                                right: { xs: -10, sm: -20, md: -30 },
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                zIndex: 10,
+                                background: "rgba(255,255,255,0.9)",
+                                boxShadow: theme.shadows[4],
+                                "&:hover": {
+                                    background: theme.palette.primary.main,
+                                    color: "white",
+                                },
+                                display: { xs: "none", sm: "flex" },
+                            }}>
+                            <ArrowForwardIos />
+                        </IconButton>
+
+                        {/* Embla Carousel Container */}
+                        <Box
+                            className="embla"
+                            ref={emblaRef}
+                            sx={{
+                                overflow: "hidden",
+                                padding: "0 10px",
+                            }}>
+                            <Box
+                                className="embla__container"
+                                sx={{
+                                    display: "flex",
+                                    gap: { xs: 2, sm: 3, md: 4 },
+                                }}>
+                                {randomCommunities.map((community) => (
+                                    <Box
+                                        className="embla__slide"
+                                        key={community._id}
+                                        sx={{
+                                            flex: "0 0 auto",
+                                            minWidth: 0,
+                                            width: {
+                                                xs: "calc(85% - 16px)",
+                                                sm: "calc(50% - 20px)",
+                                                md: "calc(33.333% - 24px)",
+                                                lg: "calc(25% - 32px)",
+                                            },
+                                            position: "relative",
+                                        }}>
+                                        <CommunitiesList
+                                            community={community}
+                                        />
+                                    </Box>
+                                ))}
+                            </Box>
+                        </Box>
+                    </Box>
+                ) : (
+                    <Typography
+                        variant="h6"
+                        color="textSecondary"
+                        align="center"
+                        sx={{ py: 4 }}>
+                        No communities found
+                    </Typography>
+                )}
+
+                <Box sx={{ textAlign: "center", mt: 6 }}>
+                    <Button
+                        component={Link}
+                        to="/communities"
+                        variant="outlined"
+                        size="large"
+                        sx={{
+                            px: 6,
+                            py: 1.5,
+                            fontSize: "1rem",
+                            fontWeight: 700,
+                            borderRadius: "50px",
+                            borderWidth: 2,
+                            "&:hover": {
+                                borderWidth: 2,
+                                backgroundColor: theme.palette.primary.main,
+                                color: "white",
+                            },
+                        }}>
+                        Explore Learning Hubs
+                    </Button>
+                </Box>
+            </Box>
+        </Box>
+    );
+};
+
+// Skeleton component for loading state
+const CardSkeleton = () => {
+    const theme = useTheme();
+
+    return (
+        <Box
+            sx={{
+                borderRadius: 4,
+                overflow: "hidden",
+                boxShadow: theme.shadows[2],
+                transition: "all 0.3s ease",
+                border: "1px solid",
+                borderColor: theme.palette.divider,
+                height: "100%",
+            }}>
+            <Skeleton variant="rectangular" height={180} />
+            <Box sx={{ p: 2.5 }}>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                    <Skeleton
+                        variant="circular"
+                        width={50}
+                        height={50}
+                        sx={{ mr: 2 }}
+                    />
+                    <Box sx={{ flex: 1 }}>
+                        <Skeleton variant="text" width="80%" height={30} />
+                        <Skeleton variant="text" width="60%" />
+                    </Box>
+                </Box>
+                <Skeleton variant="text" width="100%" />
+                <Skeleton variant="text" width="100%" />
+                <Skeleton variant="text" width="80%" />
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        mt: 3,
+                    }}>
+                    <Skeleton variant="text" width="40%" />
+                    <Skeleton variant="text" width="30%" />
+                </Box>
+            </Box>
+        </Box>
+    );
+};
+
+export default CoursesSection;

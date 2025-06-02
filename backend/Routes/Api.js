@@ -22,6 +22,23 @@ router.get("/communities", async (req, res) => {
     }
 });
 
+// endpoint to get random communities
+router.get("/communities/random", async (req, res) => {
+    try {
+        //   get random communities
+        const communities = await Community.aggregate([
+            { $sample: { size: 5 } },
+        ]);
+
+        if (!communities) return res.status(404).json("Community not found.");
+
+        res.status(200).json(communities);
+    } catch (error) {
+        res.status(400).json("Communities not found.");
+        console.error(error);
+    }
+});
+
 // server get community by id
 router.get("/community/:id", async (req, res) => {
     const { id } = req.params;
