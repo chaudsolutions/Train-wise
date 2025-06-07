@@ -140,7 +140,7 @@ export const LoginForm = ({ setAuthContainer }) => {
                     sx={{
                         textDecoration: "none",
                         "&:hover": {
-                            color: theme.palette.info.main,
+                            color: theme.palette.primary.main,
                         },
                     }}>
                     Forgot password?
@@ -151,7 +151,7 @@ export const LoginForm = ({ setAuthContainer }) => {
             <Button
                 fullWidth
                 variant="contained"
-                color="info"
+                color="primary"
                 size="large"
                 type="submit"
                 disabled={isSubmitting}
@@ -303,7 +303,7 @@ export const RegisterForm = ({ setAuthContainer }) => {
             <Button
                 fullWidth
                 variant="contained"
-                color="info"
+                color="primary"
                 size="large"
                 type="submit"
                 disabled={isSubmitting}

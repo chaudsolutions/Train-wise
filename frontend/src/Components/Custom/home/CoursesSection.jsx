@@ -21,7 +21,7 @@ const CoursesSection = () => {
         useRandomCommunitiesData();
     const theme = useTheme();
     const { isMobile } = useResponsive();
-    const autoplayOptions = { delay: 5000, stopOnInteraction: false };
+    const autoplayOptions = { delay: 5000, stopOnInteraction: true };
     const [emblaRef, emblaApi] = useEmblaCarousel(
         { loop: true, align: "start", skipSnaps: false },
         [Autoplay(autoplayOptions)]
@@ -47,7 +47,7 @@ const CoursesSection = () => {
                     sx={{ mx: "auto", mb: 4 }}
                 />
                 <Grid container spacing={4}>
-                    {[...Array(4)].map((_, index) => (
+                    {[...Array(isMobile ? 2 : 4)].map((_, index) => (
                         <Grid
                             size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
                             key={index}>
@@ -162,7 +162,7 @@ const CoursesSection = () => {
                             ref={emblaRef}
                             sx={{
                                 overflow: "hidden",
-                                padding: "0 10px",
+                                padding: "10px",
                             }}>
                             <Box
                                 className="embla__container"
@@ -178,10 +178,8 @@ const CoursesSection = () => {
                                             flex: "0 0 auto",
                                             minWidth: 0,
                                             width: {
-                                                xs: "calc(85% - 16px)",
-                                                sm: "calc(50% - 20px)",
-                                                md: "calc(33.333% - 24px)",
-                                                lg: "calc(25% - 32px)",
+                                                xs: "100%",
+                                                md: "calc(35% - 32px)",
                                             },
                                             position: "relative",
                                         }}>

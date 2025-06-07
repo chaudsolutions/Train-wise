@@ -90,7 +90,7 @@ const Privacy = () => {
                     component="h1"
                     gutterBottom
                     sx={{
-                        color: theme.palette.info.main,
+                        color: theme.palette.primary.main,
                         fontWeight: 700,
                     }}>
                     Privacy Policy
@@ -130,7 +130,7 @@ const Privacy = () => {
                 {PrivacyPolicies.map((policy, index) => (
                     <Accordion key={index} elevation={1}>
                         <AccordionSummary
-                            expandIcon={<ExpandMoreIcon color="info" />}
+                            expandIcon={<ExpandMoreIcon color="primary" />}
                             sx={{
                                 backgroundColor: theme.palette.background.paper,
                                 "&:hover": {

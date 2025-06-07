@@ -82,9 +82,9 @@ export const CommunityOverview = ({ notifications, createdAt }) => {
                         sx={{
                             px: 3,
                             py: 2,
-                            bgcolor: theme.palette.info.light,
+                            bgcolor: theme.palette.primary.light,
                             "&:hover": {
-                                bgcolor: theme.palette.info.light,
+                                bgcolor: theme.palette.primary.light,
                             },
                         }}>
                         <ListItemText
@@ -95,7 +95,7 @@ export const CommunityOverview = ({ notifications, createdAt }) => {
                                         alignItems: "center",
                                         mb: 0.5,
                                     }}>
-                                    <InfoIcon color="info" sx={{ mr: 1 }} />
+                                    <InfoIcon color="primary" sx={{ mr: 1 }} />
                                     <Typography
                                         variant="subtitle1"
                                         fontWeight="medium">
@@ -123,7 +123,7 @@ export const CommunityOverview = ({ notifications, createdAt }) => {
                             <Chip
                                 label="New"
                                 size="small"
-                                color="info"
+                                color="primary"
                                 sx={{ ml: 2 }}
                             />
                         )}
@@ -289,8 +289,9 @@ export const CommunityClassroom = ({
                                         size="small"
                                         sx={{
                                             mb: 2,
-                                            bgcolor: theme.palette.info.light,
-                                            color: theme.palette.info
+                                            bgcolor:
+                                                theme.palette.primary.light,
+                                            color: theme.palette.primary
                                                 .contrastText,
                                         }}
                                     />
@@ -320,7 +321,8 @@ export const CommunityClassroom = ({
                                                         {
                                                             backgroundColor:
                                                                 theme.palette
-                                                                    .info.main,
+                                                                    .primary
+                                                                    .main,
                                                         },
                                                 }}
                                             />
@@ -339,10 +341,11 @@ export const CommunityClassroom = ({
                                     sx={{
                                         mx: 2,
                                         mb: 2,
-                                        bgcolor: theme.palette.info.main,
-                                        color: theme.palette.info.contrastText,
+                                        bgcolor: theme.palette.primary.main,
+                                        color: theme.palette.primary
+                                            .contrastText,
                                         "&:hover": {
-                                            bgcolor: theme.palette.info.dark,
+                                            bgcolor: theme.palette.primary.dark,
                                         },
                                     }}>
                                     View Course
@@ -373,7 +376,7 @@ export const CommunityClassroom = ({
                         component={Link}
                         to={`/creator/${communityId}/add-course`}
                         variant="contained"
-                        color="info"
+                        color="primary"
                         startIcon={<AddIcon />}
                         sx={{
                             px: 4,
@@ -701,7 +704,7 @@ export const CommunityChatroom = ({
                             backgroundImage:
                                 "linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))",
 
-                            border: `1px solid ${theme.palette.info.light}`,
+                            border: `1px solid ${theme.palette.primary.light}`,
                         }}>
                         <List
                             ref={chatContainerRef}
@@ -785,14 +788,15 @@ export const CommunityChatroom = ({
                                                             msg.sender._id ===
                                                             userId
                                                                 ? theme.palette
-                                                                      .info.main
+                                                                      .primary
+                                                                      .main
                                                                 : theme.palette
                                                                       .grey[100],
                                                         color:
                                                             msg.sender._id ===
                                                             userId
                                                                 ? theme.palette
-                                                                      .info
+                                                                      .primary
                                                                       .contrastText
                                                                 : "inherit",
                                                     }}>
@@ -871,10 +875,10 @@ export const CommunityChatroom = ({
                                 onClick={handleSendMessage}
                                 disabled={!messageInput.trim() || !isConnected}
                                 sx={{
-                                    bgcolor: theme.palette.info.main,
-                                    color: theme.palette.info.contrastText,
+                                    bgcolor: theme.palette.primary.main,
+                                    color: theme.palette.primary.contrastText,
                                     "&:hover": {
-                                        bgcolor: theme.palette.info.dark,
+                                        bgcolor: theme.palette.primary.dark,
                                     },
                                     "&:disabled": {
                                         bgcolor:

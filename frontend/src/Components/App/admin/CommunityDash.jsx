@@ -134,7 +134,7 @@ const CommunityDash = () => {
                                                 sx={{
                                                     width: 48,
                                                     height: 48,
-                                                    bgcolor: "info.main",
+                                                    bgcolor: "primary.main",
                                                 }}>
                                                 {community.name?.charAt(0)}
                                             </Avatar>
@@ -271,7 +271,7 @@ const CommunityDash = () => {
                                             variant="contained"
                                             component={Link}
                                             to={`/admin/dashboard/community/${community._id}`}
-                                            color="info"
+                                            color="primary"
                                             size="small"
                                             sx={{
                                                 flex: {

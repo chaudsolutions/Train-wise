@@ -125,7 +125,7 @@ const ProfileContainer = ({
                             width: 120,
                             height: 120,
                             fontSize: "3rem",
-                            bgcolor: theme.palette.info.main,
+                            bgcolor: theme.palette.primary.main,
                         }}>
                         {!avatar && name?.charAt(0).toUpperCase()}
                     </Avatar>
@@ -138,7 +138,7 @@ const ProfileContainer = ({
                                     bottom: 0,
                                     right: 0,
                                     bgcolor: theme.palette.grey[200],
-                                    color: theme.palette.info.dark,
+                                    color: theme.palette.primary.dark,
                                     "&:hover": {
                                         bgcolor: "black",
                                         color: "white",
@@ -416,14 +416,14 @@ const ProfileContainer = ({
                                                             height: 24,
                                                             borderRadius: "50%",
                                                             bgcolor: "white",
-                                                            border: `1px solid ${theme.palette.info.light}`,
+                                                            border: `1px solid ${theme.palette.primary.light}`,
                                                             display: "flex",
                                                             alignItems:
                                                                 "center",
                                                             justifyContent:
                                                                 "center",
                                                             color: theme.palette
-                                                                .info
+                                                                .primary
                                                                 .contrastText,
                                                         }}>
                                                         {getCategoryIcon(
@@ -460,7 +460,7 @@ const ProfileContainer = ({
                                                         <Chip
                                                             label="Owner"
                                                             size="small"
-                                                            color="info"
+                                                            color="primary"
                                                         />
                                                         <Chip
                                                             label={
@@ -531,13 +531,14 @@ const ProfileContainer = ({
                                                         height: 24,
                                                         borderRadius: "50%",
                                                         bgcolor: "white",
-                                                        border: `1px solid ${theme.palette.info.light}`,
+                                                        border: `1px solid ${theme.palette.primary.light}`,
                                                         display: "flex",
                                                         alignItems: "center",
                                                         justifyContent:
                                                             "center",
                                                         color: theme.palette
-                                                            .info.contrastText,
+                                                            .primary
+                                                            .contrastText,
                                                     }}>
                                                     {getCategoryIcon(
                                                         community.category

@@ -85,7 +85,7 @@ const PaginatedData = ({ communities }) => {
                         count={pageCount}
                         page={page}
                         onChange={handlePageChange}
-                        color="info"
+                        color="primary"
                         size="large"
                         sx={{
                             "& .MuiPaginationItem-root": {

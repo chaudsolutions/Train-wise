@@ -49,7 +49,9 @@ router.put("/joinCommunity/:communityId", async (req, res) => {
         }
 
         if (!community.canExplore) {
-            return res.status(403).json("Community cannot be explored");
+            return res
+                .status(403)
+                .json("This community is not accepting new members for now");
         }
 
         if (
@@ -65,12 +67,12 @@ router.put("/joinCommunity/:communityId", async (req, res) => {
         );
         const isExistingMember = !!existingMembership;
 
+        if (isExistingMember) {
+            return res.status(200).json("Welcome Back");
+        }
+
         // Handle free communities
         if (community.subscriptionFee === 0) {
-            if (isExistingMember) {
-                return res.status(200).json("Welcome Back");
-            }
-
             // Add as new member for free community
             community.members.push({
                 userId: user._id,
@@ -87,11 +89,6 @@ router.put("/joinCommunity/:communityId", async (req, res) => {
         }
 
         // PAID COMMUNITIES BELOW THIS POINT
-        const currentPeriodEnd =
-            community.subscriptionFee > 0
-                ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-                : null;
-
         // Payment verification is required for paid communities
         if (!subscriptionId) {
             return res.status(400).json("Payment required for this community");
@@ -110,6 +107,36 @@ router.put("/joinCommunity/:communityId", async (req, res) => {
             return res.status(400).json("Payment not successful");
         }
 
+        // Calculate subscription period based on amount
+        const amountPaid = paymentIntent.amount / 100; // Convert to dollars
+        const monthlyFee = community.subscriptionFee;
+        const yearlyFee = monthlyFee * 12;
+
+        // Determine period based on payment amount
+        const tolerance = 0.01; // Allow for floating-point precision issues
+        let subscriptionPeriod;
+        let periodDays;
+        let periodText;
+
+        if (Math.abs(amountPaid - monthlyFee) < tolerance) {
+            subscriptionPeriod = "monthly";
+            periodDays = 30;
+            periodText = "month";
+        } else if (Math.abs(amountPaid - yearlyFee) < tolerance) {
+            subscriptionPeriod = "yearly";
+            periodDays = 365;
+            periodText = "year";
+        } else {
+            return res.status(400).json({
+                message: `Invalid payment amount. Expected $${monthlyFee} or $${yearlyFee}`,
+                paidAmount: amountPaid,
+            });
+        }
+
+        const currentPeriodEnd = new Date(
+            Date.now() + periodDays * 24 * 60 * 60 * 1000
+        );
+
         // Save payment record
         await Payment.create({
             paymentId: paymentIntent.id,
@@ -119,12 +146,13 @@ router.put("/joinCommunity/:communityId", async (req, res) => {
             communityId: community._id,
             paymentType: "community_subscription",
             status: paymentIntent.status,
+            subscriptionPeriod,
         });
 
         // Notify payment success
         await createNotification(
             userId,
-            `Payment for $${paymentIntent.amount / 100} for community ${
+            `Payment for $${amountPaid} for ${periodText}ly access to ${
                 community.name
             } ${isExistingMember ? "renewal" : "subscription"}`
         );
@@ -135,6 +163,7 @@ router.put("/joinCommunity/:communityId", async (req, res) => {
             existingMembership.status = "active";
             existingMembership.stripeSubscriptionId = subscriptionId;
             existingMembership.currentPeriodEnd = currentPeriodEnd;
+            existingMembership.subscriptionPeriod = subscriptionPeriod;
 
             await createNotification(
                 userId,
@@ -150,11 +179,12 @@ router.put("/joinCommunity/:communityId", async (req, res) => {
                 stripeSubscriptionId: subscriptionId,
                 status: "active",
                 currentPeriodEnd,
+                subscriptionPeriod,
             });
 
             await createNotification(
                 userId,
-                `Joined ${community.name} - $${paymentIntent.amount / 100}`
+                `Joined ${community.name} with ${subscriptionPeriod} plan - $${amountPaid}`
             );
         }
 
@@ -162,8 +192,8 @@ router.put("/joinCommunity/:communityId", async (req, res) => {
 
         res.status(200).json(
             isExistingMember
-                ? "Subscription renewed successfully"
-                : "Successfully joined community"
+                ? `Subscription renewed successfully for ${subscriptionPeriod} period`
+                : `Successfully joined community with ${subscriptionPeriod} subscription`
         );
     } catch (error) {
         console.error("Join error:", error);

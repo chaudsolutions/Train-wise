@@ -30,7 +30,7 @@ const SelectCategory = ({ activeCategory, selectCategory }) => {
             }}>
             <Button
                 variant={activeCategory === "" ? "contained" : "outlined"}
-                color="info"
+                color="primary"
                 onClick={() => selectCategory("")}>
                 All
             </Button>
@@ -45,7 +45,7 @@ const SelectCategory = ({ activeCategory, selectCategory }) => {
                                 ? "contained"
                                 : "outlined"
                         }
-                        color="info"
+                        color="primary"
                         onClick={() => selectCategory(category.name)}
                         startIcon={category.icon}>
                         {category.name}

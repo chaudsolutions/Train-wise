@@ -46,7 +46,7 @@ const ContactUs = () => {
                     component="h1"
                     gutterBottom
                     sx={{
-                        color: theme.palette.info.main,
+                        color: theme.palette.primary.main,
                         fontWeight: 700,
                     }}>
                     Contact Us
@@ -64,8 +64,8 @@ const ContactUs = () => {
                     <Card
                         elevation={0}
                         sx={{
-                            backgroundColor: theme.palette.info.light,
-                            color: theme.palette.info.contrastText,
+                            backgroundColor: theme.palette.primary.light,
+                            color: theme.palette.primary.contrastText,
                             borderRadius: 4,
                             height: "100%",
                         }}>
@@ -94,7 +94,7 @@ const ContactUs = () => {
                                     component="li"
                                     sx={{
                                         backgroundColor:
-                                            theme.palette.info.contrastText,
+                                            theme.palette.primary.contrastText,
                                         opacity: 0.2,
                                         my: 2,
                                     }}
@@ -116,7 +116,7 @@ const ContactUs = () => {
                                     component="li"
                                     sx={{
                                         backgroundColor:
-                                            theme.palette.info.contrastText,
+                                            theme.palette.primary.contrastText,
                                         opacity: 0.2,
                                         my: 2,
                                     }}
@@ -219,7 +219,7 @@ const ContactUs = () => {
                                         <Button
                                             type="submit"
                                             variant="contained"
-                                            color="info"
+                                            color="primary"
                                             size="large"
                                             endIcon={<SendIcon />}
                                             sx={{ borderRadius: 2 }}>

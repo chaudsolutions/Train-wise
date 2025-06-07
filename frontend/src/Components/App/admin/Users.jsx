@@ -57,7 +57,7 @@ const UserCard = ({ user, isCreatorTab, onRoleChange }) => {
                         sx={{
                             width: 80,
                             height: 80,
-                            bgcolor: "info.main",
+                            bgcolor: "primary.main",
                             mb: 1,
                         }}>
                         {user.name?.charAt(0)}
@@ -131,7 +131,7 @@ const UserCard = ({ user, isCreatorTab, onRoleChange }) => {
                         variant="contained"
                         component={Link}
                         to={`/admin/dashboard/user/${user._id}`}
-                        color="info"
+                        color="primary"
                         size="small"
                         fullWidth={isMobile}>
                         View Details

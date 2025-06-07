@@ -91,7 +91,7 @@ const SingleCommunityDash = () => {
                                     height: { xs: 80, sm: 100 },
                                     mx: "auto",
                                     mb: 2,
-                                    bgcolor: "info.main",
+                                    bgcolor: "primary.main",
                                 }}>
                                 {community.name?.charAt(0)}
                             </Avatar>
@@ -240,7 +240,7 @@ const SingleCommunityDash = () => {
                                 <ListItemAvatar>
                                     <Avatar
                                         sx={{
-                                            bgcolor: "info.main",
+                                            bgcolor: "primary.main",
                                             width: 40,
                                             height: 40,
                                         }}>
@@ -313,7 +313,7 @@ const SingleCommunityDash = () => {
                                                 sx={{
                                                     width: 48,
                                                     height: 48,
-                                                    bgcolor: "info.main",
+                                                    bgcolor: "primary.main",
                                                 }}>
                                                 {report.userId?.name?.charAt(
                                                     0

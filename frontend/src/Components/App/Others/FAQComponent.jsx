@@ -75,7 +75,7 @@ const FAQComponent = () => {
                     component="h1"
                     gutterBottom
                     sx={{
-                        color: theme.palette.info.main,
+                        color: theme.palette.primary.main,
                         fontWeight: 700,
                     }}>
                     Frequently Asked Questions
@@ -99,14 +99,16 @@ const FAQComponent = () => {
                 {FAQs.map((faq, index) => (
                     <Accordion key={index} elevation={0}>
                         <AccordionSummary
-                            expandIcon={<ExpandMoreIcon color="info" />}
+                            expandIcon={<ExpandMoreIcon color="primary" />}
                             sx={{
-                                backgroundColor: theme.palette.info.light,
+                                backgroundColor: theme.palette.primary.light,
                                 "&:hover": {
-                                    backgroundColor: theme.palette.info.light,
+                                    backgroundColor:
+                                        theme.palette.primary.light,
                                 },
                                 "&.Mui-expanded": {
-                                    backgroundColor: theme.palette.info.light,
+                                    backgroundColor:
+                                        theme.palette.primary.light,
                                     borderBottom: `1px solid ${theme.palette.divider}`,
                                 },
                             }}>

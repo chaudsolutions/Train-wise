@@ -45,7 +45,7 @@ const statusIcons = {
 
 const statusColors = {
     pending: "warning",
-    approved: "info",
+    approved: "primary",
     rejected: "error",
     confirmed: "success",
 };

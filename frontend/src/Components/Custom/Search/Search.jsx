@@ -46,10 +46,10 @@ const Search = ({ searchQuery, setSearchQuery }) => {
                             borderColor: theme.palette.divider,
                         },
                         "&:hover .MuiOutlinedInput-notchedOutline": {
-                            borderColor: theme.palette.info.light,
+                            borderColor: theme.palette.primary.light,
                         },
                         "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                            borderColor: theme.palette.info.main,
+                            borderColor: theme.palette.primary.main,
                             borderWidth: 1,
                         },
                     },

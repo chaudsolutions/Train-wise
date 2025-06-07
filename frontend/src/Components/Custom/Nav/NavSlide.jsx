@@ -16,7 +16,7 @@ export const AuthContainer = ({ setAuthOpen }) => {
             ) : (
                 <Button
                     variant="outlined"
-                    color="info"
+                    color="primary"
                     onClick={() => setAuthOpen((prev) => !prev)}>
                     LOGIN
                 </Button>

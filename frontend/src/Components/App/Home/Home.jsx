@@ -6,10 +6,10 @@ import AboutSection from "../../Custom/home/AboutSection";
 const Home = () => {
     return (
         <>
-            <Hero />
-            <AboutSection />
             <SectionOne />
             <CoursesSection />
+            <Hero />
+            <AboutSection />
         </>
     );
 };

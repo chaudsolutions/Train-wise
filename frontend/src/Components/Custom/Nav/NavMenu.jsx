@@ -66,7 +66,7 @@ const NavMenu = ({ handleDrawerToggle }) => {
         <List sx={{ width: "100%" }}>
             {isUserDataLoading ? (
                 <Box display="flex" justifyContent="center" p={2}>
-                    <CircularProgress color="info" />
+                    <CircularProgress color="primary" />
                 </Box>
             ) : (
                 menuItems.map(
@@ -85,9 +85,9 @@ const NavMenu = ({ handleDrawerToggle }) => {
                                     "&.active": {
                                         backgroundColor:
                                             theme.palette.action.selected,
-                                        borderLeft: `4px solid ${theme.palette.info.main}`,
+                                        borderLeft: `4px solid ${theme.palette.primary.main}`,
                                         "& .MuiListItemIcon-root": {
-                                            color: theme.palette.info.main,
+                                            color: theme.palette.primary.main,
                                         },
                                         "& .MuiListItemText-primary": {
                                             fontWeight: 600,

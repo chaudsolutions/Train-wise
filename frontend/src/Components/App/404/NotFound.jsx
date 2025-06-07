@@ -73,7 +73,7 @@ const NotFound = () => {
                 {/* Home Button */}
                 <Button
                     variant="contained"
-                    color="info"
+                    color="primary"
                     size="large"
                     onClick={goHome}
                     sx={{

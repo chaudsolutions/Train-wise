@@ -22,7 +22,7 @@ const PageLoader = () => {
                 size={60}
                 thickness={2}
                 sx={{
-                    color: theme.palette.info.main,
+                    color: theme.palette.primary.main,
                     "& .MuiCircularProgress-circle": {
                         strokeLinecap: "round",
                     },

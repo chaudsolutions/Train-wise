@@ -17,6 +17,11 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
+    Grid,
+    Avatar,
+    Divider,
+    Stack,
+    useTheme,
 } from "@mui/material";
 import LockIcon from "@mui/icons-material/Lock";
 import PeopleIcon from "@mui/icons-material/People";
@@ -24,7 +29,12 @@ import TagIcon from "@mui/icons-material/Tag";
 import PersonIcon from "@mui/icons-material/Person";
 import StarIcon from "@mui/icons-material/Star";
 import DotIcon from "@mui/icons-material/FiberManualRecord";
-import Category from "@mui/icons-material/Category";
+import CategoryIcon from "@mui/icons-material/Category";
+import ShareIcon from "@mui/icons-material/Share";
+import ExploreIcon from "@mui/icons-material/Explore";
+import HomeIcon from "@mui/icons-material/Home";
+import CheckIcon from "@mui/icons-material/CheckCircle";
+import DeleteIcon from "@mui/icons-material/Delete";
 import useResponsive from "../../Hooks/useResponsive";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import { useAuthContext } from "../../Context/AuthContext";
@@ -38,12 +48,15 @@ import PageLoader from "../../Animations/PageLoader";
 import { useCommunityActions } from "../../Hooks/useCommunityActions";
 import { Elements } from "@stripe/react-stripe-js";
 import { PaymentDialog } from "../../Custom/payment/PaymentDialog";
+import SocialShareDrawer from "../../Custom/Buttons/SocialShareDrawer";
 
 const CommunityView = () => {
+    const theme = useTheme();
     const [authOpen, setAuthOpen] = useState(false);
     const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
     const { joinCommunity, deleteCommunity, loading } = useCommunityActions();
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [selectShare, setSelectShare] = useState(false);
 
     const { user } = useAuthContext();
 
@@ -116,253 +129,661 @@ const CommunityView = () => {
         }
     };
 
+    const communityUrl = `${window.location.origin}/community/${community?._id}`;
+
     if (isCommunityLoading || isUserDataLoading) {
         return <PageLoader />;
     }
 
     return (
         <Elements stripe={stripePromise}>
-            <Container maxWidth="lg" sx={{ py: 4 }}>
+            <Box
+                sx={{
+                    bgcolor: theme.palette.background.default,
+                    minHeight: "100vh",
+                }}>
+                {/* Hero Banner */}
                 <Box
-                    display="flex"
-                    flexDirection={isMobile ? "column" : "row"}
-                    gap={4}>
-                    {/* Main Content */}
-                    <Box flex={3}>
-                        <Card sx={{ mb: 3, borderRadius: 4 }}>
-                            <CardMedia
-                                component="img"
-                                height={isMobile ? 300 : 400}
-                                image={bannerImage}
-                                alt={`${name} banner`}
-                            />
-                            <CardContent>
-                                <Typography
-                                    variant="h5"
-                                    gutterBottom
-                                    fontWeight="bold">
-                                    About This Community
-                                </Typography>
-                                <Typography variant="body1" paragraph>
-                                    {description}
-                                </Typography>
+                    sx={{
+                        position: "relative",
+                        height: isMobile ? 300 : 300,
+                        overflow: "hidden",
+                        backgroundColor: theme.palette.primary.dark,
+                    }}>
+                    {bannerImage ? (
+                        <CardMedia
+                            component="img"
+                            height="100%"
+                            width="100%"
+                            image={bannerImage}
+                            alt={`${name} banner`}
+                            sx={{ objectFit: "cover" }}
+                        />
+                    ) : (
+                        <Box
+                            sx={{
+                                height: "100%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                bgcolor: theme.palette.primary.main,
+                                backgroundImage:
+                                    "linear-gradient(135deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 100%)",
+                            }}>
+                            <Typography
+                                variant="h3"
+                                sx={{
+                                    color: "white",
+                                    fontWeight: 700,
+                                    textShadow: "0 2px 10px rgba(0,0,0,0.3)",
+                                }}>
+                                {name}
+                            </Typography>
+                        </Box>
+                    )}
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            bgcolor: "rgba(0,0,0,0.6)",
+                            py: 2,
+                            px: 3,
+                        }}>
+                        <Container maxWidth="lg">
+                            <Typography
+                                variant="h3"
+                                sx={{
+                                    color: "white",
+                                    fontWeight: 700,
+                                    mb: 1,
+                                }}>
+                                {name}
+                            </Typography>
+                            <Typography
+                                variant="subtitle1"
+                                sx={{
+                                    color: "rgba(255,255,255,0.9)",
+                                    fontWeight: 500,
+                                }}>
+                                {description}
+                            </Typography>
+                        </Container>
+                    </Box>
+                </Box>
 
-                                <Box
-                                    display="flex"
-                                    flexWrap="wrap"
-                                    gap={1}
-                                    mb={3}>
-                                    <Chip
-                                        icon={<Category />}
-                                        label={category}
-                                        color="info"
-                                        variant="outlined"
+                <Container maxWidth="lg" sx={{ py: 4, position: "relative" }}>
+                    {/* Floating Action Buttons */}
+                    <Box
+                        sx={{
+                            position: "sticky",
+                            top: 16,
+                            zIndex: 10,
+                            mb: 3,
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            gap: 2,
+                        }}>
+                        <Button
+                            variant="contained"
+                            color="secondary"
+                            onClick={() => setSelectShare(true)}
+                            disabled={loading}
+                            startIcon={<ShareIcon />}
+                            sx={{
+                                borderRadius: 50,
+                                fontWeight: 600,
+                                boxShadow: theme.shadows[4],
+                                minWidth: 120,
+                            }}>
+                            Share
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color={
+                                isUserMember || isCreator || isAdmin
+                                    ? "success"
+                                    : "primary"
+                            }
+                            onClick={handleJoinCommunity}
+                            disabled={loading}
+                            startIcon={
+                                loading ? (
+                                    <CircularProgress
+                                        size={24}
+                                        color="inherit"
                                     />
-                                    <Chip
-                                        icon={<LockIcon />}
-                                        label="Private"
-                                        color="info"
-                                        variant="outlined"
-                                    />
-                                    <Chip
-                                        icon={<PeopleIcon />}
-                                        label={`${
-                                            members?.length || 0
-                                        } members`}
-                                        color="info"
-                                        variant="outlined"
-                                    />
-                                    <Chip
-                                        icon={<TagIcon />}
-                                        label={
-                                            subscriptionFee
-                                                ? `$${subscriptionFee}/Month`
-                                                : "Free"
-                                        }
-                                        color="info"
-                                        variant="outlined"
-                                    />
-                                    <Chip
-                                        icon={<PersonIcon />}
-                                        label={isCreator ? "You" : creatorName}
-                                        color="info"
-                                        variant="outlined"
-                                        deleteIcon={<StarIcon color="info" />}
-                                        onDelete={() => {}}
-                                    />
-                                </Box>
-
-                                <Button
-                                    fullWidth
-                                    variant="contained"
-                                    color="info"
-                                    onClick={handleJoinCommunity}
-                                    disabled={loading}
-                                    sx={{
-                                        py: 1,
-                                        borderRadius: 2,
-                                        fontWeight: 600,
-                                        fontSize: "1rem",
-                                    }}>
-                                    {loading ? (
-                                        <CircularProgress
-                                            size={24}
-                                            color="inherit"
-                                        />
-                                    ) : isUserMember || isCreator || isAdmin ? (
-                                        "Explore Group"
-                                    ) : (
-                                        "Join Group"
-                                    )}
-                                </Button>
-                            </CardContent>
-                        </Card>
-
-                        {/* Community Rules */}
-                        <Card sx={{ mb: 3, borderRadius: 4 }}>
-                            <CardContent>
-                                <Typography
-                                    variant="h6"
-                                    gutterBottom
-                                    fontWeight="bold">
-                                    Community Rules
-                                </Typography>
-                                <List>
-                                    {rules?.map((rule, index) => (
-                                        <ListItem key={index} sx={{ py: 0.5 }}>
-                                            <ListItemIcon sx={{ minWidth: 32 }}>
-                                                <DotIcon fontSize="small" />
-                                            </ListItemIcon>
-                                            <ListItemText
-                                                primary={`${
-                                                    index + 1
-                                                }. ${rule}`}
-                                            />
-                                        </ListItem>
-                                    ))}
-                                </List>
-                            </CardContent>
-                        </Card>
-
-                        {/* Reasons to Join */}
-                        <Card sx={{ borderRadius: 4 }}>
-                            <CardContent>
-                                <Typography
-                                    variant="h6"
-                                    gutterBottom
-                                    fontWeight="bold">
-                                    Reasons to Join
-                                </Typography>
-                                <List>
-                                    {visions?.map((vision, index) => (
-                                        <ListItem key={index} sx={{ py: 0.5 }}>
-                                            <ListItemIcon sx={{ minWidth: 32 }}>
-                                                <DotIcon fontSize="small" />
-                                            </ListItemIcon>
-                                            <ListItemText primary={vision} />
-                                        </ListItem>
-                                    ))}
-                                </List>
-                            </CardContent>
-                        </Card>
-
-                        {/* Delete Button (for creator) */}
-                        {isCreator && (
-                            <Box mt={3} display="flex" justifyContent="center">
-                                <Button
-                                    variant="outlined"
-                                    color="error"
-                                    onClick={() => setDeleteConfirmOpen(true)}
-                                    disabled={loading}
-                                    sx={{
-                                        px: 4,
-                                        py: 1.5,
-                                        borderRadius: 2,
-                                        fontWeight: 600,
-                                    }}>
-                                    Delete Community
-                                </Button>
-                            </Box>
-                        )}
+                                ) : isUserMember || isCreator || isAdmin ? (
+                                    <ExploreIcon />
+                                ) : (
+                                    <HomeIcon />
+                                )
+                            }
+                            sx={{
+                                borderRadius: 50,
+                                fontWeight: 600,
+                                boxShadow: theme.shadows[4],
+                                minWidth: 140,
+                            }}>
+                            {loading
+                                ? "Loading..."
+                                : isUserMember || isCreator || isAdmin
+                                ? "Enter Community"
+                                : "Join Community"}
+                        </Button>
                     </Box>
 
-                    {/* Sidebar (Desktop only) */}
-                    {!isMobile && (
-                        <Box flex={1}>
-                            <Card sx={{ borderRadius: 4 }}>
+                    <Grid container spacing={3}>
+                        {/* Main Content */}
+                        <Grid size={{ xs: 12, md: 8 }}>
+                            {/* Community Details */}
+                            <Card
+                                sx={{
+                                    borderRadius: 4,
+                                    mb: 3,
+                                    boxShadow: theme.shadows[3],
+                                    borderLeft: `4px solid ${theme.palette.primary.main}`,
+                                }}>
                                 <CardContent>
                                     <Typography
                                         variant="h6"
                                         gutterBottom
-                                        fontWeight="bold">
+                                        fontWeight="bold"
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                            color: theme.palette.primary.dark,
+                                        }}>
+                                        <CategoryIcon fontSize="small" />
                                         Community Details
                                     </Typography>
-                                    <Typography
-                                        variant="body2"
-                                        color="text.secondary"
-                                        paragraph>
-                                        Click the Join Group button to join this
-                                        community
+
+                                    <Grid container spacing={2} sx={{ mt: 1 }}>
+                                        <Grid size={{ xs: 6, md: 3 }}>
+                                            <Box sx={{ textAlign: "center" }}>
+                                                <Typography
+                                                    variant="body2"
+                                                    color="text.secondary">
+                                                    Members
+                                                </Typography>
+                                                <Typography
+                                                    variant="h5"
+                                                    fontWeight={700}>
+                                                    {members?.length || 0}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid size={{ xs: 6, md: 3 }}>
+                                            <Box sx={{ textAlign: "center" }}>
+                                                <Typography
+                                                    variant="body2"
+                                                    color="text.secondary">
+                                                    Category
+                                                </Typography>
+                                                <Typography
+                                                    variant="h6"
+                                                    fontWeight={600}>
+                                                    {category}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                        <Grid size={{ xs: 6, md: 3 }}>
+                                            <Box sx={{ textAlign: "center" }}>
+                                                <Typography
+                                                    variant="body2"
+                                                    color="text.secondary">
+                                                    Access
+                                                </Typography>
+                                                <Chip
+                                                    label={
+                                                        subscriptionFee
+                                                            ? "Premium"
+                                                            : "Free"
+                                                    }
+                                                    size="small"
+                                                    color={
+                                                        subscriptionFee
+                                                            ? "primary"
+                                                            : "success"
+                                                    }
+                                                    sx={{ fontWeight: 600 }}
+                                                />
+                                            </Box>
+                                        </Grid>
+                                        <Grid size={{ xs: 6, md: 3 }}>
+                                            <Box sx={{ textAlign: "center" }}>
+                                                <Typography
+                                                    variant="body2"
+                                                    color="text.secondary">
+                                                    Created By
+                                                </Typography>
+                                                <Typography
+                                                    variant="h6"
+                                                    fontWeight={600}>
+                                                    {creatorName}
+                                                </Typography>
+                                            </Box>
+                                        </Grid>
+                                    </Grid>
+
+                                    <Divider sx={{ my: 3 }} />
+
+                                    <Typography variant="body1" paragraph>
+                                        {description}
                                     </Typography>
-                                    <Typography
-                                        variant="body2"
-                                        color="text.secondary"
-                                        paragraph>
-                                        This group is created by{" "}
-                                        {createdBy?.name}
-                                    </Typography>
-                                    <Chip
-                                        label={category}
-                                        color="info"
-                                        sx={{ mt: 2 }}
-                                    />
+
+                                    <Box sx={{ mt: 3 }}>
+                                        <Typography
+                                            variant="body2"
+                                            color="text.secondary">
+                                            Membership Fee:
+                                        </Typography>
+                                        <Typography
+                                            variant="h5"
+                                            fontWeight={700}
+                                            color={
+                                                subscriptionFee
+                                                    ? "primary"
+                                                    : "success"
+                                            }>
+                                            {subscriptionFee
+                                                ? `$${subscriptionFee}/month`
+                                                : "Free to join"}
+                                        </Typography>
+                                    </Box>
                                 </CardContent>
                             </Card>
+
+                            {/* Community Rules */}
+                            <Card
+                                sx={{
+                                    borderRadius: 4,
+                                    mb: 3,
+                                    boxShadow: theme.shadows[3],
+                                    borderLeft: `4px solid ${theme.palette.warning.main}`,
+                                }}>
+                                <CardContent>
+                                    <Typography
+                                        variant="h6"
+                                        gutterBottom
+                                        fontWeight="bold"
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                            color: theme.palette.warning.dark,
+                                        }}>
+                                        <LockIcon fontSize="small" />
+                                        Community Rules
+                                    </Typography>
+                                    <List>
+                                        {rules?.map((rule, index) => (
+                                            <ListItem
+                                                key={index}
+                                                sx={{ py: 0.5 }}>
+                                                <ListItemIcon
+                                                    sx={{ minWidth: 32 }}>
+                                                    <DotIcon
+                                                        fontSize="small"
+                                                        color="warning"
+                                                    />
+                                                </ListItemIcon>
+                                                <ListItemText
+                                                    primary={`${
+                                                        index + 1
+                                                    }. ${rule}`}
+                                                />
+                                            </ListItem>
+                                        ))}
+                                    </List>
+                                </CardContent>
+                            </Card>
+
+                            {/* Reasons to Join */}
+                            <Card
+                                sx={{
+                                    borderRadius: 4,
+                                    boxShadow: theme.shadows[3],
+                                    borderLeft: `4px solid ${theme.palette.success.main}`,
+                                }}>
+                                <CardContent>
+                                    <Typography
+                                        variant="h6"
+                                        gutterBottom
+                                        fontWeight="bold"
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                            color: theme.palette.success.dark,
+                                        }}>
+                                        <StarIcon fontSize="small" />
+                                        Benefits of Joining
+                                    </Typography>
+                                    <List>
+                                        {visions?.map((vision, index) => (
+                                            <ListItem
+                                                key={index}
+                                                sx={{ py: 1 }}>
+                                                <ListItemIcon
+                                                    sx={{ minWidth: 32 }}>
+                                                    <CheckIcon color="success" />
+                                                </ListItemIcon>
+                                                <ListItemText
+                                                    primary={vision}
+                                                    primaryTypographyProps={{
+                                                        fontWeight: 500,
+                                                    }}
+                                                />
+                                            </ListItem>
+                                        ))}
+                                    </List>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+
+                        {/* Sidebar */}
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            {/* Creator Info */}
+                            <Card
+                                sx={{
+                                    borderRadius: 4,
+                                    mb: 3,
+                                    boxShadow: theme.shadows[3],
+                                }}>
+                                <CardContent>
+                                    <Typography
+                                        variant="h6"
+                                        gutterBottom
+                                        fontWeight="bold"
+                                        sx={{
+                                            color: theme.palette.primary.dark,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                        }}>
+                                        <PersonIcon fontSize="small" />
+                                        Community Creator
+                                    </Typography>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 2,
+                                            mt: 2,
+                                        }}>
+                                        <Avatar
+                                            sx={{
+                                                width: 60,
+                                                height: 60,
+                                                bgcolor:
+                                                    theme.palette.primary.main,
+                                                fontSize: 24,
+                                                fontWeight: 700,
+                                            }}>
+                                            {creatorName?.charAt(0)}
+                                        </Avatar>
+                                        <Box>
+                                            <Typography
+                                                variant="h6"
+                                                fontWeight={600}>
+                                                {creatorName}
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                color="text.secondary">
+                                                Community Founder
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </CardContent>
+                            </Card>
+
+                            {/* Membership Info */}
+                            <Card
+                                sx={{
+                                    borderRadius: 4,
+                                    mb: 3,
+                                    boxShadow: theme.shadows[3],
+                                    bgcolor: theme.palette.primary.light,
+                                }}>
+                                <CardContent>
+                                    <Typography
+                                        variant="h6"
+                                        gutterBottom
+                                        fontWeight="bold"
+                                        sx={{
+                                            color: theme.palette.primary
+                                                .contrastText,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                        }}>
+                                        <PeopleIcon fontSize="small" />
+                                        Membership Status
+                                    </Typography>
+                                    <Box
+                                        sx={{
+                                            bgcolor: "rgba(255,255,255,0.9)",
+                                            p: 2,
+                                            borderRadius: 3,
+                                            mt: 2,
+                                        }}>
+                                        {isUserMember ||
+                                        isCreator ||
+                                        isAdmin ? (
+                                            <>
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: 1,
+                                                        color: theme.palette
+                                                            .success.dark,
+                                                    }}>
+                                                    <CheckIcon color="success" />
+                                                    <Typography
+                                                        variant="body1"
+                                                        fontWeight={600}>
+                                                        You&apos;re a member
+                                                    </Typography>
+                                                </Box>
+                                                <Typography
+                                                    variant="body2"
+                                                    sx={{ mt: 1 }}>
+                                                    You have full access to this
+                                                    community&apos;s content and
+                                                    features.
+                                                </Typography>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Typography
+                                                    variant="body1"
+                                                    fontWeight={600}>
+                                                    Join to access
+                                                </Typography>
+                                                <Typography
+                                                    variant="body2"
+                                                    sx={{ mt: 1 }}>
+                                                    Become a member to
+                                                    participate in discussions,
+                                                    access exclusive content,
+                                                    and connect with other
+                                                    members.
+                                                </Typography>
+                                            </>
+                                        )}
+                                    </Box>
+                                </CardContent>
+                            </Card>
+
+                            {/* Stats Card */}
+                            <Card
+                                sx={{
+                                    borderRadius: 4,
+                                    boxShadow: theme.shadows[3],
+                                }}>
+                                <CardContent>
+                                    <Typography
+                                        variant="h6"
+                                        gutterBottom
+                                        fontWeight="bold"
+                                        sx={{
+                                            color: theme.palette.primary.dark,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                        }}>
+                                        <TagIcon fontSize="small" />
+                                        Community Stats
+                                    </Typography>
+                                    <Stack spacing={2} sx={{ mt: 2 }}>
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                            }}>
+                                            <Typography variant="body2">
+                                                Active Members:
+                                            </Typography>
+                                            <Typography fontWeight={600}>
+                                                {members?.length || 0}
+                                            </Typography>
+                                        </Box>
+                                        <Divider />
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                            }}>
+                                            <Typography variant="body2">
+                                                Subscription Fee:
+                                            </Typography>
+                                            <Typography
+                                                fontWeight={600}
+                                                color={
+                                                    subscriptionFee
+                                                        ? "primary"
+                                                        : "success"
+                                                }>
+                                                {subscriptionFee
+                                                    ? `$${subscriptionFee}/month`
+                                                    : "Free"}
+                                            </Typography>
+                                        </Box>
+                                        <Divider />
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                            }}>
+                                            <Typography variant="body2">
+                                                Category:
+                                            </Typography>
+                                            <Typography fontWeight={600}>
+                                                {category}
+                                            </Typography>
+                                        </Box>
+                                        <Divider />
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                            }}>
+                                            <Typography variant="body2">
+                                                Privacy:
+                                            </Typography>
+                                            <Typography fontWeight={600}>
+                                                Private Community
+                                            </Typography>
+                                        </Box>
+                                    </Stack>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    </Grid>
+
+                    {/* Delete Button (for creator) */}
+                    {isCreator && (
+                        <Box mt={4} display="flex" justifyContent="center">
+                            <Button
+                                variant="outlined"
+                                color="error"
+                                onClick={() => setDeleteConfirmOpen(true)}
+                                disabled={loading}
+                                startIcon={<DeleteIcon />}
+                                sx={{
+                                    px: 4,
+                                    py: 1.5,
+                                    borderRadius: 2,
+                                    fontWeight: 600,
+                                }}>
+                                Delete Community
+                            </Button>
                         </Box>
                     )}
-                </Box>
+                </Container>
+            </Box>
 
-                {/* Auth Dialog */}
-                <Auth authContain={authOpen} setAuthContain={setAuthOpen} />
+            {/* Auth Dialog */}
+            <Auth authContain={authOpen} setAuthContain={setAuthOpen} />
 
-                {/* Delete Confirmation Dialog */}
-                <Dialog
-                    open={deleteConfirmOpen}
-                    onClose={() => setDeleteConfirmOpen(false)}>
-                    <DialogTitle>Delete Community</DialogTitle>
-                    <DialogContent>
-                        <Typography>
-                            Are you sure you want to delete this community? This
-                            action cannot be undone.
-                        </Typography>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setDeleteConfirmOpen(false)}>
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={() => deleteCommunity(communityId)}
-                            color="error"
-                            variant="contained"
-                            disabled={loading}>
-                            {loading ? (
-                                <CircularProgress size={24} />
-                            ) : (
-                                "Delete"
-                            )}
-                        </Button>
-                    </DialogActions>
-                </Dialog>
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={deleteConfirmOpen}
+                onClose={() => setDeleteConfirmOpen(false)}
+                PaperProps={{ sx: { borderRadius: 4 } }}>
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    Delete Community
+                </DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to delete the{" "}
+                        <strong>{name}</strong> community? This action cannot be
+                        undone and all community data will be permanently lost.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        onClick={() => setDeleteConfirmOpen(false)}
+                        variant="outlined"
+                        sx={{ borderRadius: 2, fontWeight: 600 }}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={() => deleteCommunity(communityId)}
+                        color="error"
+                        variant="contained"
+                        disabled={loading}
+                        sx={{ borderRadius: 2, fontWeight: 600 }}>
+                        {loading ? (
+                            <CircularProgress size={24} />
+                        ) : (
+                            "Confirm Delete"
+                        )}
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
-                <PaymentDialog
-                    open={paymentDialogOpen}
-                    onClose={() => setPaymentDialogOpen(false)}
-                    amount={subscriptionFee}
-                    communityId={communityId}
-                    onPaymentSuccess={handlePaymentSuccess}
-                    type="community_subscription"
-                />
-            </Container>
+            <PaymentDialog
+                open={paymentDialogOpen}
+                onClose={() => setPaymentDialogOpen(false)}
+                amount={subscriptionFee}
+                communityId={communityId}
+                onPaymentSuccess={handlePaymentSuccess}
+                type="community_subscription"
+            />
+
+            {/* share drawer */}
+            <SocialShareDrawer
+                open={selectShare}
+                onClose={() => setSelectShare(false)}
+                communityName={name}
+                url={communityUrl}
+            />
         </Elements>
     );
 };

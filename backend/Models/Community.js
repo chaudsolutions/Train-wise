@@ -17,6 +17,7 @@ const communityMembersSchema = new mongoose.Schema(
         },
         currentPeriodEnd: { type: Date },
         paymentMethodId: { type: String },
+        subscriptionPeriod: { type: String, enum: ["monthly", "yearly"] },
     },
     {
         timestamps: true,

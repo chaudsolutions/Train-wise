@@ -197,8 +197,8 @@ const EnterCommunity = () => {
                                             size="small"
                                             sx={{
                                                 bgcolor:
-                                                    theme.palette.info.dark,
-                                                color: theme.palette.info
+                                                    theme.palette.primary.dark,
+                                                color: theme.palette.primary
                                                     .contrastText,
                                             }}
                                         />
@@ -236,7 +236,7 @@ const EnterCommunity = () => {
                                 sx={{
                                     "& .MuiTabs-indicator": {
                                         backgroundColor:
-                                            theme.palette.info.main,
+                                            theme.palette.primary.main,
                                         height: 3,
                                     },
                                 }}>
@@ -249,7 +249,8 @@ const EnterCommunity = () => {
                                         sx={{
                                             minHeight: 60,
                                             "&.Mui-selected": {
-                                                color: theme.palette.info.main,
+                                                color: theme.palette.primary
+                                                    .main,
                                             },
                                         }}
                                     />
@@ -264,7 +265,8 @@ const EnterCommunity = () => {
                                         sx={{
                                             minHeight: 60,
                                             "&.Mui-selected": {
-                                                color: theme.palette.info.main,
+                                                color: theme.palette.primary
+                                                    .main,
                                             },
                                         }}
                                     />
@@ -389,7 +391,7 @@ const EnterCommunity = () => {
                             <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
                                 <Chip
                                     label={category}
-                                    color="info"
+                                    color="primary"
                                     variant="outlined"
                                     size="small"
                                 />
@@ -407,7 +409,7 @@ const EnterCommunity = () => {
                                             LinkComponent={Link}
                                             to={`/creator/${communityId}/add-course`}
                                             variant="outlined"
-                                            color="info"
+                                            color="primary"
                                             startIcon={<Add />}>
                                             Create Course
                                         </Button>
@@ -416,7 +418,7 @@ const EnterCommunity = () => {
                                 <Button
                                     onClick={handleInviteMembers}
                                     variant="outlined"
-                                    color="info"
+                                    color="primary"
                                     startIcon={<PeopleIcon />}>
                                     Invite Members
                                 </Button>

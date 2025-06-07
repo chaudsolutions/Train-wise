@@ -67,7 +67,7 @@ const CreateCommunity = () => {
                 p: 3,
                 mb: 4,
                 backgroundColor: theme.palette.background.paper,
-                borderLeft: `4px solid ${theme.palette.info.main}`,
+                borderLeft: `4px solid ${theme.palette.primary.main}`,
             }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                 Why Create a Community?
@@ -102,7 +102,7 @@ const CreateCommunity = () => {
                     )}
                 </Box>
                 {userRole === "admin" || userRole === "creator" ? (
-                    <Box component="span" sx={{ ml: 1, color: "info.main" }}>
+                    <Box component="span" sx={{ ml: 1, color: "primary.main" }}>
                         (Waived for {userRole}s)
                     </Box>
                 ) : null}
@@ -180,7 +180,7 @@ const CreateCommunity = () => {
                         gutterBottom
                         sx={{
                             fontWeight: 700,
-                            color: theme.palette.info.main,
+                            color: theme.palette.primary.main,
                             mb: 4,
                         }}>
                         Create a New Community
@@ -472,7 +472,7 @@ const CreateCommunity = () => {
                             <Button
                                 type="submit"
                                 variant="contained"
-                                color="info"
+                                color="primary"
                                 disabled={isSubmitting}
                                 sx={{
                                     px: 6,

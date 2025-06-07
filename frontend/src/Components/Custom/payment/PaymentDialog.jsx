@@ -8,25 +8,51 @@ import {
     useTheme,
     Typography,
     Box,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
 } from "@mui/material";
 import { usePayment, useRenewalPayment } from "../../Hooks/usePayment";
 import { CardElement } from "@stripe/react-stripe-js";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 export const PaymentDialog = ({
     open,
     onClose,
-    amount,
+    amount: initialAmount,
     data,
     onPaymentSuccess,
     type,
 }) => {
     const theme = useTheme();
     const { handlePayment, paymentProcessing } = usePayment();
+    const [subscriptionPeriod, setSubscriptionPeriod] = useState("monthly");
+    const [currentAmount, setCurrentAmount] = useState(initialAmount);
+
+    // Reset state when dialog opens
+    useEffect(() => {
+        if (open) {
+            setSubscriptionPeriod("monthly");
+            setCurrentAmount(initialAmount);
+        }
+    }, [open, initialAmount]);
+
+    // Update amount when subscription period changes
+    useEffect(() => {
+        if (type === "community_subscription") {
+            const newAmount =
+                subscriptionPeriod === "yearly"
+                    ? initialAmount * 12
+                    : initialAmount;
+            setCurrentAmount(newAmount);
+        }
+    }, [subscriptionPeriod, initialAmount, type]);
 
     const handleSubmit = async () => {
         const success = await handlePayment({
-            amount,
+            amount: currentAmount,
             onSuccess: onPaymentSuccess,
             type,
             data,
@@ -39,13 +65,36 @@ export const PaymentDialog = ({
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle>
-                Pay ${amount}
+                Pay ${currentAmount}
                 {type === "community_subscription"
-                    ? "/month to join"
-                    : " to create"}{" "}
+                    ? `/${
+                          subscriptionPeriod === "yearly" ? "year" : "month"
+                      } to join`
+                    : "/year to create"}{" "}
                 Community
             </DialogTitle>
             <DialogContent>
+                {/* Subscription period selector */}
+                {type === "community_subscription" && (
+                    <FormControl fullWidth sx={{ mb: 5 }}>
+                        <InputLabel>Subscription Type</InputLabel>
+                        <Select
+                            value={subscriptionPeriod}
+                            onChange={(e) =>
+                                setSubscriptionPeriod(e.target.value)
+                            }
+                            label="Subscription Type"
+                            disabled={paymentProcessing}>
+                            <MenuItem value="monthly">
+                                Monthly (${initialAmount}/month)
+                            </MenuItem>
+                            <MenuItem value="yearly">
+                                Yearly (${initialAmount * 12}/year)
+                            </MenuItem>
+                        </Select>
+                    </FormControl>
+                )}
+
                 <CardElement
                     options={{
                         style: {

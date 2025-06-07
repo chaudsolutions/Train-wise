@@ -40,7 +40,7 @@ const statusColors = {
     pending: "warning",
     approved: "success",
     rejected: "error",
-    confirmed: "info",
+    confirmed: "primary",
 };
 
 const WithdrawalsDash = () => {

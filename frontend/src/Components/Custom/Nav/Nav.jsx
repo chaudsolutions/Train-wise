@@ -81,7 +81,7 @@ const Nav = () => {
                             <>
                                 <IconButton
                                     onClick={handleDesktopMenuOpen}
-                                    color="info"
+                                    color="primary"
                                     sx={{
                                         transform: desktopMenuOpen
                                             ? "rotate(180deg)"

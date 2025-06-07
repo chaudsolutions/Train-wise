@@ -9,7 +9,7 @@ import HeroBg from "../../../assets/heroBg.png";
 const Hero = () => {
     const { isMobile } = useResponsive();
     const autoplayOptions = { delay: 7000, stopOnInteraction: false };
-    const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
+    const [emblaRef] = useEmblaCarousel({ loop: true }, [
         Autoplay(autoplayOptions),
     ]);
     const textSliderRef = useRef(null);
@@ -18,8 +18,8 @@ const Hero = () => {
         {
             title: "Associate More - Learn More",
             description:
-                "Join vibrant Hubs of learners and experts to share knowledge, collaborate on projects, and grow together in a supportive environment.",
-            buttonText: "Explore Learning Hubs",
+                "Join vibrant Communities of learners and experts to share knowledge, collaborate on projects, and grow together in a supportive environment.",
+            buttonText: "Explore Learning Communities",
         },
         {
             title: "Create A Learning Hub - Earn More",
@@ -43,8 +43,8 @@ const Hero = () => {
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "center",
-                alignItems: "center",
-                textAlign: "center",
+                alignItems: isMobile ? "center" : "start",
+                textAlign: isMobile ? "center" : "start",
                 color: "white",
                 px: 2,
                 position: "relative",
@@ -145,8 +145,9 @@ const Hero = () => {
                                 opacity: 0.9,
                             }}>
                             <Typography
-                                variant={isMobile ? "h4" : "h2"}
+                                variant="h1"
                                 component="h1"
+                                fontSize={isMobile ? "2rem" : "2.5rem"}
                                 sx={{
                                     fontWeight: 800,
                                     mb: 3,
@@ -220,35 +221,6 @@ const Hero = () => {
                         </Box>
                     ))}
                 </Box>
-            </Box>
-
-            {/* Slider indicators */}
-            <Box
-                sx={{
-                    position: "absolute",
-                    bottom: 40,
-                    zIndex: 3,
-                    display: "flex",
-                    gap: 1,
-                }}>
-                {heroContent.map((_, index) => (
-                    <Box
-                        key={index}
-                        onClick={() => emblaApi && emblaApi.scrollTo(index)}
-                        sx={{
-                            width: 12,
-                            height: 12,
-                            borderRadius: "50%",
-                            bgcolor: "rgba(255,255,255,0.3)",
-                            cursor: "pointer",
-                            transition: "all 0.3s ease",
-                            "&:hover": {
-                                bgcolor: "rgba(255,255,255,0.5)",
-                                transform: "scale(1.2)",
-                            },
-                        }}
-                    />
-                ))}
             </Box>
 
             {/* Bottom decorative bar */}
