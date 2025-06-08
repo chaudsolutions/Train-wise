@@ -2,9 +2,9 @@
 
 // app constants
 // mailer
-const appUrl = "";
-const fromMail = `TRAIN-WISE <noreply@trainwise.com>`;
-const replyToMail = `noreply@trainwise.com`;
+const appUrl = "https://skillbay.net";
+const fromMail = `SKILLBAY <noreply@${appUrl}>`;
+const replyToMail = `noreply@${appUrl}`;
 // server
 const serverPort = process.env.port;
 // db

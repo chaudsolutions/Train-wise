@@ -67,7 +67,7 @@ connectDB();
 
 // Define a default route handler for the root URL ("/")
 app.get("/", (req, res) => {
-    res.send("Hello, World! This is the root route for TRAIN-WISE SERVERS.");
+    res.send("Hello, World! This is the root route for SKILLBAY SERVERS.");
 });
 
 // authentication route

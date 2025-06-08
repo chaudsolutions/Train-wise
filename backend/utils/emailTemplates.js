@@ -1,3 +1,5 @@
+const { appUrl } = require("./variables");
+
 const baseEmailTemplate = (title, content, note) => `
 <!DOCTYPE html>
 <html>
@@ -59,7 +61,7 @@ const baseEmailTemplate = (title, content, note) => `
 <body>
     <div class="email-container">
         <div class="header">
-            <img src="https://train-wise-frontend.vercel.app/logo.png" alt="Company Logo" class="logo">
+            <img src="${appUrl}/logo.png" alt="Company Logo" class="logo">
             <h1>${title}</h1>
         </div>
         
@@ -69,9 +71,9 @@ const baseEmailTemplate = (title, content, note) => `
         </div>
 
         <div class="footer">
-            <p>&copy; ${new Date().getFullYear()} TrainWise. All rights reserved.</p>
+            <p>&copy; ${new Date().getFullYear()} Skillbay. All rights reserved.</p>
             <p>Built with passion in 2025</p>
-            <p>Need help? <a href="mailto:support@trainwise.com">Contact our support team</a></p>
+            <p>Need help? <a href="mailto:support@${appUrl}">Contact our support team</a></p>
         </div>
     </div>
 </body>
