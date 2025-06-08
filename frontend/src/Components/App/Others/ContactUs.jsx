@@ -14,12 +14,10 @@ import {
     Button,
     TextField,
 } from "@mui/material";
-import {
-    LocationOn as LocationIcon,
-    Phone as PhoneIcon,
-    Email as EmailIcon,
-    Send as SendIcon,
-} from "@mui/icons-material";
+import LocationIcon from "@mui/icons-material/LocationOn";
+import PhoneIcon from "@mui/icons-material/Phone";
+import EmailIcon from "@mui/icons-material/Email";
+import SendIcon from "@mui/icons-material/Send";
 import { useForm } from "react-hook-form";
 import Maps from "../../Custom/Maps/Maps";
 import { companyName } from "../../Hooks/useVariable";
@@ -85,7 +83,7 @@ const ContactUs = () => {
                                     </ListItemIcon>
                                     <ListItemText
                                         primary="Our Location"
-                                        secondary="123 Community Street, Tech City, TC 12345"
+                                        secondary="5 Billington street, Northampton NN1 4DB, UK"
                                     />
                                 </ListItem>
 
@@ -129,7 +127,7 @@ const ContactUs = () => {
                                     </ListItemIcon>
                                     <ListItemText
                                         primary="Email Us"
-                                        secondary={`Care@${companyName}.com\nContact@${companyName}.com`}
+                                        secondary={`support@${companyName}.com`}
                                     />
                                 </ListItem>
                             </List>

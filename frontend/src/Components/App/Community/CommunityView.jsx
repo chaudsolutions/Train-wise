@@ -58,6 +58,8 @@ const CommunityView = () => {
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [selectShare, setSelectShare] = useState(false);
 
+    const { isMobile } = useResponsive();
+
     const { user } = useAuthContext();
 
     const { useParams, useNavigate } = useReactRouter();
@@ -65,8 +67,6 @@ const CommunityView = () => {
     const navigate = useNavigate();
 
     const { communityId } = useParams();
-
-    const { isMobile } = useResponsive();
 
     const { community, isCommunityLoading, refetchCommunity } =
         useCommunityByIdData({
@@ -83,6 +83,7 @@ const CommunityView = () => {
         visions,
         subscriptionFee,
         bannerImage,
+        logo,
         members,
         createdBy,
         creatorName,
@@ -146,7 +147,7 @@ const CommunityView = () => {
                 <Box
                     sx={{
                         position: "relative",
-                        height: isMobile ? 300 : 300,
+                        height: 400,
                         overflow: "hidden",
                         backgroundColor: theme.palette.primary.dark,
                     }}>
@@ -187,13 +188,20 @@ const CommunityView = () => {
                             bottom: 0,
                             left: 0,
                             right: 0,
-                            bgcolor: "rgba(0,0,0,0.6)",
+                            bgcolor: "rgba(0,0,0,0.8)",
                             py: 2,
                             px: 3,
+                            height: "100%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexDirection: "column",
+                            textAlign: "center",
                         }}>
                         <Container maxWidth="lg">
                             <Typography
                                 variant="h3"
+                                fontSize="2rem"
                                 sx={{
                                     color: "white",
                                     fontWeight: 700,
@@ -223,8 +231,19 @@ const CommunityView = () => {
                             mb: 3,
                             display: "flex",
                             justifyContent: "flex-end",
+                            alignItems: "center",
                             gap: 2,
                         }}>
+                        <Avatar
+                            src={logo}
+                            alt={`${name} logo`}
+                            sx={{
+                                width: 70,
+                                height: 70,
+                                borderRadius: "50%",
+                                boxShadow: theme.shadows[3],
+                            }}
+                        />
                         <Button
                             variant="contained"
                             color="secondary"
@@ -269,8 +288,8 @@ const CommunityView = () => {
                             {loading
                                 ? "Loading..."
                                 : isUserMember || isCreator || isAdmin
-                                ? "Enter Community"
-                                : "Join Community"}
+                                ? `Explore ${isMobile ? "" : "Community"}`
+                                : `${isMobile ? "Join" : "Become a Member"}`}
                         </Button>
                     </Box>
 

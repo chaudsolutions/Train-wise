@@ -24,10 +24,10 @@ import {
     People as PeopleIcon,
     School as SchoolIcon,
     Notifications as NotificationsIcon,
-    Add,
     Message,
 } from "@mui/icons-material";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import AddIcon from "@mui/icons-material/Add";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import {
     useCommunityByIdData,
@@ -37,6 +37,7 @@ import {
 import PageLoader from "../../Animations/PageLoader";
 import useResponsive from "../../Hooks/useResponsive";
 import {
+    AddMember,
     CommunityChatroom,
     CommunityClassroom,
     CommunityInventory,
@@ -47,12 +48,14 @@ import axios from "axios";
 import { serVer, useToken } from "../../Hooks/useVariable";
 import { useSearchParams } from "react-router-dom";
 import { ReportCommunityForm } from "../../Custom/Forms/Forms";
+import SocialShareDrawer from "../../Custom/Buttons/SocialShareDrawer";
 
 const EnterCommunity = () => {
     const [activeTab, setActiveTab] = useState("community");
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [btn, setBtn] = useState(false);
     const [reportDialog, setReportDialog] = useState(false);
+    const [selectShare, setSelectShare] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
 
     const theme = useTheme();
@@ -105,21 +108,6 @@ const EnterCommunity = () => {
         { id: "members", label: "Members", icon: <PeopleIcon /> },
     ];
 
-    const handleInviteMembers = () => {
-        const communityLink = `${location.origin}/community/${communityId}`;
-
-        // Copy to clipboard
-        navigator.clipboard
-            .writeText(communityLink)
-            .then(() => {
-                setOpenSnackbar(true);
-            })
-            .catch((err) => {
-                console.error("Failed to copy text: ", err);
-                // You might want to show an error toast here
-            });
-    };
-
     const handleCloseSnackbar = (event, reason) => {
         if (reason === "clickaway") {
             return;
@@ -149,6 +137,8 @@ const EnterCommunity = () => {
             setBtn(false);
         }
     };
+
+    const communityUrl = `${window.location.origin}/community/${community?._id}`;
 
     if (isCommunityLoading || isUserDataLoading || isCoursesLoading) {
         return <PageLoader />;
@@ -271,6 +261,21 @@ const EnterCommunity = () => {
                                         }}
                                     />
                                 ))}
+                                {isCommunityAdmin && (
+                                    <Tab
+                                        value="addAMember"
+                                        label="Add A Member"
+                                        icon={<AddIcon />}
+                                        iconPosition="start"
+                                        sx={{
+                                            minHeight: 60,
+                                            "&.Mui-selected": {
+                                                color: theme.palette.primary
+                                                    .main,
+                                            },
+                                        }}
+                                    />
+                                )}
                             </Tabs>
                             <Divider />
                         </Box>
@@ -354,6 +359,13 @@ const EnterCommunity = () => {
                                     </List>
                                 </Box>
                             )}
+
+                            {activeTab === "addAMember" && (
+                                <AddMember
+                                    communityId={communityId}
+                                    refetchCommunity={refetchCommunity}
+                                />
+                            )}
                         </Box>
                     </Paper>
                 </Grid>
@@ -410,17 +422,17 @@ const EnterCommunity = () => {
                                             to={`/creator/${communityId}/add-course`}
                                             variant="outlined"
                                             color="primary"
-                                            startIcon={<Add />}>
+                                            startIcon={<AddIcon />}>
                                             Create Course
                                         </Button>
                                     </>
                                 )}
                                 <Button
-                                    onClick={handleInviteMembers}
+                                    onClick={() => setSelectShare(true)}
                                     variant="outlined"
                                     color="primary"
                                     startIcon={<PeopleIcon />}>
-                                    Invite Members
+                                    Share This Community
                                 </Button>
                                 <Button
                                     variant="outlined"
@@ -452,6 +464,13 @@ const EnterCommunity = () => {
                 open={reportDialog}
                 onClose={() => setReportDialog(false)}
                 communityId={communityId}
+            />
+
+            <SocialShareDrawer
+                open={selectShare}
+                onClose={() => setSelectShare(false)}
+                communityName={name}
+                url={communityUrl}
             />
         </Box>
     );

@@ -321,4 +321,126 @@ router.delete("/:communityId/delete-message/:messageId", async (req, res) => {
     }
 });
 
+// endpoint to search for a community member
+router.put("/search-member/:communityId", async (req, res) => {
+    try {
+        const { communityId } = req.params;
+        const { email } = req.body;
+
+        // find community
+        const community = await Community.findById(communityId);
+
+        if (!community) {
+            return res.status(404).json("Community not found");
+        }
+
+        // find user
+        const user = await UsersModel.findOne({ email })
+            .select("id name email avatar")
+            .lean();
+
+        if (!user) {
+            return res.status(404).json("User doesn't exist");
+        }
+
+        const isCreator = community.createdBy.toString() === user.id;
+
+        if (isCreator) {
+            return res
+                .status(403)
+                .json(
+                    "You cannot add yourself as a member of your own community"
+                );
+        }
+
+        // check if user exists in community
+        const isMember = community.members.some(
+            (member) => member.userId.toString() === user.id
+        );
+
+        if (isMember) {
+            return res
+                .status(403)
+                .json("User is already a member of this community");
+        }
+
+        res.status(200).json(user);
+    } catch (error) {
+        console.error("Error searching for members:", error);
+        res.status(500).json("Failed to search for members");
+    }
+});
+
+// endpoint to add a member to the community
+router.put("/add-member/:communityId", async (req, res) => {
+    try {
+        const { communityId } = req.params;
+        const { userId } = req.body;
+
+        // find community
+        const community = await Community.findById(communityId);
+
+        if (!community) {
+            return res.status(404).json("Community not found");
+        }
+
+        // find user
+        const user = await UsersModel.findById(userId);
+
+        if (!user) {
+            return res.status(404).json("User doesn't exist");
+        }
+
+        const isCreator = community.createdBy.toString() === user.id;
+
+        if (isCreator) {
+            return res
+                .status(403)
+                .json(
+                    "You cannot add yourself as a member of your own community"
+                );
+        }
+
+        // check if user exists in community
+        const isMember = community.members.some(
+            (member) => member.userId.toString() === user.id
+        );
+
+        if (isMember) {
+            return res
+                .status(403)
+                .json("User is already a member of this community");
+        }
+
+        // add user to community
+        community.members.push({
+            userId: user.id,
+            status: "active",
+            currentPeriodEnd:
+                community.subscriptionFee === 0
+                    ? null
+                    : Date.now() + 1000 * 60 * 60 * 24 * 30,
+            subscriptionPeriod:
+                community.subscriptionFee === 0 ? null : "monthly",
+        });
+
+        await Promise.all([
+            community.save(),
+            createNotification(
+                community.createdBy,
+                `You have added ${user.name} to your community ${community.name}`
+            ),
+            createNotification(
+                user.id,
+                `You have been added to the community ${community.name} by the creator`
+            ),
+        ]);
+
+        res.status(200).json("Member added successfully");
+    } catch (error) {
+        console.error("Error adding member:", error);
+        res.status(500).json("Failed to add member");
+    }
+});
+
 module.exports = { Creator: router };

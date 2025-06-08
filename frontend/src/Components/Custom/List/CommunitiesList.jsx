@@ -155,7 +155,6 @@ const CommunitiesList = ({ community, isLoading }) => {
                                     bgcolor: "white",
                                     color: theme.palette.error.main,
                                     border: `1px solid ${theme.palette.error.main}`,
-                                    "&:hover": { bgcolor: "white" },
                                 }}>
                                 <FavoriteBorderIcon fontSize="small" />
                             </IconButton>
@@ -169,7 +168,6 @@ const CommunitiesList = ({ community, isLoading }) => {
                                         ? "white"
                                         : theme.palette.primary.dark,
                                     border: `1px solid ${theme.palette.primary.main}`,
-                                    "&:hover": { bgcolor: "white" },
                                 }}>
                                 <ShareIcon fontSize="small" />
                             </IconButton>

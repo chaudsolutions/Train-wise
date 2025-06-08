@@ -26,10 +26,13 @@ import {
     DialogContent,
     DialogActions,
     Tooltip,
+    Stepper,
+    Step,
+    StepLabel,
+    StepContent,
 } from "@mui/material";
 import {
     Info as InfoIcon,
-    Add as AddIcon,
     PlayCircleOutline as PlayIcon,
     Send as SendIcon,
     Circle as OnlineIcon,
@@ -38,6 +41,11 @@ import {
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import EmailIcon from "@mui/icons-material/Email";
+import PersonIcon from "@mui/icons-material/Person";
+import CheckIcon from "@mui/icons-material/CheckCircle";
+import SearchIcon from "@mui/icons-material/Search";
+import AddIcon from "@mui/icons-material/Add";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import CourseStockImg from "../../../assets/courseStock.png";
 import { useEffect, useRef, useState } from "react";
@@ -1026,6 +1034,315 @@ export const CommunityInventory = ({ balance, handleWithdrawal, btn }) => {
                     No funds available for withdrawal
                 </Typography>
             )}
+        </Paper>
+    );
+};
+
+// add a member component
+export const AddMember = ({ communityId, refetchCommunity }) => {
+    const theme = useTheme();
+    const [activeStep, setActiveStep] = useState(0);
+    const [email, setEmail] = useState("");
+    const [userData, setUserData] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    const { token } = useToken();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    const handleSearch = async () => {
+        if (!emailRegex.test(email)) {
+            setError("Please enter a valid email address");
+            return;
+        }
+
+        setLoading(true);
+        setError("");
+        setUserData(null);
+
+        try {
+            const res = await axios.put(
+                `${serVer}/creator/search-member/${communityId}`,
+                {
+                    email,
+                },
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+
+            setUserData(res.data);
+            setActiveStep(1);
+        } catch (err) {
+            setError(err.response?.data || "Failed to fetch user data");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAddMember = async () => {
+        setLoading(true);
+        setError("");
+        try {
+            await axios.put(
+                `${serVer}/creator/add-member/${communityId}`,
+                {
+                    userId: userData._id,
+                },
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+
+            setActiveStep(2);
+            refetchCommunity();
+        } catch (err) {
+            setError(err.response?.data || "Failed to add member");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleReset = () => {
+        setActiveStep(0);
+        setEmail("");
+        setUserData(null);
+        setError("");
+    };
+
+    const steps = [
+        {
+            label: "Search User",
+            description: "Enter the email address of the user you want to add",
+        },
+        {
+            label: "Confirm Details",
+            description: "Verify user information before adding to community",
+        },
+        {
+            label: "Complete",
+            description: "User has been successfully added",
+        },
+    ];
+
+    return (
+        <Paper
+            elevation={0}
+            sx={{
+                borderRadius: 4,
+                p: 1,
+                background: theme.palette.background.paper,
+            }}>
+            <Typography variant="h5" fontWeight={700} mb={3} color="primary">
+                Add New Member
+            </Typography>
+
+            <Stepper activeStep={activeStep} orientation="vertical">
+                {/* Step 1: Search User */}
+                <Step>
+                    <StepLabel
+                        StepIconProps={{
+                            sx: {
+                                "& .MuiStepIcon-root": {
+                                    color: theme.palette.primary.main,
+                                },
+                            },
+                        }}>
+                        <Typography variant="subtitle1" fontWeight={600}>
+                            {steps[0].label}
+                        </Typography>
+                    </StepLabel>
+                    <StepContent>
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            mb={2}>
+                            {steps[0].description}
+                        </Typography>
+
+                        <TextField
+                            fullWidth
+                            variant="outlined"
+                            label="User Email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            InputProps={{
+                                startAdornment: (
+                                    <EmailIcon
+                                        sx={{
+                                            color: theme.palette.action.active,
+                                            mr: 1,
+                                        }}
+                                    />
+                                ),
+                            }}
+                            onKeyPress={(e) =>
+                                e.key === "Enter" && handleSearch()
+                            }
+                            error={!!error}
+                            helperText={error}
+                            sx={{ mb: 2 }}
+                        />
+
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleSearch}
+                            disabled={loading || !email}
+                            startIcon={
+                                loading ? (
+                                    <CircularProgress size={20} />
+                                ) : (
+                                    <SearchIcon />
+                                )
+                            }
+                            sx={{ borderRadius: 2, fontWeight: 600 }}>
+                            Search User
+                        </Button>
+                    </StepContent>
+                </Step>
+
+                {/* Step 2: Confirm Details */}
+                <Step>
+                    <StepLabel>
+                        <Typography variant="subtitle1" fontWeight={600}>
+                            {steps[1].label}
+                        </Typography>
+                    </StepLabel>
+                    <StepContent>
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            mb={2}>
+                            {steps[1].description}
+                        </Typography>
+
+                        {userData && (
+                            <Card
+                                sx={{
+                                    borderRadius: 3,
+                                    mb: 3,
+                                    borderBottom: `4px solid ${theme.palette.primary.main}`,
+                                    boxShadow: theme.shadows[2],
+                                }}>
+                                <CardContent>
+                                    <Grid container spacing={2}>
+                                        <Grid size={12} align="center">
+                                            <Avatar
+                                                src={userData?.avatar}
+                                                alt={userData.name}
+                                                sx={{
+                                                    width: 64,
+                                                    height: 64,
+                                                    bgcolor:
+                                                        theme.palette.primary
+                                                            .main,
+                                                    fontSize: 24,
+                                                    fontWeight: 700,
+                                                }}>
+                                                {userData?.avatar ||
+                                                    userData.name.charAt(0)}
+                                            </Avatar>
+                                        </Grid>
+                                        <Grid size={12} align="center">
+                                            <Typography
+                                                variant="h6"
+                                                fontWeight={700}>
+                                                {userData.name}
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                color="text.secondary">
+                                                {userData.email}
+                                            </Typography>
+                                        </Grid>
+                                    </Grid>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {error && (
+                            <Typography
+                                variant="body2"
+                                color="error"
+                                sx={{ mb: 2 }}>
+                                {error}
+                            </Typography>
+                        )}
+
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                            <Button
+                                variant="outlined"
+                                onClick={() => setActiveStep(0)}
+                                sx={{ borderRadius: 2, fontWeight: 600 }}>
+                                Back
+                            </Button>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={handleAddMember}
+                                disabled={loading}
+                                startIcon={
+                                    loading ? (
+                                        <CircularProgress size={20} />
+                                    ) : (
+                                        <AddIcon />
+                                    )
+                                }
+                                sx={{ borderRadius: 2, fontWeight: 600 }}>
+                                {loading ? "Adding..." : "Add User"}
+                            </Button>
+                        </Box>
+                    </StepContent>
+                </Step>
+
+                {/* Step 3: Complete */}
+                <Step>
+                    <StepLabel>
+                        <Typography variant="subtitle1" fontWeight={600}>
+                            {steps[2].label}
+                        </Typography>
+                    </StepLabel>
+                    <StepContent>
+                        <Box
+                            sx={{
+                                textAlign: "center",
+                                p: 3,
+                                borderRadius: 3,
+                                border: `1px solid ${theme.palette.success.main}`,
+                            }}>
+                            <CheckIcon
+                                sx={{
+                                    fontSize: 64,
+                                    color: theme.palette.success.main,
+                                    mb: 2,
+                                }}
+                            />
+                            <Typography variant="h6" fontWeight={700} mb={1}>
+                                Member Added Successfully!
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                {userData?.name} has been added to your
+                                community
+                            </Typography>
+                        </Box>
+
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleReset}
+                            sx={{
+                                mt: 3,
+                                borderRadius: 2,
+                                fontWeight: 600,
+                                px: 4,
+                            }}>
+                            Add Another Member
+                        </Button>
+                    </StepContent>
+                </Step>
+            </Stepper>
         </Paper>
     );
 };
