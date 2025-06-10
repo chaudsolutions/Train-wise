@@ -1065,7 +1065,7 @@ export const AddMember = ({ communityId, refetchCommunity }) => {
             const res = await axios.put(
                 `${serVer}/creator/search-member/${communityId}`,
                 {
-                    email,
+                    email: email.trim().toLowerCase(),
                 },
                 {
                     headers: { Authorization: `Bearer ${token}` },

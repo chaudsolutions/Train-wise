@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const Community = require("../Models/Community.js");
 const CommunityMessage = require("../Models/CommunityMessage.js");
 const Category = require("../Models/Category.js");
+const Settings = require("../Models/Settings.js");
 
 const router = express.Router();
 
@@ -244,6 +245,22 @@ router.get("/communities/:communityId/messages/stream", async (req, res) => {
     } catch (error) {
         console.error("SSE error:", error);
         res.status(500).json({ message: "Server error" });
+    }
+});
+
+// Get current settings
+router.get("/settings", async (req, res) => {
+    try {
+        const settings = await Settings.findOne().lean();
+
+        if (!settings) {
+            return res.status(404).json("Settings not found");
+        }
+
+        res.status(200).json(settings);
+    } catch (error) {
+        res.status(500).json("Error fetching settings");
+        console.log(error);
     }
 });
 

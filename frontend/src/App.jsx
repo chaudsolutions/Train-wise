@@ -1,4 +1,3 @@
-import ScrollToTop from "react-scroll-to-top";
 import { Toaster } from "react-hot-toast";
 import { useReactRouter } from "./Components/Hooks/useReactRouter";
 import { useAuthContext } from "./Components/Context/AuthContext";
@@ -37,6 +36,7 @@ import Communities from "./Components/App/Community/Communities";
 import AboutUs from "./Components/App/Others/AboutUs";
 import SignUp from "./Components/App/auth/SignUp";
 import SignIn from "./Components/App/auth/SignIn";
+import ScrollToTopBtn from "./Components/Custom/Buttons/ScrollToTop";
 
 function App() {
     const { user } = useAuthContext();
@@ -136,13 +136,7 @@ function App() {
                         {/* create a community */}
                         <Route
                             path="/create-a-community"
-                            element={
-                                user ? (
-                                    <CreateCommunity />
-                                ) : (
-                                    <Navigate to="/sign-up" />
-                                )
-                            }
+                            element={<CreateCommunity />}
                         />
 
                         {/* view a community */}
@@ -226,13 +220,7 @@ function App() {
                 </div>
 
                 {/* scroll to top BTN */}
-                <ScrollToTop
-                    color="blue"
-                    smooth
-                    width="20"
-                    height="20"
-                    className="scrollToTopBtn"
-                />
+                <ScrollToTopBtn />
 
                 {/* footer */}
                 {showNavFooter && <Footer />}

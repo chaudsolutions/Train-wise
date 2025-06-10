@@ -226,7 +226,7 @@ const CommunityView = () => {
                     <Box
                         sx={{
                             position: "sticky",
-                            top: 16,
+                            top: 90,
                             zIndex: 10,
                             mb: 3,
                             display: "flex",

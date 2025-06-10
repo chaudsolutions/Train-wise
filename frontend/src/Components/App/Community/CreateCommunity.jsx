@@ -16,7 +16,12 @@ import axios from "axios";
 import { useForm } from "react-hook-form";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import toast from "react-hot-toast";
-import { serVer, useToken } from "../../Hooks/useVariable";
+import {
+    redirectSessionKey,
+    serVer,
+    stripePromise,
+    useToken,
+} from "../../Hooks/useVariable";
 import {
     useCategoriesData,
     useCommunitiesData,
@@ -25,14 +30,15 @@ import {
 } from "../../Hooks/useQueryFetch/useQueryData";
 import PageLoader from "../../Animations/PageLoader";
 import { Elements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
 import { useState } from "react";
 import { PaymentDialog } from "../../Custom/payment/PaymentDialog";
-
-// Initialize Stripe with your publishable key
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PK);
+import { useAuthContext } from "../../Context/AuthContext";
+import { useLocation } from "react-router-dom";
+import Auth from "../../Custom/Auth/Auth";
 
 const CreateCommunity = () => {
+    const [authOpen, setAuthOpen] = useState(false);
+
     const theme = useTheme();
     const { useNavigate } = useReactRouter();
     const { token } = useToken();
@@ -41,6 +47,10 @@ const CreateCommunity = () => {
     const { categories, isCategoriesLoading } = useCategoriesData();
     const { userData, isUserDataLoading } = useUserData();
     const { communityCreationFee } = settingsData || {};
+
+    const location = useLocation();
+
+    const { user } = useAuthContext();
 
     const {
         register,
@@ -154,6 +164,11 @@ const CreateCommunity = () => {
     };
 
     const onSubmit = async (data) => {
+        if (!user) {
+            sessionStorage.setItem(redirectSessionKey, location.pathname);
+            return setAuthOpen(true);
+        }
+
         setFormData(data);
         if (userRole === "admin" || userRole === "creator") {
             // Admins and creators create directly without payment
@@ -504,6 +519,9 @@ const CreateCommunity = () => {
                         onPaymentSuccess={handleCreateCommunity}
                         type="community_creation"
                     />
+
+                    {/* Auth Dialog */}
+                    <Auth authContain={authOpen} setAuthContain={setAuthOpen} />
                 </Paper>
             </Container>
         </Elements>

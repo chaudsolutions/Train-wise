@@ -8,8 +8,9 @@ import {
     useTheme,
     IconButton,
     Grid,
+    Link,
 } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link as NavLink } from "react-router-dom";
 import { useRandomCommunitiesData } from "../../Hooks/useQueryFetch/useQueryData";
 import CommunitiesList from "../List/CommunitiesList";
 import useResponsive from "../../Hooks/useResponsive";
@@ -87,10 +88,23 @@ const CoursesSection = () => {
                     sx={{
                         fontWeight: 800,
                         textAlign: "center",
-                        mb: 2,
                         color: theme.palette.primary.dark,
                     }}>
                     Discover Vibrant Hubs
+                </Typography>
+                <Typography
+                    variant="body1"
+                    component="p"
+                    color="textSecondary"
+                    sx={{
+                        fontWeight: 800,
+                        textAlign: "center",
+                        mb: 2,
+                    }}>
+                    or{" "}
+                    <Link component={NavLink} to="/create-a-community">
+                        Create Your Own
+                    </Link>
                 </Typography>
 
                 <Typography
@@ -203,7 +217,7 @@ const CoursesSection = () => {
 
                 <Box sx={{ textAlign: "center", mt: 6 }}>
                     <Button
-                        component={Link}
+                        component={NavLink}
                         to="/communities"
                         variant="outlined"
                         size="large"

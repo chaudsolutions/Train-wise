@@ -1,22 +1,11 @@
-import {
-    Box,
-    Typography,
-    Card,
-    CardContent,
-    useTheme,
-    IconButton,
-} from "@mui/material";
+import { Box, Typography, Card, CardContent, useTheme } from "@mui/material";
 import ChatBubbleOutline from "@mui/icons-material/ChatBubbleOutline";
 import GroupAdd from "@mui/icons-material/GroupAdd";
 import GroupWork from "@mui/icons-material/GroupWork";
 import School from "@mui/icons-material/School";
 import EmojiEvents from "@mui/icons-material/EmojiEvents";
 import Forum from "@mui/icons-material/Forum";
-import ArrowBackIos from "@mui/icons-material/ArrowBackIos";
-import ArrowForwardIos from "@mui/icons-material/ArrowForwardIos";
 import useResponsive from "../../Hooks/useResponsive";
-import useEmblaCarousel from "embla-carousel-react";
-import Autoplay from "embla-carousel-autoplay";
 
 const benefits = [
     {
@@ -60,20 +49,6 @@ const benefits = [
 const SectionOne = () => {
     const theme = useTheme();
     const { isMobile } = useResponsive();
-
-    // Embla Carousel setup
-    const autoplayOptions = { delay: 5000, stopOnInteraction: false };
-    const [emblaRef, emblaApi] = useEmblaCarousel(
-        {
-            align: "start",
-            skipSnaps: false,
-            containScroll: "trimSnaps",
-        },
-        [Autoplay(autoplayOptions)]
-    );
-
-    const scrollPrev = () => emblaApi && emblaApi.scrollPrev();
-    const scrollNext = () => emblaApi && emblaApi.scrollNext();
 
     return (
         <Box
@@ -138,177 +113,76 @@ const SectionOne = () => {
                     worldwide.
                 </Typography>
 
-                {/* Carousel Container */}
+                {/* Grid Container */}
                 <Box
                     sx={{
-                        position: "relative",
                         maxWidth: "1400px",
                         mx: "auto",
                         px: { xs: 0, md: 4 },
+                        display: "grid",
+                        gridTemplateColumns: {
+                            xs: "1fr",
+                            sm: "repeat(2, 1fr)",
+                            md: "repeat(3, 1fr)",
+                        },
+                        gap: { xs: 2, sm: 3, md: 4 },
                     }}>
-                    {/* Navigation Arrows */}
-                    <IconButton
-                        onClick={scrollPrev}
-                        sx={{
-                            position: "absolute",
-                            left: { xs: -10, sm: -20, md: -30 },
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            zIndex: 10,
-                            background: "rgba(255,255,255,0.9)",
-                            boxShadow: theme.shadows[4],
-                            "&:hover": {
-                                background: "white",
-                            },
-                            display: { xs: "none", sm: "flex" },
-                        }}>
-                        <ArrowBackIos />
-                    </IconButton>
-
-                    <IconButton
-                        onClick={scrollNext}
-                        sx={{
-                            position: "absolute",
-                            right: { xs: -10, sm: -20, md: -30 },
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            zIndex: 10,
-                            background: "rgba(255,255,255,0.9)",
-                            boxShadow: theme.shadows[4],
-                            "&:hover": {
-                                background: "white",
-                            },
-                            display: { xs: "none", sm: "flex" },
-                        }}>
-                        <ArrowForwardIos />
-                    </IconButton>
-
-                    {/* Embla Viewport */}
-                    <Box
-                        className="embla"
-                        ref={emblaRef}
-                        p={2}
-                        sx={{
-                            overflow: "hidden",
-                            cursor: "grab",
-                            "&:active": {
-                                cursor: "grabbing",
-                            },
-                        }}>
-                        <Box
-                            className="embla__container"
+                    {benefits.map((benefit, index) => (
+                        <Card
+                            key={index}
                             sx={{
-                                display: "flex",
-                                gap: { xs: 2, sm: 3, md: 4 },
-                                ml: { xs: 2, sm: 0 },
+                                height: "100%",
+                                borderRadius: 4,
+                                boxShadow: "0 8px 30px rgba(0,0,0,0.08)",
+                                transition: "all 0.3s ease",
+                                border: "1px solid rgba(0,0,0,0.05)",
+                                "&:hover": {
+                                    transform: "translateY(-10px)",
+                                    boxShadow: "0 12px 40px rgba(0,0,0,0.15)",
+                                    borderColor: theme.palette.primary.light,
+                                },
                             }}>
-                            {benefits.map((benefit, index) => (
+                            <CardContent sx={{ p: 3 }}>
                                 <Box
-                                    className="embla__slide"
-                                    key={index}
-                                    sx={{
-                                        flex: "0 0 auto",
-                                        minWidth: 0,
-                                        width: {
-                                            xs: "calc(85% - 16px)",
-                                            sm: "calc(50% - 20px)",
-                                            md: "calc(33.333% - 24px)",
-                                        },
-                                        position: "relative",
-                                    }}>
-                                    <Card
+                                    display="flex"
+                                    alignItems="center"
+                                    gap={1}
+                                    mb={2}>
+                                    <Box
                                         sx={{
-                                            height: "100%",
-                                            borderRadius: 4,
-                                            boxShadow:
-                                                "0 8px 30px rgba(0,0,0,0.08)",
-                                            transition: "all 0.3s ease",
-                                            border: "1px solid rgba(0,0,0,0.05)",
-                                            "&:hover": {
-                                                transform: "translateY(-10px)",
-                                                boxShadow:
-                                                    "0 12px 40px rgba(0,0,0,0.15)",
-                                                borderColor:
-                                                    theme.palette.primary.light,
-                                            },
+                                            color: "white",
+                                            background:
+                                                "linear-gradient(135deg, #1976d2 0%, #5e35b1 100%)",
+                                            padding: 2,
+                                            borderRadius: "50%",
                                         }}>
-                                        <CardContent sx={{ p: 3 }}>
-                                            <Box
-                                                display="flex"
-                                                alignItems="center"
-                                                gap={1}
-                                                mb={2}>
-                                                <Box
-                                                    sx={{
-                                                        color: "white",
-                                                        background:
-                                                            "linear-gradient(135deg, #1976d2 0%, #5e35b1 100%)",
-                                                        padding: 2,
-                                                        borderRadius: "50%",
-                                                    }}>
-                                                    {benefit.icon}
-                                                </Box>
+                                        {benefit.icon}
+                                    </Box>
 
-                                                <Typography
-                                                    variant="h6"
-                                                    component="h3"
-                                                    fontSize="1.1rem"
-                                                    sx={{
-                                                        fontWeight: 700,
-                                                        color: theme.palette
-                                                            .primary.dark,
-                                                    }}>
-                                                    {benefit.title}
-                                                </Typography>
-                                            </Box>
-
-                                            <Typography
-                                                variant="body1"
-                                                fontSize=".8rem"
-                                                sx={{
-                                                    color: theme.palette.text
-                                                        .secondary,
-                                                    lineHeight: 1.6,
-                                                }}>
-                                                {benefit.description}
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
+                                    <Typography
+                                        variant="h6"
+                                        component="h3"
+                                        fontSize="1.1rem"
+                                        sx={{
+                                            fontWeight: 700,
+                                            color: theme.palette.primary.dark,
+                                        }}>
+                                        {benefit.title}
+                                    </Typography>
                                 </Box>
-                            ))}
-                        </Box>
-                    </Box>
 
-                    {/* Dots for mobile */}
-                    {isMobile && (
-                        <Box
-                            sx={{
-                                display: "flex",
-                                justifyContent: "center",
-                                mt: 4,
-                                gap: 1,
-                            }}>
-                            {benefits.map((_, index) => (
-                                <Box
-                                    key={index}
-                                    onClick={() =>
-                                        emblaApi && emblaApi.scrollTo(index)
-                                    }
+                                <Typography
+                                    variant="body1"
+                                    fontSize=".8rem"
                                     sx={{
-                                        width: 5,
-                                        height: 5,
-                                        borderRadius: "50%",
-                                        bgcolor: "rgba(0,0,0,0.2)",
-                                        cursor: "pointer",
-                                        transition: "all 0.3s ease",
-                                        "&:hover": {
-                                            bgcolor: "rgba(0,0,0,0.4)",
-                                        },
-                                    }}
-                                />
-                            ))}
-                        </Box>
-                    )}
+                                        color: theme.palette.text.secondary,
+                                        lineHeight: 1.6,
+                                    }}>
+                                    {benefit.description}
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    ))}
                 </Box>
             </Box>
         </Box>

@@ -43,7 +43,10 @@ export const LoginForm = ({ setAuthContainer }) => {
         const { email, password } = data;
 
         try {
-            const response = await axios.post(url, { email, password });
+            const response = await axios.post(url, {
+                email: email.trim().toLowerCase(),
+                password,
+            });
 
             if (response.status === 200) {
                 //update the auth Context
@@ -191,7 +194,11 @@ export const RegisterForm = ({ setAuthContainer }) => {
         const { name, email, password } = data;
 
         try {
-            const response = await axios.post(url, { name, email, password });
+            const response = await axios.post(url, {
+                name,
+                email: email.trim().toLowerCase(),
+                password,
+            });
 
             if (response.status === 200) {
                 //update the auth Context

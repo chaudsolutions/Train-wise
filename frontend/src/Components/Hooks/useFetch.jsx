@@ -215,7 +215,7 @@ export const fetchWithdrawals = async () => {
 // fetch settings
 export const fetchSettings = async () => {
     const token = localStorage.getItem(localStorageToken);
-    const response = await axios.get(`${serVer}/user/settings`, {
+    const response = await axios.get(`${serVer}/api/settings`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },

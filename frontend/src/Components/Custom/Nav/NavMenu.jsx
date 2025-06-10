@@ -26,7 +26,7 @@ const NavMenu = ({ handleDrawerToggle }) => {
     const menuItems = [
         {
             name: "Discover communities",
-            link: "/discovery",
+            link: "/communities",
             icon: <ExploreIcon fontSize="large" />,
             show: true,
         },

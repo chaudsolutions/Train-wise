@@ -312,8 +312,6 @@ export const useUserWithdrawals = () => {
 
 // use settings data
 export const useSettingsData = () => {
-    const { user } = useAuthContext();
-
     const {
         data: settingsData,
         isLoading: isSettingsLoading,
@@ -322,7 +320,6 @@ export const useSettingsData = () => {
     } = useQuery({
         queryKey: ["settings"], // Use the new object-based syntax
         queryFn: fetchSettings,
-        enabled: !!user,
     });
 
     return {

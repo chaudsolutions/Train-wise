@@ -30,6 +30,7 @@ const { Creator } = require("./Routes/Creator");
 const { Api } = require("./Routes/Api");
 const { VerifyPayments } = require("./Routes/VerifyPayments");
 const { Admin } = require("./Routes/Admin");
+const UsersModel = require("./Models/Users");
 
 //connect to DB
 const connectDB = async () => {
