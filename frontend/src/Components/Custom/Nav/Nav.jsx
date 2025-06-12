@@ -197,9 +197,8 @@ export const Logo = () => {
                 src="/logo.png"
                 alt="logo"
                 sx={{
-                    maxWidth: "5rem",
                     width: "fit-content",
-                    objectFit: "contain",
+                    height: 60,
                 }}
             />
         </Box>
