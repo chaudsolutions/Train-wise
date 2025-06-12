@@ -107,7 +107,7 @@ const communitySchema = new mongoose.Schema(
         },
         canExplore: {
             type: Boolean,
-            default: false,
+            default: true,
         },
         paymentId: { type: String },
         renewalDate: { type: Date, default: null },

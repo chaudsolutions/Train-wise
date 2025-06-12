@@ -93,9 +93,9 @@ const CreateCommunity = () => {
                         gap: 1,
                     },
                 }}>
-                <li>🎓 Monetize your expertise</li>
-                <li>🤝 Build an engaged community</li>
-                <li>📈 Access detailed analytics</li>
+                <li>✍️ Monetize your expertise</li>
+                <li>❤️ Build an engaged community</li>
+                <li>🏛️ Access detailed analytics</li>
                 <li>🔒 Secure payment processing</li>
             </Box>
             <Typography variant="body1" sx={{ mt: 2, fontWeight: 500 }}>

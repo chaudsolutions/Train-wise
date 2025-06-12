@@ -135,42 +135,45 @@ router.post(
                 const paymentIntent = await stripe.paymentIntents.retrieve(
                     paymentId
                 );
-                await Payment.create({
-                    paymentId,
-                    amount: paymentIntent.amount / 100, // Convert cents to dollars
-                    currency: paymentIntent.currency,
-                    userId,
-                    communityId: community._id,
-                    paymentType: "community_creation",
-                    status: paymentIntent.status,
-                });
 
-                // Notify payment success
-                await createNotification(
-                    userId,
-                    `Payment of $${
-                        paymentIntent.amount / 100
-                    } for community ${name} creation succeeded`
-                );
+                await Promise.all([
+                    Payment.create({
+                        paymentId,
+                        amount: paymentIntent.amount / 100, // Convert cents to dollars
+                        currency: paymentIntent.currency,
+                        userId,
+                        communityId: community._id,
+                        paymentType: "community_creation",
+                        status: paymentIntent.status,
+                        subscriptionPeriod: "yearly",
+                    }),
+                    // Notify payment success
+                    createNotification(
+                        userId,
+                        `Payment of $${
+                            paymentIntent.amount / 100
+                        } for community ${name} creation succeeded`
+                    ),
+                ]);
             }
 
-            // Create community course object
-            await CommunityCourse.create({
-                communityId: community._id,
-                courses: [],
-            });
-
-            // Notify community creation
-            await createNotification(
-                userId,
-                `You Created the community "${name}"`
-            );
-
-            // Create community messages object
-            await CommunityMessage.create({
-                communityId: community._id,
-                messages: [],
-            });
+            await Promise.all([
+                // Create community course object
+                CommunityCourse.create({
+                    communityId: community._id,
+                    courses: [],
+                }),
+                // Create community messages object
+                CommunityMessage.create({
+                    communityId: community._id,
+                    messages: [],
+                }),
+                // Notify community creation
+                createNotification(
+                    userId,
+                    `You Created the community "${name}"`
+                ),
+            ]);
 
             res.status(200).json(community);
         } catch (error) {

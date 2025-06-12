@@ -13,7 +13,7 @@ const paymentSchema = new mongoose.Schema(
         communityId: { type: mongoose.Schema.Types.ObjectId, ref: "Community" }, // Linked community (optional)
         paymentType: { type: String, required: true }, // e.g., 'community_creation'
         status: { type: String, required: true }, // e.g., 'succeeded', 'failed'
-        subscriptionPeriod: { type: String, required: true }, // e.g., 'monthly', 'yearly' for subscriptions only
+        subscriptionPeriod: { type: String, enum: ["monthly", "yearly"] }, // e.g., 'monthly', 'yearly' for subscriptions only
     },
     {
         timestamps: true,
