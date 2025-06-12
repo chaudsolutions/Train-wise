@@ -29,6 +29,8 @@ import {
     Button,
     CircularProgress,
     useTheme,
+    FormControlLabel,
+    Switch,
 } from "@mui/material";
 import Report from "@mui/icons-material/Report";
 import Groups from "@mui/icons-material/Groups";
@@ -39,6 +41,8 @@ import Person from "@mui/icons-material/Person";
 import Event from "@mui/icons-material/Event";
 import Edit from "@mui/icons-material/Edit";
 import Visibility from "@mui/icons-material/Visibility";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
 import PageLoader from "../../Animations/PageLoader";
 import { useForm } from "react-hook-form";
 import axios from "axios";
@@ -115,23 +119,128 @@ const SingleCommunityDash = () => {
 };
 
 // Tab for viewing community details
-const CommunityViewTab = ({ community }) => {
+const CommunityViewTab = ({ community, refetch }) => {
     const { isMobile } = useResponsive();
+    const theme = useTheme();
+    const { token } = useToken();
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+    const handleToggleStatus = async () => {
+        try {
+            setIsUpdatingStatus(true);
+            const newStatus = !community.canExplore;
+
+            await axios.patch(
+                `${serVer}/admin/community/${community._id}/status`,
+                { canExplore: newStatus },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            refetch();
+            toast.success(
+                `Community ${
+                    newStatus ? "activated" : "deactivated"
+                } successfully`
+            );
+        } catch (error) {
+            console.error("Error updating community status:", error);
+            toast.error("Failed to update community status. Please try again.");
+        } finally {
+            setIsUpdatingStatus(false);
+        }
+    };
 
     return (
         <>
-            <Typography
-                variant="h4"
-                fontSize={{ xs: "1.5rem", sm: "2rem" }}
+            <Box
                 sx={{
-                    mb: 3,
-                    fontWeight: 700,
                     display: "flex",
                     alignItems: "center",
-                    gap: 1,
+                    justifyContent: "space-between",
+                    mb: 3,
+                    flexWrap: "wrap",
+                    gap: 2,
                 }}>
-                <Groups /> {community.name}
-            </Typography>
+                <Typography
+                    variant="h4"
+                    fontSize={{ xs: "1.5rem", sm: "2rem" }}
+                    sx={{
+                        fontWeight: 700,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                    }}>
+                    <Groups /> {community.name}
+                </Typography>
+
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 2,
+                        backgroundColor: community.canExplore
+                            ? theme.palette.primary.main
+                            : theme.palette.error.light,
+                        color: "white",
+                        p: { xs: 1, sm: 2 },
+                        borderRadius: 2,
+                        minWidth: 300,
+                    }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            flex: 1,
+                        }}>
+                        {community.canExplore ? (
+                            <CheckCircleIcon sx={{ color: "inherit" }} />
+                        ) : (
+                            <CancelIcon sx={{ color: "error.main" }} />
+                        )}
+                        <Typography
+                            variant="body1"
+                            fontSize={{ xs: "0.7rem", md: ".9rem" }}
+                            fontWeight={500}>
+                            {community.canExplore
+                                ? "Community is active and can be explored"
+                                : "Community cannot be currently explored"}
+                        </Typography>
+                    </Box>
+
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={community.canExplore}
+                                onChange={handleToggleStatus}
+                                disabled={isUpdatingStatus}
+                                color={
+                                    community.canExplore ? "inherit" : "error"
+                                }
+                            />
+                        }
+                        label={
+                            isUpdatingStatus ? (
+                                <CircularProgress size={20} />
+                            ) : community.canExplore ? (
+                                "Active"
+                            ) : (
+                                "Inactive"
+                            )
+                        }
+                        sx={{
+                            ml: 0,
+                            "& .MuiFormControlLabel-label": {
+                                minWidth: 60,
+                            },
+                        }}
+                    />
+                </Box>
+            </Box>
 
             <Card elevation={3} sx={{ borderRadius: 4, mb: 4 }}>
                 <CardMedia

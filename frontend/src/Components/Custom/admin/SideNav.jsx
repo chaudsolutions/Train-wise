@@ -66,6 +66,7 @@ const SideNav = ({ isMobile, drawerOpen, handleDrawerToggle, drawerWidth }) => {
                         width: drawerWidth,
                         bgcolor: "primary.main",
                         color: "white",
+                        zIndex: 1200, // Ensure it appears above other content
                     },
                 }}>
                 <Toolbar

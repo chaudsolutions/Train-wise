@@ -14,6 +14,8 @@ const {
 } = require("../utils/cloudinary");
 const { upload, uploadToCloudinary } = require("../utils/uploadMedia");
 const { deleteCommunity } = require("../controllers/community.controller");
+const CommunityCourse = require("../Models/CommunityCourse");
+const CommunityMessage = require("../Models/CommunityMessage");
 
 const router = express.Router();
 
@@ -739,6 +741,137 @@ router.put(
         } catch (error) {
             console.error("Error updating community:", error);
             res.status(500).json("Internal server error");
+        }
+    }
+);
+
+// endpoint to search for user for community creation
+router.put("/find-user-by-email", async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        // find user
+        const user = await UsersModel.findOne({ email })
+            .select("id name email avatar")
+            .lean();
+
+        if (!user) {
+            return res.status(404).json("User doesn't exist");
+        }
+
+        res.status(200).json(user);
+    } catch (error) {
+        console.error("Error searching for members:", error);
+        res.status(500).json("Failed to search for members");
+    }
+});
+
+// endpoint to create new community for a user
+router.post(
+    "/create-community-for-user",
+    upload.fields([
+        { name: "bannerImage", maxCount: 1 },
+        { name: "logo", maxCount: 1 },
+    ]),
+    async (req, res) => {
+        const adminId = req.userId;
+        // Extract fields from the request body
+        const {
+            name,
+            description,
+            subscriptionFee,
+            category,
+            rules,
+            visions,
+            userId,
+        } = req.body;
+
+        const bannerImage = req.files["bannerImage"]?.[0];
+        const logo = req.files["logo"]?.[0];
+
+        // Validate required fields
+        if (
+            !name ||
+            !description ||
+            !subscriptionFee ||
+            !category ||
+            !rules ||
+            !visions ||
+            !userId
+        ) {
+            return res.status(400).json("All fields are required");
+        }
+
+        if (!bannerImage || !logo) {
+            return res.status(400).json("Banner image and logo are required");
+        }
+
+        try {
+            // Find user
+            const creator = await UsersModel.findById(userId);
+            if (!creator) {
+                return res.status(404).json("User not found");
+            }
+
+            // Upload banner and logo image to Cloudinary
+            const [bannerImageResult, logoResult] = await Promise.all([
+                uploadToCloudinary(
+                    bannerImage.buffer,
+                    bannerImage.originalname,
+                    "image"
+                ),
+                uploadToCloudinary(logo.buffer, logo.originalname, "image"),
+            ]);
+
+            // add 1yr to date
+            const currentDate = new Date();
+            currentDate.setFullYear(currentDate.getFullYear() + 1);
+
+            // Create the community
+            const communityData = {
+                name,
+                description,
+                rules,
+                visions,
+                subscriptionFee: parseFloat(subscriptionFee),
+                category,
+                bannerImage: bannerImageResult.secure_url,
+                logo: logoResult.secure_url,
+                createdBy: creator._id,
+                creatorName: creator.name,
+                canExplore: true,
+                renewalDate: currentDate,
+            };
+
+            const community = await Community.create(communityData);
+
+            await Promise.all([
+                createNotification(
+                    creator._id,
+                    `Admin Created the community "${name}" for you`
+                ),
+                createNotification(
+                    adminId,
+                    `You Created the community "${name}" for ${creator.email}`
+                ),
+
+                // Create community course object
+                await CommunityCourse.create({
+                    communityId: community._id,
+                    courses: [],
+                }),
+
+                // Create community messages object
+                await CommunityMessage.create({
+                    communityId: community._id,
+                    messages: [],
+                }),
+            ]);
+
+            res.status(200).json(community);
+        } catch (error) {
+            console.error("Error creating community:", error);
+            res.status(500).json("Failed to create community");
         }
     }
 );
