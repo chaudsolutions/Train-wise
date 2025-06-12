@@ -1,58 +1,91 @@
-import { Button, CircularProgress, Stack } from "@mui/material";
-import useResponsive from "../../Hooks/useResponsive";
+import {
+    CircularProgress,
+    Tab,
+    Tabs,
+    useMediaQuery,
+    useTheme,
+} from "@mui/material";
 import { useCategoriesData } from "../../Hooks/useQueryFetch/useQueryData";
 
 const SelectCategory = ({ activeCategory, selectCategory }) => {
-    const { isMobile } = useResponsive();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
     const { categories, isCategoriesLoading } = useCategoriesData();
 
+    const handleChange = (event, newValue) => {
+        selectCategory(newValue);
+    };
+
     return (
-        <Stack
-            direction="row"
-            spacing={2}
+        <Tabs
+            value={activeCategory}
+            onChange={handleChange}
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
             sx={{
                 mb: 4,
-                flexWrap: isMobile ? "nowrap" : "wrap",
-                justifyContent: isMobile ? "flex-start" : "center",
-                overflowX: isMobile ? "auto" : "visible",
-                px: isMobile ? 2 : 0,
-                py: isMobile ? 1 : 0,
-                scrollbarWidth: "none", // For Firefox
-                "&::-webkit-scrollbar": {
-                    // For Chrome/Safari
+                "& .MuiTab-root": {
+                    textTransform: "none",
+                    minHeight: "auto",
+                    padding: isMobile ? "6px 12px" : "8px 16px",
+                    fontSize: isMobile ? "0.875rem" : "1rem",
+                    minWidth: "unset",
+                    margin: "0 4px",
+                    borderRadius: "20px",
+                    border: "1px solid",
+                    borderColor: "divider",
+                    backgroundColor: "background.paper",
+                    "&.Mui-selected": {
+                        backgroundColor: theme.palette.primary.main,
+                        color: theme.palette.primary.contrastText,
+                        borderColor: theme.palette.primary.main,
+                    },
+                },
+                "& .MuiTabs-indicator": {
                     display: "none",
                 },
-                "& button": {
-                    textTransform: "none",
-                    flexShrink: 0, // Prevent buttons from shrinking on small screens
-                    whiteSpace: "nowrap", // Keep button text on one line
-                },
             }}>
-            <Button
-                variant={activeCategory === "" ? "contained" : "outlined"}
-                color="primary"
-                onClick={() => selectCategory("")}>
-                All
-            </Button>
+            <Tab
+                label="All"
+                value=""
+                sx={{
+                    "&.Mui-selected": {
+                        backgroundColor: theme.palette.primary.main,
+                        color: theme.palette.primary.contrastText,
+                    },
+                }}
+            />
             {isCategoriesLoading ? (
-                <CircularProgress size={20} />
+                <CircularProgress
+                    size={20}
+                    sx={{ alignSelf: "center", ml: 3 }}
+                />
             ) : (
-                categories.map((category, i) => (
-                    <Button
-                        key={i}
-                        variant={
-                            activeCategory === category.name
-                                ? "contained"
-                                : "outlined"
+                categories.map((category) => (
+                    <Tab
+                        key={category.name}
+                        label={
+                            <span
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                }}>
+                                <span
+                                    style={{
+                                        marginRight: 8,
+                                        fontSize: "1.2rem",
+                                    }}>
+                                    {category.icon}
+                                </span>
+                                {category.name}
+                            </span>
                         }
-                        color="primary"
-                        onClick={() => selectCategory(category.name)}
-                        startIcon={category.icon}>
-                        {category.name}
-                    </Button>
+                        value={category.name}
+                    />
                 ))
             )}
-        </Stack>
+        </Tabs>
     );
 };
 

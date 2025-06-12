@@ -1,59 +1,64 @@
 import { Box, Grid, Pagination, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import CommunitiesList from "../List/CommunitiesList";
 import SelectCategory from "../Buttons/SelectCategory";
+import { useSearchParams } from "react-router-dom";
 
 const PaginatedData = ({ communities }) => {
-    const [filteredCommunities, setFilteredCommunities] = useState(communities);
-    const [activeCategory, setActiveCategory] = useState("");
-    const [currentCommunities, setCurrentCommunities] = useState([]);
-    const [pageCount, setPageCount] = useState(0);
-    const [itemOffset, setItemOffset] = useState(0);
-    const [page, setPage] = useState(1);
+    const [searchParams, setSearchParams] = useSearchParams();
     const itemsPerPage = 21;
 
-    useEffect(() => {
-        setFilteredCommunities(communities);
-    }, [communities]);
+    // Get page from URL params or default to 1
+    const page = parseInt(searchParams.get("page")) || 1;
+    const categoryParam = searchParams.get("category") || "";
 
-    useEffect(() => {
-        const endOffset = itemOffset + itemsPerPage;
-        setCurrentCommunities(
-            filteredCommunities?.slice(itemOffset, endOffset)
-        );
-        setPageCount(Math.ceil(filteredCommunities?.length / itemsPerPage));
-    }, [filteredCommunities, itemOffset]);
+    // Apply category filter
+    const filteredCommunities = useMemo(() => {
+        if (!categoryParam) return communities;
+
+        return communities?.filter((c) => c.category === categoryParam) || [];
+    }, [communities, categoryParam]);
+
+    // Calculate pagination data
+    const { currentCommunities, pageCount } = useMemo(() => {
+        if (!filteredCommunities?.length) {
+            return { currentCommunities: [], pageCount: 0 };
+        }
+
+        const startIndex = (page - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginated = filteredCommunities.slice(startIndex, endIndex);
+        const count = Math.ceil(filteredCommunities.length / itemsPerPage);
+
+        return {
+            currentCommunities: paginated,
+            pageCount: count,
+        };
+    }, [filteredCommunities, page, itemsPerPage]);
 
     const handlePageChange = (event, value) => {
-        setPage(value);
-        const newOffset =
-            ((value - 1) * itemsPerPage) % filteredCommunities.length;
-        setItemOffset(newOffset);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        setSearchParams({ page: value, category: categoryParam });
+        window.scrollTo({ top: 100, behavior: "smooth" });
     };
 
     const selectCategory = (category) => {
-        setActiveCategory(category);
-        setItemOffset(0);
-        setPage(1);
-
-        const filtered = category
-            ? communities.filter((c) => c.category === category)
-            : communities;
-
-        setFilteredCommunities(filtered);
+        // Reset to page 1 when category changes
+        setSearchParams({
+            page: 1,
+            category,
+        });
     };
 
     return (
         <Box component="section">
             {/* select category buttons */}
             <SelectCategory
-                activeCategory={activeCategory}
+                activeCategory={categoryParam}
                 selectCategory={selectCategory}
             />
 
             <Grid container spacing={4}>
-                {currentCommunities && currentCommunities.length > 0 ? (
+                {currentCommunities.length > 0 ? (
                     currentCommunities?.map((community) => (
                         <CommunitiesList
                             key={community._id}

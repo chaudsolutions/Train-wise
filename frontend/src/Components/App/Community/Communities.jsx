@@ -1,12 +1,23 @@
-import { Box, Container, Link, Typography, useTheme } from "@mui/material";
-import PageLoader from "../../Animations/PageLoader";
+import {
+    Box,
+    Container,
+    Grid,
+    Link,
+    Skeleton,
+    Typography,
+    useTheme,
+} from "@mui/material";
 import PaginatedData from "../../Custom/PaginatedData/PaginatedData";
 import Search from "../../Custom/Search/Search";
 import { useEnhancedSearch } from "../../Hooks/useFuzzySearch";
 import { Link as NavLink } from "react-router-dom";
+import useResponsive from "../../Hooks/useResponsive";
+import CardSkeleton from "../../Custom/List/Skeleton";
 
 const Communities = () => {
     const theme = useTheme();
+
+    const { isMobile } = useResponsive();
 
     const {
         searchResults,
@@ -18,7 +29,29 @@ const Communities = () => {
     } = useEnhancedSearch();
 
     if (isLoading) {
-        return <PageLoader />;
+        return (
+            <Box sx={{ py: 8, px: { xs: 2, sm: 4, md: 6 } }}>
+                <Skeleton
+                    variant="text"
+                    width={300}
+                    height={60}
+                    sx={{ mx: "auto" }}
+                />
+                <Skeleton
+                    variant="text"
+                    width={400}
+                    height={40}
+                    sx={{ mx: "auto", mb: 4 }}
+                />
+                <Grid container spacing={4}>
+                    {[...Array(isMobile ? 2 : 3)].map((_, index) => (
+                        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
+                            <CardSkeleton />
+                        </Grid>
+                    ))}
+                </Grid>
+            </Box>
+        );
     }
 
     return (

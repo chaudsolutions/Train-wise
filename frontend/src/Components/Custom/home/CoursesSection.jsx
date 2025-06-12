@@ -16,6 +16,7 @@ import CommunitiesList from "../List/CommunitiesList";
 import useResponsive from "../../Hooks/useResponsive";
 import ArrowBackIos from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIos from "@mui/icons-material/ArrowForwardIos";
+import CardSkeleton from "../List/Skeleton";
 
 const CoursesSection = () => {
     const { randomCommunities, isRandomCommunitiesLoading } =
@@ -49,9 +50,7 @@ const CoursesSection = () => {
                 />
                 <Grid container spacing={4}>
                     {[...Array(isMobile ? 2 : 4)].map((_, index) => (
-                        <Grid
-                            size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
-                            key={index}>
+                        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
                             <CardSkeleton />
                         </Grid>
                     ))}
@@ -236,52 +235,6 @@ const CoursesSection = () => {
                         }}>
                         Explore Learning Hubs
                     </Button>
-                </Box>
-            </Box>
-        </Box>
-    );
-};
-
-// Skeleton component for loading state
-const CardSkeleton = () => {
-    const theme = useTheme();
-
-    return (
-        <Box
-            sx={{
-                borderRadius: 4,
-                overflow: "hidden",
-                boxShadow: theme.shadows[2],
-                transition: "all 0.3s ease",
-                border: "1px solid",
-                borderColor: theme.palette.divider,
-                height: "100%",
-            }}>
-            <Skeleton variant="rectangular" height={180} />
-            <Box sx={{ p: 2.5 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                    <Skeleton
-                        variant="circular"
-                        width={50}
-                        height={50}
-                        sx={{ mr: 2 }}
-                    />
-                    <Box sx={{ flex: 1 }}>
-                        <Skeleton variant="text" width="80%" height={30} />
-                        <Skeleton variant="text" width="60%" />
-                    </Box>
-                </Box>
-                <Skeleton variant="text" width="100%" />
-                <Skeleton variant="text" width="100%" />
-                <Skeleton variant="text" width="80%" />
-                <Box
-                    sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        mt: 3,
-                    }}>
-                    <Skeleton variant="text" width="40%" />
-                    <Skeleton variant="text" width="30%" />
                 </Box>
             </Box>
         </Box>

@@ -1,5 +1,4 @@
 import {
-    Card,
     CardMedia,
     CardContent,
     Avatar,
@@ -9,7 +8,6 @@ import {
     useTheme,
     IconButton,
     Badge,
-    Skeleton,
     Grid,
 } from "@mui/material";
 import { useReactRouter } from "../../Hooks/useReactRouter";
@@ -20,7 +18,7 @@ import { useState } from "react";
 import SocialShareDrawer from "../Buttons/SocialShareDrawer";
 import useResponsive from "../../Hooks/useResponsive";
 
-const CommunitiesList = ({ community, isLoading }) => {
+const CommunitiesList = ({ community }) => {
     const { Link } = useReactRouter();
     const theme = useTheme();
     const { isMobile } = useResponsive();
@@ -34,51 +32,6 @@ const CommunitiesList = ({ community, isLoading }) => {
         if (names.length === 1) return names[0];
         return `${names[0]} ${names[1][0]}.`;
     };
-
-    // Handle loading state
-    if (isLoading) {
-        return (
-            <Card
-                sx={{
-                    height: "100%",
-                    borderRadius: 4,
-                    overflow: "hidden",
-                    boxShadow: theme.shadows[3],
-                    transition: "all 0.3s ease",
-                    position: "relative",
-                    display: "flex",
-                    flexDirection: "column",
-                }}>
-                <Skeleton variant="rectangular" height={180} />
-                <CardContent sx={{ flexGrow: 1 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                        <Skeleton
-                            variant="circular"
-                            width={50}
-                            height={50}
-                            sx={{ mr: 2 }}
-                        />
-                        <Box sx={{ flex: 1 }}>
-                            <Skeleton variant="text" width="70%" height={30} />
-                            <Skeleton variant="text" width="50%" />
-                        </Box>
-                    </Box>
-                    <Skeleton variant="text" width="100%" />
-                    <Skeleton variant="text" width="90%" />
-                    <Skeleton variant="text" width="80%" />
-                    <Box
-                        sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            mt: 3,
-                        }}>
-                        <Skeleton variant="text" width="40%" />
-                        <Skeleton variant="text" width="30%" />
-                    </Box>
-                </CardContent>
-            </Card>
-        );
-    }
 
     const communityUrl = `${window.location.origin}/community/${community?._id}`;
 
