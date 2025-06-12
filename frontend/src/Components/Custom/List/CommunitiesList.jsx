@@ -10,6 +10,7 @@ import {
     IconButton,
     Badge,
     Skeleton,
+    Grid,
 } from "@mui/material";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -83,7 +84,8 @@ const CommunitiesList = ({ community, isLoading }) => {
 
     return (
         <>
-            <Card
+            <Grid
+                size={{ xs: 12, sm: 6, md: 4 }}
                 sx={{
                     height: "100%",
                     display: "flex",
@@ -331,7 +333,7 @@ const CommunitiesList = ({ community, isLoading }) => {
                         />
                     </Box>
                 </CardContent>
-            </Card>
+            </Grid>
 
             <SocialShareDrawer
                 open={selectShare}
