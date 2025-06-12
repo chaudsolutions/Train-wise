@@ -8,6 +8,11 @@ const UsersModel = require("../Models/Users");
 const { createNotification } = require("../utils/notifications");
 const Withdrawal = require("../Models/Withdrawal");
 const Settings = require("../Models/Settings");
+const {
+    extractPublicId,
+    deleteCloudinaryImage,
+} = require("../utils/cloudinary");
+const { upload, uploadToCloudinary } = require("../utils/uploadMedia");
 
 const router = express.Router();
 
@@ -644,5 +649,130 @@ router.put("/withdrawal/:id/:action", async (req, res) => {
         res.status(500).json("Failed to process withdrawal");
     }
 });
+
+// Endpoint to edit community
+router.put(
+    "/edit-community/:communityId",
+    upload.fields([
+        { name: "bannerImage", maxCount: 1 },
+        { name: "logo", maxCount: 1 },
+    ]),
+    async (req, res) => {
+        const { communityId } = req.params;
+        const { bannerImage, logo } = req.files;
+        const { name, description, subscriptionFee, category, rules, visions } =
+            req.body;
+
+        try {
+            // Find the community
+            const community = await Community.findById(communityId);
+            if (!community) {
+                return res.status(404).json("Community not found");
+            }
+
+            // Prepare update fields
+            const updateFields = {};
+
+            // Handle text fields
+            if (name) updateFields.name = name;
+            if (description) updateFields.description = description;
+            if (subscriptionFee)
+                updateFields.subscriptionFee = parseFloat(subscriptionFee);
+            if (category) updateFields.category = category;
+            // if (canExplore !== undefined)
+            //   updateFields.canExplore = canExplore === "true";
+
+            // Handle rules (expecting an array)
+            if (rules) {
+                try {
+                    updateFields.rules = Array.isArray(rules)
+                        ? rules
+                        : JSON.parse(rules);
+                } catch (error) {
+                    console.error("Error parsing rules:", error);
+                    return res.status(400).json("Invalid rules format");
+                }
+            }
+
+            // Handle visions (expecting an array)
+            if (visions) {
+                try {
+                    updateFields.visions = Array.isArray(visions)
+                        ? visions
+                        : JSON.parse(visions);
+                } catch (error) {
+                    console.error("Error parsing visions:", error);
+                    return res.status(400).json("Invalid visions format");
+                }
+            }
+
+            // Handle banner image
+            if (bannerImage) {
+                try {
+                    // Delete old banner image
+                    const oldBannerPublicId = extractPublicId(
+                        community.bannerImage
+                    );
+                    if (oldBannerPublicId) {
+                        await deleteCloudinaryImage(oldBannerPublicId);
+                    }
+
+                    // Upload new banner image
+                    const file = bannerImage[0];
+
+                    const result = await uploadToCloudinary(
+                        file.buffer,
+                        file.originalname,
+                        "image"
+                    );
+
+                    updateFields.bannerImage = result.secure_url;
+                } catch (error) {
+                    console.error("Error updating banner image:", error);
+                    return res
+                        .status(500)
+                        .json({ error: "Error updating banner image" });
+                }
+            }
+
+            // Handle logo
+            if (logo) {
+                try {
+                    // Delete old logo
+                    const oldLogoPublicId = extractPublicId(community.logo);
+                    if (oldLogoPublicId) {
+                        await deleteCloudinaryImage(oldLogoPublicId);
+                    }
+
+                    // Upload new logo
+                    const file = logo[0];
+
+                    const result = await uploadToCloudinary(
+                        file.buffer,
+                        file.originalname,
+                        "image"
+                    );
+
+                    updateFields.logo = result.secure_url;
+                } catch (error) {
+                    console.error("Error updating logo:", error);
+                    return res.status(500).json("Error updating logo");
+                }
+            }
+
+            // Update community
+            const updatedCommunity = await Community.findByIdAndUpdate(
+                communityId,
+                { $set: updateFields },
+                { new: true, runValidators: true }
+            );
+
+            res.status(200).json(updatedCommunity);
+        } catch (error) {
+            console.error("Error updating community:", error);
+            res.status(500).json("Internal server error");
+        }
+    }
+);
 
 module.exports = { Admin: router };

@@ -89,11 +89,11 @@ const communitySchema = new mongoose.Schema(
             required: [true, "Category is required"],
         },
         bannerImage: {
-            type: String, // Store the file path or URL
+            type: String, // Store the file URL
             required: [true, "Banner image is required"],
         },
         logo: {
-            type: String, // Store the file path or URL
+            type: String, // Store the file URL
             required: [true, "Logo is required"],
         },
         createdBy: {
