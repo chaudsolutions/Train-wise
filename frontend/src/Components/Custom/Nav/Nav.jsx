@@ -60,7 +60,7 @@ const Nav = () => {
                     backgroundColor: "background.paper",
                     color: "text.primary",
                     borderBottom: `1px solid ${theme.palette.divider}`,
-                    py: 1,
+                    py: 0.5,
                 }}>
                 <Toolbar sx={{ justifyContent: "space-between" }}>
                     <Box display="flex" alignItems="center">
@@ -199,6 +199,8 @@ export const Logo = () => {
                 sx={{
                     width: "fit-content",
                     height: 60,
+                    objectFit: "contain",
+                    maxWidth: "8rem",
                 }}
             />
         </Box>
