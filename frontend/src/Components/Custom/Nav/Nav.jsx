@@ -5,7 +5,6 @@ import {
     IconButton,
     Drawer,
     Avatar,
-    Typography,
     Button,
     Box,
     Divider,
@@ -19,7 +18,6 @@ import { UserProfile } from "./NavSlide";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import NavMenu from "./NavMenu";
 import { useAuthContext } from "../../Context/AuthContext";
-import { companyName } from "../../Hooks/useVariable";
 import { Link } from "react-router-dom";
 
 const Nav = () => {
@@ -189,19 +187,22 @@ const Nav = () => {
 
 export const Logo = () => {
     return (
-        <Avatar
+        <Box
             component={Link}
             to="/"
-            src="/logo.png"
-            alt="logo"
             sx={{
-                height: 46,
-                width: "fit-content",
-                objectFit: "contain",
-                mr: 1,
                 cursor: "pointer",
-            }}
-        />
+            }}>
+            <Avatar
+                src="/logo.png"
+                alt="logo"
+                sx={{
+                    maxWidth: "5rem",
+                    width: "fit-content",
+                    objectFit: "contain",
+                }}
+            />
+        </Box>
     );
 };
 
