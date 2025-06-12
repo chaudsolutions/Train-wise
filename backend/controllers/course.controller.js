@@ -151,7 +151,7 @@ const createCourse = async (req, res) => {
         res.status(201).json("Course created successfully");
     } catch (error) {
         console.error("Course creation error:", error);
-        res.status(500).json(error.message);
+        res.status(500).json("Internal Server Error");
     }
 };
 

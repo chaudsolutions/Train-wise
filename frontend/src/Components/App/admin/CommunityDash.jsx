@@ -33,29 +33,26 @@ import {
 import { useAdminAnalyticsData } from "../../Hooks/useQueryFetch/useQueryData";
 import { Link } from "react-router-dom";
 import PageLoader from "../../Animations/PageLoader";
-import axios from "axios";
-import { serVer, useToken } from "../../Hooks/useVariable";
-import toast from "react-hot-toast";
 import useResponsive from "../../Hooks/useResponsive";
+import { useCommunityActions } from "../../Hooks/useCommunityActions";
 
 const CommunityDash = () => {
     const { analyticsData, isAnalyticsDataLoading, refetchAnalyticsData } =
         useAdminAnalyticsData();
     const [tabValue, setTabValue] = useState(0);
-    const { token } = useToken();
     const { communities } = analyticsData || {};
     const {
         communities: allCommunities,
         freeCommunities,
         paidCommunities,
     } = communities || {};
+    const { deleteCommunity, loading } = useCommunityActions();
 
     const { isMobile } = useResponsive();
 
     // State for confirmation dialog
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedCommunity, setSelectedCommunity] = useState(null);
-    const [btn, setBtn] = useState(false);
 
     const handleOpenDialog = (community) => {
         setSelectedCommunity(community);
@@ -68,26 +65,11 @@ const CommunityDash = () => {
     };
 
     const handleDeleteCommunity = async () => {
-        if (!selectedCommunity) return;
-        setBtn(true);
-
-        try {
-            await axios.delete(
-                `${serVer}/admin/community/${selectedCommunity._id}`,
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                }
-            );
-            toast.success(
-                `Community "${selectedCommunity.name}" deleted successfully`
-            );
-            refetchAnalyticsData(); // Refresh analytics data
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to delete community");
-        } finally {
-            setBtn(false);
-            handleCloseDialog();
+        const success = await deleteCommunity(selectedCommunity._id);
+        if (success) {
+            await refetchAnalyticsData();
+            setSelectedCommunity(null);
+            setOpenDialog(false);
         }
     };
 
@@ -439,7 +421,7 @@ const CommunityDash = () => {
                         color="error"
                         variant="contained"
                         autoFocus>
-                        {btn ? (
+                        {loading ? (
                             <CircularProgress color="white" size={20} />
                         ) : (
                             "Delete"

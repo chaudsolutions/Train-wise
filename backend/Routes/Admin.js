@@ -13,6 +13,7 @@ const {
     deleteCloudinaryImage,
 } = require("../utils/cloudinary");
 const { upload, uploadToCloudinary } = require("../utils/uploadMedia");
+const { deleteCommunity } = require("../controllers/community.controller");
 
 const router = express.Router();
 
@@ -537,40 +538,7 @@ router.put("/role-change/:userId", async (req, res) => {
 });
 
 // Delete a community
-router.delete("/community/:communityId", async (req, res) => {
-    const { communityId } = req.params;
-    const adminId = req.userId;
-
-    try {
-        const community = await Community.findById(communityId);
-        if (!community) {
-            return res.status(404).json("Community not found");
-        }
-
-        // Notify creator
-        await createNotification(
-            community.createdBy,
-            `Your community "${community.name}" was deleted by an admin`
-        );
-
-        // Notify admin
-        await createNotification(
-            adminId,
-            `You deleted the community "${community.name}"`
-        );
-
-        // Delete community
-        await Community.deleteOne({ _id: communityId });
-
-        res.status(200).json({ message: "Community deleted successfully" });
-    } catch (error) {
-        console.error("Error deleting community:", error.message, error.stack);
-        res.status(500).json({
-            message: "Failed to delete community",
-            error: error.message,
-        });
-    }
-});
+router.delete("/community/:communityId", deleteCommunity);
 
 // Admin approves/rejects withdrawal
 router.put("/withdrawal/:id/:action", async (req, res) => {

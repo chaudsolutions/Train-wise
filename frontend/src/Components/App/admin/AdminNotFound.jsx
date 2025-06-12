@@ -1,25 +1,11 @@
-import {
-    Box,
-    Typography,
-    Button,
-    Container,
-    useTheme,
-    Avatar,
-} from "@mui/material";
-import { useReactRouter } from "../../Hooks/useReactRouter";
+import { Box, Typography, Button, Container, useTheme } from "@mui/material";
+import { Link } from "react-router-dom";
 
-const NotFound = () => {
+const AdminNotFound = () => {
     const theme = useTheme();
 
-    const { useNavigate } = useReactRouter();
-    const navigate = useNavigate();
-
-    const goHome = () => {
-        navigate("/");
-    };
-
     return (
-        <Container maxWidth="sm" sx={{ py: 2 }}>
+        <Container maxWidth="sm" sx={{ py: 2, mt: 10 }}>
             <Box
                 sx={{
                     display: "flex",
@@ -28,18 +14,6 @@ const NotFound = () => {
                     textAlign: "center",
                     gap: 3,
                 }}>
-                {/* Logo */}
-                <Avatar
-                    src="/logo.png"
-                    alt="logo"
-                    variant="square"
-                    sx={{
-                        height: "5rem",
-                        width: "100%",
-                        maxWidth: "10rem",
-                    }}
-                />
-
                 {/* 404 Text */}
                 <Typography
                     variant="h1"
@@ -69,7 +43,7 @@ const NotFound = () => {
                         mb: 3,
                     }}>
                     The page you are looking for might have been removed, had
-                    its name changed, or is temporarily unavailable.
+                    its name changed, or currently under construction.
                 </Typography>
 
                 {/* Home Button */}
@@ -77,7 +51,8 @@ const NotFound = () => {
                     variant="contained"
                     color="primary"
                     size="large"
-                    onClick={goHome}
+                    component={Link}
+                    to="/admin/dashboard"
                     sx={{
                         px: 4,
                         py: 1.5,
@@ -92,4 +67,4 @@ const NotFound = () => {
     );
 };
 
-export default NotFound;
+export default AdminNotFound;

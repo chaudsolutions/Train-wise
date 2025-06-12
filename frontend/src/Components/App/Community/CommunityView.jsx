@@ -13,10 +13,6 @@ import {
     ListItemIcon,
     ListItemText,
     CircularProgress,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     Grid,
     Avatar,
     Divider,
@@ -34,7 +30,6 @@ import ShareIcon from "@mui/icons-material/Share";
 import ExploreIcon from "@mui/icons-material/Explore";
 import HomeIcon from "@mui/icons-material/Home";
 import CheckIcon from "@mui/icons-material/CheckCircle";
-import DeleteIcon from "@mui/icons-material/Delete";
 import useResponsive from "../../Hooks/useResponsive";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import { useAuthContext } from "../../Context/AuthContext";
@@ -54,8 +49,7 @@ const CommunityView = () => {
     const theme = useTheme();
     const [authOpen, setAuthOpen] = useState(false);
     const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-    const { joinCommunity, deleteCommunity, loading } = useCommunityActions();
-    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const { joinCommunity, loading } = useCommunityActions();
     const [selectShare, setSelectShare] = useState(false);
 
     const { isMobile } = useResponsive();
@@ -724,68 +718,11 @@ const CommunityView = () => {
                             </Card>
                         </Grid>
                     </Grid>
-
-                    {/* Delete Button (for creator) */}
-                    {isCreator && (
-                        <Box mt={4} display="flex" justifyContent="center">
-                            <Button
-                                variant="outlined"
-                                color="error"
-                                onClick={() => setDeleteConfirmOpen(true)}
-                                disabled={loading}
-                                startIcon={<DeleteIcon />}
-                                sx={{
-                                    px: 4,
-                                    py: 1.5,
-                                    borderRadius: 2,
-                                    fontWeight: 600,
-                                }}>
-                                Delete Community
-                            </Button>
-                        </Box>
-                    )}
                 </Container>
             </Box>
 
             {/* Auth Dialog */}
             <Auth authContain={authOpen} setAuthContain={setAuthOpen} />
-
-            {/* Delete Confirmation Dialog */}
-            <Dialog
-                open={deleteConfirmOpen}
-                onClose={() => setDeleteConfirmOpen(false)}
-                PaperProps={{ sx: { borderRadius: 4 } }}>
-                <DialogTitle sx={{ fontWeight: 700 }}>
-                    Delete Community
-                </DialogTitle>
-                <DialogContent>
-                    <Typography>
-                        Are you sure you want to delete the{" "}
-                        <strong>{name}</strong> community? This action cannot be
-                        undone and all community data will be permanently lost.
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button
-                        onClick={() => setDeleteConfirmOpen(false)}
-                        variant="outlined"
-                        sx={{ borderRadius: 2, fontWeight: 600 }}>
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={() => deleteCommunity(communityId)}
-                        color="error"
-                        variant="contained"
-                        disabled={loading}
-                        sx={{ borderRadius: 2, fontWeight: 600 }}>
-                        {loading ? (
-                            <CircularProgress size={24} />
-                        ) : (
-                            "Confirm Delete"
-                        )}
-                    </Button>
-                </DialogActions>
-            </Dialog>
 
             <PaymentDialog
                 open={paymentDialogOpen}

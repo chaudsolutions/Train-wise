@@ -37,6 +37,8 @@ import AboutUs from "./Components/App/Others/AboutUs";
 import SignUp from "./Components/App/auth/SignUp";
 import SignIn from "./Components/App/auth/SignIn";
 import ScrollToTopBtn from "./Components/Custom/Buttons/ScrollToTop";
+import AdminNotFound from "./Components/App/admin/AdminNotFound";
+import AdminCreateCommunity from "./Components/App/admin/AdminCreateCommunity";
 
 function App() {
     const { user } = useAuthContext();
@@ -197,6 +199,10 @@ function App() {
                                 element={<UserDetails />}
                             />
                             <Route
+                                path="create-community"
+                                element={<AdminCreateCommunity />}
+                            />
+                            <Route
                                 path="communities"
                                 element={<CommunityDash />}
                             />
@@ -210,6 +216,9 @@ function App() {
                                 element={<WithdrawalsDash />}
                             />
                             <Route path="settings" element={<Settings />} />
+
+                            {/* catch all admin route */}
+                            <Route path="*" element={<AdminNotFound />} />
                         </Route>
 
                         <Route path="/buggy" element={<BuggyComponent />} />

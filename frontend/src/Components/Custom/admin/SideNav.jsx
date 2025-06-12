@@ -9,13 +9,11 @@ import {
     Divider,
 } from "@mui/material";
 import { NavLink } from "react-router-dom"; // Import NavLink
-import {
-    Dashboard as DashboardIcon,
-    People as PeopleIcon,
-    Groups as GroupsIcon,
-    Category as CategoryIcon,
-    ChevronLeft as ChevronLeftIcon,
-} from "@mui/icons-material";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import PeopleIcon from "@mui/icons-material/People";
+import GroupsIcon from "@mui/icons-material/Groups";
+import CategoryIcon from "@mui/icons-material/Category";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Logo } from "../Nav/Nav";
@@ -32,6 +30,11 @@ const SideNav = ({ isMobile, drawerOpen, handleDrawerToggle, drawerWidth }) => {
             text: "Communities",
             icon: <GroupsIcon />,
             path: "communities",
+        },
+        {
+            text: "Create Community",
+            icon: <GroupsIcon />,
+            path: "create-community",
         },
         {
             text: "Withdrawals",
@@ -85,8 +88,7 @@ const SideNav = ({ isMobile, drawerOpen, handleDrawerToggle, drawerWidth }) => {
                             key={item.text}
                             onClick={isMobile ? handleDrawerToggle : null} // Close drawer on mobile
                             sx={{
-                                borderRadius: 0,
-                                py: 2,
+                                py: 1.5,
                                 color: "white",
                                 "&:hover": { bgcolor: "primary.dark" },
                                 "&.active": { bgcolor: "primary.dark" }, // Highlight active link
@@ -94,7 +96,9 @@ const SideNav = ({ isMobile, drawerOpen, handleDrawerToggle, drawerWidth }) => {
                             <IconButton sx={{ color: "white" }}>
                                 {item.icon}
                             </IconButton>
-                            <Typography sx={{ ml: 2 }}>{item.text}</Typography>
+                            <Typography fontSize=".85rem" sx={{ ml: 1 }}>
+                                {item.text}
+                            </Typography>
                         </ListItem>
                     ))}
                 </List>

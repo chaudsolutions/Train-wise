@@ -1,6 +1,4 @@
 const express = require("express");
-//images store path
-const cloudinary = require("cloudinary").v2;
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const Community = require("../Models/Community");
@@ -185,57 +183,6 @@ router.post(
     upload.any(), // Handle multipart/form-data
     createCourse
 );
-
-// endpoint to delete a community
-router.delete("/delete-community/:id", async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        // find community
-        const community = await Community.findByIdAndDelete(id);
-
-        if (!community) {
-            return res.status(404).json("Community not found");
-        }
-
-        // get community courses obj and delete and also the videos url
-        const communityCourse = await CommunityCourse.findByIdAndDelete(
-            communityCourse._id
-        );
-
-        if (communityCourse) {
-            await communityCourse.courses.forEach(async (course) => {
-                const videoUrls = course.videos;
-
-                await Promise.all(
-                    videoUrls.map(async (videoUrl) => {
-                        const publicId = videoUrl
-                            .split("/")
-                            .slice(-2)
-                            .join("/")
-                            .split(".")[0];
-                        await cloudinary.uploader.destroy(publicId);
-                    })
-                );
-            });
-        }
-
-        const imageUrls = [community.logo, community.bannerImage];
-
-        // Extract public_ids from image URLs and delete them from Cloudinary
-        const deletePromises = imageUrls.map((url) => {
-            const publicId = url.split("/").slice(-2).join("/").split(".")[0];
-            return cloudinary.uploader.destroy(publicId);
-        });
-
-        await Promise.all(deletePromises);
-
-        res.status(200).json("Community deleted successfully");
-    } catch (error) {
-        console.error("Error deleting community:", error);
-        res.status(500).json("Failed to delete community");
-    }
-});
 
 // endpoint to withdraw community balance
 router.put("/withdraw/:communityId", async (req, res) => {
