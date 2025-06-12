@@ -106,7 +106,11 @@ const CreateCommunity = () => {
                     alignItems="center"
                     sx={{ color: "success.main", fontSize: "1.2rem" }}>
                     {isSettingsLoading ? (
-                        <CircularProgress color="error" size={15} />
+                        <CircularProgress
+                            color="error"
+                            size={15}
+                            sx={{ alignSelf: "center" }}
+                        />
                     ) : (
                         <>${(communityCreationFee / 100).toLocaleString()}</>
                     )}
@@ -170,8 +174,13 @@ const CreateCommunity = () => {
         }
 
         setFormData(data);
-        if (userRole === "admin" || userRole === "creator") {
+        if (
+            userRole === "admin" ||
+            userRole === "creator" ||
+            communityCreationFee === 0
+        ) {
             // Admins and creators create directly without payment
+            // or if the creation fee is 0
             await handleCreateCommunity(data);
         } else {
             // Regular users proceed to payment

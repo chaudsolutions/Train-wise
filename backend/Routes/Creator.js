@@ -63,8 +63,11 @@ router.post(
 
             // Check payment or role
             if (!paymentId) {
-                // If no paymentId, user must be admin or creator
-                if (creator.role !== "admin" && creator.role !== "creator") {
+                // If no paymentId, community fee must be free or user must be admin or creator
+                if (
+                    creator.role === "user" &&
+                    parseInt(settings.communityCreationFee) > 0
+                ) {
                     return res
                         .status(403)
                         .json("Payment required for regular users");

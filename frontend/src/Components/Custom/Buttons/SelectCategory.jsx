@@ -1,15 +1,26 @@
 import {
     CircularProgress,
+    styled,
     Tab,
     Tabs,
-    useMediaQuery,
+    Typography,
     useTheme,
 } from "@mui/material";
 import { useCategoriesData } from "../../Hooks/useQueryFetch/useQueryData";
+import useResponsive from "../../Hooks/useResponsive";
+
+const EmojiContainer = styled("span")(({ theme }) => ({
+    fontSize: "1.2rem",
+    lineHeight: 1,
+    display: "inline-flex",
+    marginRight: theme.spacing(1),
+    fontFamily:
+        '"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif',
+}));
 
 const SelectCategory = ({ activeCategory, selectCategory }) => {
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+    const { isMobile } = useResponsive();
     const { categories, isCategoriesLoading } = useCategoriesData();
 
     const handleChange = (event, newValue) => {
@@ -27,19 +38,17 @@ const SelectCategory = ({ activeCategory, selectCategory }) => {
                 mb: 4,
                 "& .MuiTab-root": {
                     textTransform: "none",
-                    minHeight: "auto",
-                    padding: isMobile ? "6px 12px" : "8px 16px",
+                    px: 1,
                     fontSize: isMobile ? "0.875rem" : "1rem",
-                    minWidth: "unset",
-                    margin: "0 4px",
-                    borderRadius: "20px",
+                    mx: 1,
+                    borderRadius: 4,
                     border: "1px solid",
                     borderColor: "divider",
                     backgroundColor: "background.paper",
                     "&.Mui-selected": {
                         backgroundColor: theme.palette.primary.main,
                         color: theme.palette.primary.contrastText,
-                        borderColor: theme.palette.primary.main,
+                        borderColor: theme.palette.primary.dark,
                     },
                 },
                 "& .MuiTabs-indicator": {
@@ -66,20 +75,16 @@ const SelectCategory = ({ activeCategory, selectCategory }) => {
                     <Tab
                         key={category.name}
                         label={
-                            <span
+                            <Typography
+                                variant="body2"
+                                component="span"
                                 style={{
                                     display: "flex",
                                     alignItems: "center",
                                 }}>
-                                <span
-                                    style={{
-                                        marginRight: 8,
-                                        fontSize: "1.2rem",
-                                    }}>
-                                    {category.icon}
-                                </span>
+                                <EmojiContainer>{category.icon}</EmojiContainer>
                                 {category.name}
-                            </span>
+                            </Typography>
                         }
                         value={category.name}
                     />
