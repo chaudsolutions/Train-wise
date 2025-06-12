@@ -106,7 +106,10 @@ const SingleCommunityDash = () => {
             </Box>
 
             {activeTab === 0 ? (
-                <CommunityViewTab community={community} />
+                <CommunityViewTab
+                    community={community}
+                    refetch={refetchCommunity}
+                />
             ) : (
                 <CommunityEditTab
                     community={community}
@@ -225,7 +228,10 @@ const CommunityViewTab = ({ community, refetch }) => {
                         }
                         label={
                             isUpdatingStatus ? (
-                                <CircularProgress size={20} />
+                                <CircularProgress
+                                    sx={{ color: "white" }}
+                                    size={25}
+                                />
                             ) : community.canExplore ? (
                                 "Active"
                             ) : (
@@ -235,7 +241,9 @@ const CommunityViewTab = ({ community, refetch }) => {
                         sx={{
                             ml: 0,
                             "& .MuiFormControlLabel-label": {
-                                minWidth: 60,
+                                minWidth: 50,
+                                display: "flex",
+                                alignItems: "center",
                             },
                         }}
                     />

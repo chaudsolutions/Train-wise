@@ -876,4 +876,24 @@ router.post(
     }
 );
 
+// endpoint to toggle community activation (canExplore)
+router.patch("/community/:communityId/status", async (req, res) => {
+    try {
+        const { communityId } = req.params;
+
+        const community = await Community.findById(communityId);
+        if (!community) {
+            return res.status(404).json("Community not found");
+        }
+
+        community.canExplore = !community.canExplore;
+        await community.save();
+
+        res.status(200).json("community status updated");
+    } catch (error) {
+        console.error("Error updating community status:", error);
+        res.status(500).json("Internal Server Error");
+    }
+});
+
 module.exports = { Admin: router };

@@ -175,7 +175,7 @@ const AdminCreateCommunity = () => {
                     />
                 );
             case 2:
-                return <SuccessStep />;
+                return <SuccessStep community={community} />;
             default:
                 return <div>Unknown step</div>;
         }
@@ -644,7 +644,7 @@ const SuccessStep = ({ community }) => {
                 variant="contained"
                 color="success"
                 component={Link}
-                to={`/admin/dashboard/community/${community.id}`}
+                to={`/admin/dashboard/community/${community._id}`}
                 sx={{ mt: 4 }}>
                 View Community
             </Button>
