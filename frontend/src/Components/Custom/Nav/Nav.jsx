@@ -20,6 +20,7 @@ import { useReactRouter } from "../../Hooks/useReactRouter";
 import NavMenu from "./NavMenu";
 import { useAuthContext } from "../../Context/AuthContext";
 import { companyName } from "../../Hooks/useVariable";
+import { Link } from "react-router-dom";
 
 const Nav = () => {
     const theme = useTheme();
@@ -187,40 +188,20 @@ const Nav = () => {
 };
 
 export const Logo = () => {
-    // react router
-    const { useNavigate } = useReactRouter();
-
-    // responsive hook
-    const { isMobile } = useResponsive();
-
-    const navigate = useNavigate();
-
     return (
-        <Box
+        <Avatar
+            component={Link}
+            to="/"
+            src="/logo.png"
+            alt="logo"
             sx={{
-                display: "flex",
-                alignItems: "center",
+                height: 46,
+                width: "fit-content",
+                objectFit: "contain",
+                mr: 1,
                 cursor: "pointer",
             }}
-            onClick={() => navigate("/")}>
-            <Avatar
-                src="/logo.png"
-                alt="logo"
-                sx={{
-                    width: 30,
-                    height: 46,
-                    mr: 1,
-                }}
-            />
-            {!isMobile && (
-                <Typography
-                    variant="h6"
-                    component="div"
-                    sx={{ fontWeight: 700 }}>
-                    {companyName}
-                </Typography>
-            )}
-        </Box>
+        />
     );
 };
 
