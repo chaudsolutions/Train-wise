@@ -94,7 +94,7 @@ const AdminCreateCommunity = () => {
             console.error("Error searching for user:", error);
             toast.error("Failed to find user. Please try again.");
             logError({
-                error,
+                error: error?.response.data,
                 context: {
                     action: "search_user_create_community",
                     component: "AdminCreateCommunity",
@@ -162,7 +162,7 @@ const AdminCreateCommunity = () => {
             console.error("Error creating community:", error);
             toast.error("Failed to create community. Please try again.");
             logError({
-                error,
+                error: error?.response.data,
                 context: {
                     action: "admin_create_community",
                     component: "AdminCreateCommunity",
@@ -325,7 +325,7 @@ const CommunityForm = ({
                     } image.`
                 );
                 logError({
-                    error,
+                    error: error?.response.data,
                     context: {
                         action: `read_${
                             previewField === "bannerPreview" ? "banner" : "logo"

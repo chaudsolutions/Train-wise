@@ -35,6 +35,7 @@ import { PaymentDialog } from "../../Custom/payment/PaymentDialog";
 import { useAuthContext } from "../../Context/AuthContext";
 import { useLocation } from "react-router-dom";
 import Auth from "../../Custom/Auth/Auth";
+import logError from "../../../utils/logger";
 
 const CreateCommunity = () => {
     const [authOpen, setAuthOpen] = useState(false);
@@ -162,6 +163,17 @@ const CreateCommunity = () => {
             navigate(`/community/${communityId}`);
             toast.success("Community created successfully");
         } catch (error) {
+            logError({
+                error: error?.response.data,
+                context: {
+                    action: "user_create_community",
+                    component: "CreateCommunity",
+                    customData: {
+                        communityName: data.name,
+                    },
+                },
+                type: "try_catch",
+            });
             console.error("Error creating community:", error);
             toast.error("Failed to create community. Please try again.");
         }

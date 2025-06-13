@@ -178,7 +178,7 @@ router.post(
             res.status(200).json(community);
         } catch (error) {
             console.error("Error creating community:", error);
-            res.status(500).json("Failed to create community");
+            res.status(500).json(error);
         }
     }
 );
