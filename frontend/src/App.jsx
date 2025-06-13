@@ -39,6 +39,7 @@ import SignIn from "./Components/App/auth/SignIn";
 import ScrollToTopBtn from "./Components/Custom/Buttons/ScrollToTop";
 import AdminNotFound from "./Components/App/admin/AdminNotFound";
 import AdminCreateCommunity from "./Components/App/admin/AdminCreateCommunity";
+import AdminErrorLogs from "./Components/App/admin/AdminErrorLogs";
 
 function App() {
     const { user } = useAuthContext();
@@ -83,13 +84,21 @@ function App() {
                         <Route
                             path="/sign-up"
                             element={
-                                !user ? <SignUp /> : <Navigate to="/profile" />
+                                !user ? (
+                                    <SignUp />
+                                ) : (
+                                    <Navigate to="/communities" />
+                                )
                             }
                         />
                         <Route
                             path="/sign-in"
                             element={
-                                !user ? <SignIn /> : <Navigate to="/profile" />
+                                !user ? (
+                                    <SignIn />
+                                ) : (
+                                    <Navigate to="/communities" />
+                                )
                             }
                         />
                         <Route
@@ -98,7 +107,7 @@ function App() {
                                 !user ? (
                                     <PasswordReset />
                                 ) : (
-                                    <Navigate to="/profile" />
+                                    <Navigate to="/communities" />
                                 )
                             }
                         />
@@ -216,6 +225,10 @@ function App() {
                                 element={<WithdrawalsDash />}
                             />
                             <Route path="settings" element={<Settings />} />
+                            <Route
+                                path="error-logs"
+                                element={<AdminErrorLogs />}
+                            />
 
                             {/* catch all admin route */}
                             <Route path="*" element={<AdminNotFound />} />

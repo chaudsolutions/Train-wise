@@ -16,6 +16,7 @@ import CategoryIcon from "@mui/icons-material/Category";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import SettingsIcon from "@mui/icons-material/Settings";
+import ErrorIcon from "@mui/icons-material/Error";
 import { Logo } from "../Nav/Nav";
 
 const SideNav = ({ isMobile, drawerOpen, handleDrawerToggle, drawerWidth }) => {
@@ -50,6 +51,11 @@ const SideNav = ({ isMobile, drawerOpen, handleDrawerToggle, drawerWidth }) => {
             text: "Settings",
             icon: <SettingsIcon />,
             path: "settings",
+        },
+        {
+            text: "Error Logs",
+            icon: <ErrorIcon color="error" />,
+            path: "error-logs",
         },
     ];
 

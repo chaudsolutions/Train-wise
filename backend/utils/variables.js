@@ -9,6 +9,8 @@ const replyToMail = `noreply@${appUrl}`;
 const serverPort = process.env.port;
 // db
 const mongoUrl = process.env.mongodbLive;
+// secret key
+const secretKey = process.env.SECRET;
 
 module.exports = {
     appUrl,
@@ -16,4 +18,5 @@ module.exports = {
     replyToMail,
     serverPort,
     mongoUrl,
+    secretKey,
 };

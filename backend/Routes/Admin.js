@@ -16,6 +16,7 @@ const { upload, uploadToCloudinary } = require("../utils/uploadMedia");
 const { deleteCommunity } = require("../controllers/community.controller");
 const CommunityCourse = require("../Models/CommunityCourse");
 const CommunityMessage = require("../Models/CommunityMessage");
+const ErrorLog = require("../Models/ErrorLog");
 
 const router = express.Router();
 
@@ -309,6 +310,12 @@ router.get("/dashboard/analytics", async (req, res) => {
         const communityCreationFee = settings.communityCreationFee / 100;
         const withdrawalLimit = settings.withdrawalLimit;
 
+        // get error logs
+        const errorLogs = await ErrorLog.find()
+            .populate("userId", "name")
+            .lean()
+            .sort({ createdAt: -1 });
+
         const analytics = {
             revenue: {
                 totalRevenue,
@@ -337,6 +344,7 @@ router.get("/dashboard/analytics", async (req, res) => {
                 communityCreationFee,
                 withdrawalLimit,
             },
+            errorLogs,
         };
 
         res.status(200).json(analytics);

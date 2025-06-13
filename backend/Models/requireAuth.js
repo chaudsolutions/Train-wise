@@ -1,7 +1,5 @@
-const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
-
-const secretKey = process.env.SECRET;
+const { verifyToken } = require("../utils/verifyJWT");
 
 const requireAuth = async (req, res, next) => {
     //verify token
@@ -22,7 +20,7 @@ const requireAuth = async (req, res, next) => {
 
     try {
         // Verify token synchronously
-        const decoded = jwt.verify(token, secretKey);
+        const decoded = await verifyToken(token);
 
         const userId = mongoose.Types.ObjectId.createFromHexString(decoded._id);
         req.userId = userId;

@@ -1,6 +1,5 @@
 import {
     CircularProgress,
-    styled,
     Tab,
     Tabs,
     Typography,
@@ -8,15 +7,6 @@ import {
 } from "@mui/material";
 import { useCategoriesData } from "../../Hooks/useQueryFetch/useQueryData";
 import useResponsive from "../../Hooks/useResponsive";
-
-const EmojiContainer = styled("span")(({ theme }) => ({
-    fontSize: "1.2rem",
-    lineHeight: 1,
-    display: "inline-flex",
-    marginRight: theme.spacing(1),
-    fontFamily:
-        '"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif',
-}));
 
 const SelectCategory = ({ activeCategory, selectCategory }) => {
     const theme = useTheme();
@@ -82,7 +72,7 @@ const SelectCategory = ({ activeCategory, selectCategory }) => {
                                     display: "flex",
                                     alignItems: "center",
                                 }}>
-                                <EmojiContainer>{category.icon}</EmojiContainer>
+                                {category.icon}
                                 {category.name}
                             </Typography>
                         }

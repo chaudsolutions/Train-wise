@@ -151,10 +151,10 @@ export const fetchAdminAnalytics = async () => {
         throw new Error("Network response was not ok");
     }
 
-    const { communities, revenue, users, withdrawals, settings } =
+    const { communities, revenue, users, withdrawals, settings, errorLogs } =
         response.data;
 
-    return { communities, revenue, users, withdrawals, settings };
+    return { communities, revenue, users, withdrawals, settings, errorLogs };
 };
 
 // get admin analytics for single user

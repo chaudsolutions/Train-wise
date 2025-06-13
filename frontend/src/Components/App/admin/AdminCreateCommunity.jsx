@@ -33,6 +33,7 @@ import {
     useCategoriesData,
 } from "../../Hooks/useQueryFetch/useQueryData";
 import { Link } from "react-router-dom";
+import logError from "../../../utils/logger";
 
 const AdminCreateCommunity = () => {
     const [activeStep, setActiveStep] = useState(0);
@@ -148,6 +149,17 @@ const AdminCreateCommunity = () => {
         } catch (error) {
             console.error("Error creating community:", error);
             toast.error("Failed to create community. Please try again.");
+            logError({
+                error,
+                context: {
+                    action: "admin_create_community",
+                    component: "AdminCreateCommunity",
+                    customData: {
+                        step: activeStep,
+                    },
+                },
+                type: "try_catch",
+            });
         } finally {
             setFormSubmitting(false);
         }

@@ -5,9 +5,9 @@ import {
     Button,
     Paper,
     Divider,
-    TextField,
     Container,
 } from "@mui/material";
+import logError from "../../utils/logger";
 
 class ErrorBoundary extends Component {
     constructor(props) {
@@ -26,27 +26,17 @@ class ErrorBoundary extends Component {
     }
 
     componentDidCatch(error, errorInfo) {
+        // log error to db
+        logError({
+            error,
+            errorInfo,
+            type: "component",
+            location: window.location.href,
+        });
+
         console.error("ErrorBoundary caught an error", error, errorInfo);
         this.setState({ errorInfo });
     }
-
-    handleReportSubmit = (e) => {
-        e.preventDefault();
-        this.setState({ isReporting: true });
-
-        // Here you would typically send the error to your error tracking service
-        console.log("Error report:", {
-            error: this.state.error?.toString(),
-            stack: this.state.errorInfo?.componentStack,
-            userMessage: this.state.userMessage,
-        });
-
-        // Simulate API call
-        setTimeout(() => {
-            this.setState({ isReporting: false });
-            alert("Thank you for your report! We'll look into this issue.");
-        }, 1500);
-    };
 
     render() {
         if (this.state.hasError) {
@@ -60,6 +50,7 @@ class ErrorBoundary extends Component {
                         minHeight: "100vh",
                         display: "flex",
                         flexDirection: "column",
+                        backgroundColor: "background.default",
                     }}>
                     <Box
                         sx={{
@@ -88,6 +79,13 @@ class ErrorBoundary extends Component {
                                     textAlign: "center",
                                 }}>
                                 Oops! Something went wrong.
+                            </Typography>
+                            <Typography
+                                variant="body1"
+                                component="p"
+                                gutterBottom
+                                sx={{ mb: 2, textAlign: "center" }}>
+                                Our team has been notified.
                             </Typography>
 
                             <Box
@@ -131,41 +129,28 @@ class ErrorBoundary extends Component {
                                     variant="body1"
                                     gutterBottom
                                     sx={{ mb: 2 }}>
-                                    <strong>Help us improve:</strong> Report
-                                    this error to our team
+                                    <strong>Thank you:</strong> This error would
+                                    be worked on by the team.
                                 </Typography>
+                            </Box>
 
-                                <TextField
-                                    fullWidth
-                                    multiline
-                                    rows={1}
-                                    variant="outlined"
-                                    placeholder="What were you doing when this happened? (Optional)"
-                                    value={this.state.userMessage}
-                                    onChange={(e) =>
-                                        this.setState({
-                                            userMessage: e.target.value,
-                                        })
-                                    }
-                                    sx={{ mb: 2 }}
-                                />
-
+                            {import.meta.env.VITE_ENV === "development" && (
                                 <Box
                                     sx={{
-                                        display: "flex",
-                                        justifyContent: "flex-end",
+                                        mt: 4,
+                                        p: 2,
+                                        bgcolor: "grey.100",
+                                        borderRadius: 1,
                                     }}>
-                                    <Button
-                                        type="submit"
-                                        variant="contained"
-                                        color="secondary"
-                                        disabled={this.state.isReporting}>
-                                        {this.state.isReporting
-                                            ? "Submitting..."
-                                            : "Submit Report"}
-                                    </Button>
+                                    <Typography variant="h6" gutterBottom>
+                                        Error Details (Development Only)
+                                    </Typography>
+                                    <pre>{this.state.error?.stack}</pre>
+                                    <pre>
+                                        {this.state.errorInfo?.componentStack}
+                                    </pre>
                                 </Box>
-                            </Box>
+                            )}
                         </Paper>
                     </Box>
                 </Container>

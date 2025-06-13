@@ -5,6 +5,8 @@ const Community = require("../Models/Community.js");
 const CommunityMessage = require("../Models/CommunityMessage.js");
 const Category = require("../Models/Category.js");
 const Settings = require("../Models/Settings.js");
+const ErrorLog = require("../Models/ErrorLog.js");
+const { verifyToken } = require("../utils/verifyJWT.js");
 
 const router = express.Router();
 
@@ -261,6 +263,49 @@ router.get("/settings", async (req, res) => {
     } catch (error) {
         res.status(500).json("Error fetching settings");
         console.log(error);
+    }
+});
+
+router.post("/log-error", async (req, res) => {
+    const {
+        timestamp,
+        userAgent,
+        url,
+        type,
+        error,
+        context,
+        errorInfo,
+        userToken,
+        attempts,
+    } = req.body;
+
+    try {
+        let userId = undefined;
+        if (userToken) {
+            const decoded = await verifyToken(userToken);
+            userId = decoded._id;
+        }
+
+        await ErrorLog.create({
+            timestamp: new Date(timestamp),
+            userAgent,
+            url,
+            type,
+            userId,
+            error: {
+                name: error.name,
+                message: error.message,
+                stack: error.stack,
+            },
+            context: context || {},
+            additionalInfo: errorInfo,
+            attempts,
+        });
+
+        res.status(200).json("Error logged");
+    } catch (error) {
+        console.error("Failed to log error:", error);
+        res.status(500).json("Failed to log error");
     }
 });
 

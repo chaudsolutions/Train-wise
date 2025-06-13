@@ -38,7 +38,7 @@ const CommunitiesList = ({ community }) => {
     return (
         <>
             <Grid
-                size={{ xs: 12, sm: 6, md: 4 }}
+                size={{ xs: 12, md: 4 }}
                 sx={{
                     height: "100%",
                     display: "flex",

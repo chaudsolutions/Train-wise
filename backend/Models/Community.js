@@ -54,7 +54,6 @@ const communitySchema = new mongoose.Schema(
             type: String,
             required: [true, "Community name is required"],
             trim: true,
-            unique: true, // Ensure community names are unique
             maxlength: [50, "Community name cannot exceed 50 characters"],
         },
         description: {
