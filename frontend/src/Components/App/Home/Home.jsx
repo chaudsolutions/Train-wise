@@ -38,7 +38,7 @@ const Home = () => {
 
     const handleClose = () => {
         setOpenDialog(false);
-        localStorage.setItem("hasSeenTutorialPrompt", "true");
+        // localStorage.setItem("hasSeenTutorialPrompt", "true");
     };
 
     const handleLearn = () => {
