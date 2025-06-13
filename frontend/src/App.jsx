@@ -40,6 +40,7 @@ import ScrollToTopBtn from "./Components/Custom/Buttons/ScrollToTop";
 import AdminNotFound from "./Components/App/admin/AdminNotFound";
 import AdminCreateCommunity from "./Components/App/admin/AdminCreateCommunity";
 import AdminErrorLogs from "./Components/App/admin/AdminErrorLogs";
+import TutorialPage from "./Components/App/Others/Tutorial";
 
 function App() {
     const { user } = useAuthContext();
@@ -79,6 +80,8 @@ function App() {
 
                         {/* contact us */}
                         <Route path="/contact-us" element={<ContactUs />} />
+
+                        <Route path="/tutorial" element={<TutorialPage />} />
 
                         {/* auth / password reset */}
                         <Route

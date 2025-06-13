@@ -77,7 +77,7 @@ const Privacy = () => {
         },
         {
             title: "Contact Information",
-            info: "For privacy concerns or DSAR requests, contact our Data Protection Officer at privacy@yourplatform.com. Response within 7 business days guaranteed.",
+            info: `For privacy concerns or DSAR requests, contact our Data Protection Officer at support@${window.location.host}. Response within 7 business days guaranteed.`,
         },
     ];
 

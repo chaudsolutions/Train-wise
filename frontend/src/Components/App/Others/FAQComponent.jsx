@@ -3,11 +3,13 @@ import {
     AccordionDetails,
     AccordionSummary,
     Box,
+    Button,
     Container,
     Typography,
     useTheme,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Link } from "react-router-dom";
 
 const FAQComponent = () => {
     const theme = useTheme();
@@ -15,7 +17,33 @@ const FAQComponent = () => {
     const FAQs = [
         {
             title: "How do I create a community?",
-            info: "Users can create communities by clicking 'Create Community' in their dashboard, and setting up their community details.",
+            info: (
+                <>
+                    Creating a community is easy! Just follow these steps:
+                    <Box component="ol" sx={{ pl: 2, my: 1 }}>
+                        <li>
+                            Go to communities pages and click &apos;Create a
+                            Community&apos;
+                        </li>
+                        <li>
+                            Fill in your community details (name, description,
+                            category)
+                        </li>
+                        <li>Upload banner and logo images</li>
+                        <li>Set your subscription model (free or paid)</li>
+                        <li>Review and launch your community</li>
+                    </Box>
+                    <Button
+                        component={Link}
+                        to="/tutorial"
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        sx={{ mt: 1 }}>
+                        View Step-by-Step Tutorial
+                    </Button>
+                </>
+            ),
         },
         {
             title: "Can I switch a free community to paid later?",
@@ -121,7 +149,7 @@ const FAQComponent = () => {
                                 backgroundColor: theme.palette.background.paper,
                                 py: 3,
                             }}>
-                            <Typography color="text.secondary">
+                            <Typography component="div" color="text.secondary">
                                 {faq.info}
                             </Typography>
                         </AccordionDetails>
