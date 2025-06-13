@@ -11,6 +11,11 @@ const serverPort = process.env.port;
 const mongoUrl = process.env.mongodbLive;
 // secret key
 const secretKey = process.env.SECRET;
+// allowed origins
+const allowedOrigins = [
+    process.env.CLIENT_URL_PROD,
+    process.env.CLIENT_URL_VERCEL,
+];
 
 module.exports = {
     appUrl,
@@ -19,4 +24,5 @@ module.exports = {
     serverPort,
     mongoUrl,
     secretKey,
+    allowedOrigins,
 };

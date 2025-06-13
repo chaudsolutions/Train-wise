@@ -7,12 +7,26 @@ import {
     Avatar,
 } from "@mui/material";
 import { useReactRouter } from "../../Hooks/useReactRouter";
+import { useEffect } from "react";
+import logError from "../../../utils/logger";
 
 const NotFound = () => {
     const theme = useTheme();
 
     const { useNavigate } = useReactRouter();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const error = new Error("Page not found (404)");
+        logError({
+            error,
+            context: {
+                action: "page_not_found",
+                component: "NotFound",
+            },
+            type: "navigation",
+        });
+    }, []);
 
     const goHome = () => {
         navigate("/");

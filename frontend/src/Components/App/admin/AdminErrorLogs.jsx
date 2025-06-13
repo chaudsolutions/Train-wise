@@ -24,6 +24,7 @@ import {
     Snackbar,
     Alert,
     CircularProgress,
+    TablePagination,
 } from "@mui/material";
 import { format } from "date-fns";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -46,6 +47,8 @@ const AdminErrorLogs = () => {
     const [expandedRows, setExpandedRows] = useState({});
     const [loadingStatus, setLoadingStatus] = useState({}); // Track loading per errorId
     const [snackbar, setSnackbar] = useState({ open: false, message: "" });
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
 
     const { errorLogs = [] } = analyticsData || {};
 
@@ -95,6 +98,14 @@ const AdminErrorLogs = () => {
         });
     }, [errorLogs, filters]);
 
+    // Get paginated logs
+    const paginatedLogs = useMemo(() => {
+        return filteredLogs.slice(
+            page * rowsPerPage,
+            page * rowsPerPage + rowsPerPage
+        );
+    }, [filteredLogs, page, rowsPerPage]);
+
     // Get unique error types for filter dropdown
     const errorTypes = useMemo(() => {
         return [...new Set(errorLogs.map((log) => log.type))];
@@ -122,6 +133,7 @@ const AdminErrorLogs = () => {
 
     const handleFilterChange = (name, value) => {
         setFilters((prev) => ({ ...prev, [name]: value }));
+        setPage(0); // Reset to first page when filters change
     };
 
     const clearFilters = () => {
@@ -143,6 +155,15 @@ const AdminErrorLogs = () => {
 
     const handleCloseSnackbar = () => {
         setSnackbar({ open: false, message: "" });
+    };
+
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
     };
 
     // Styled TableRow component
@@ -326,7 +347,7 @@ const AdminErrorLogs = () => {
                                       </TableCell>
                                   </TableRow>
                               ))
-                            : filteredLogs.map((log) => (
+                            : paginatedLogs.map((log) => (
                                   <>
                                       <StyledTableRow key={log._id}>
                                           <TableCell>
@@ -457,7 +478,7 @@ const AdminErrorLogs = () => {
                                                   paddingBottom: 0,
                                                   paddingTop: 0,
                                               }}
-                                              colSpan={6}>
+                                              colSpan={7}>
                                               <Collapse
                                                   in={expandedRows[log._id]}
                                                   timeout="auto"
@@ -486,9 +507,17 @@ const AdminErrorLogs = () => {
                                                           variant="body2"
                                                           gutterBottom>
                                                           <strong>User:</strong>{" "}
-                                                          {log.context
-                                                              ?.userId ||
-                                                              "Unknown"}
+                                                          {log?.userId?.email ||
+                                                              "N/A"}
+                                                      </Typography>
+                                                      <Typography
+                                                          variant="body2"
+                                                          gutterBottom>
+                                                          <strong>
+                                                              User Agent:
+                                                          </strong>{" "}
+                                                          {log.userAgent ||
+                                                              "N/A"}
                                                       </Typography>
                                                       <Typography
                                                           variant="body2"
@@ -629,6 +658,17 @@ const AdminErrorLogs = () => {
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            {/* Table Pagination */}
+            <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={filteredLogs.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+            />
 
             {/* Success Toast Notification */}
             <Snackbar

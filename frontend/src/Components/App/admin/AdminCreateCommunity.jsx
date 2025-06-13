@@ -93,6 +93,18 @@ const AdminCreateCommunity = () => {
         } catch (error) {
             console.error("Error searching for user:", error);
             toast.error("Failed to find user. Please try again.");
+            logError({
+                error,
+                context: {
+                    action: "search_user_create_community",
+                    component: "AdminCreateCommunity",
+                    customData: {
+                        step: activeStep,
+                        email: email.trim().toLowerCase(),
+                    },
+                },
+                type: "try_catch",
+            });
         } finally {
             setSearchLoading(false);
         }
@@ -156,6 +168,7 @@ const AdminCreateCommunity = () => {
                     component: "AdminCreateCommunity",
                     customData: {
                         step: activeStep,
+                        communityName: watch("name"),
                     },
                 },
                 type: "try_catch",
@@ -297,6 +310,35 @@ const CommunityForm = ({
     isLoading,
 }) => {
     const theme = useTheme();
+
+    const handleFileRead = (file, previewField) => {
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                setValue(previewField, event.target.result);
+            };
+            reader.onerror = (error) => {
+                console.error("Error reading file:", error);
+                toast.error(
+                    `Failed to read ${
+                        previewField === "bannerPreview" ? "banner" : "logo"
+                    } image.`
+                );
+                logError({
+                    error,
+                    context: {
+                        action: `read_${
+                            previewField === "bannerPreview" ? "banner" : "logo"
+                        }_image`,
+                        component: "CommunityForm",
+                        customData: { fileName: file.name },
+                    },
+                    type: "try_catch",
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     return (
         <Box
@@ -443,17 +485,10 @@ const CommunityForm = ({
                                 {...register("image1", {
                                     required: "Banner image is required",
                                     onChange: (e) => {
-                                        const file = e.target.files[0];
-                                        if (file) {
-                                            const reader = new FileReader();
-                                            reader.onload = (event) => {
-                                                setValue(
-                                                    "bannerPreview",
-                                                    event.target.result
-                                                );
-                                            };
-                                            reader.readAsDataURL(file);
-                                        }
+                                        handleFileRead(
+                                            e.target.files[0],
+                                            "bannerPreview"
+                                        );
                                     },
                                 })}
                             />
@@ -505,17 +540,10 @@ const CommunityForm = ({
                                 {...register("image2", {
                                     required: "Logo is required",
                                     onChange: (e) => {
-                                        const file = e.target.files[0];
-                                        if (file) {
-                                            const reader = new FileReader();
-                                            reader.onload = (event) => {
-                                                setValue(
-                                                    "logoPreview",
-                                                    event.target.result
-                                                );
-                                            };
-                                            reader.readAsDataURL(file);
-                                        }
+                                        handleFileRead(
+                                            e.target.files[0],
+                                            "bannerPreview"
+                                        );
                                     },
                                 })}
                             />

@@ -4,7 +4,7 @@ const morgan = require("morgan");
 const helmet = require("helmet");
 const cors = require("cors");
 require("dotenv").config();
-const { mongoUrl, serverPort } = require("./utils/variables");
+const { mongoUrl, serverPort, allowedOrigins } = require("./utils/variables");
 
 const app = express();
 app.use(morgan("tiny"));
@@ -14,9 +14,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
     cors({
-        origin: "*", // Allow only this origin
-        methods: ["GET", "HEAD", "PUT", "PATCH", "OPTIONS", "POST", "DELETE"], // Allowed methods
-        allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+        origin: allowedOrigins,
+        methods: ["GET", "HEAD", "PUT", "PATCH", "OPTIONS", "POST", "DELETE"],
+        allowedHeaders: ["Content-Type", "Authorization"],
         optionsSuccessStatus: 204,
     })
 );
