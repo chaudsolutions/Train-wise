@@ -679,6 +679,8 @@ const AdminErrorLogs = () => {
                 <Alert
                     onClose={handleCloseSnackbar}
                     severity="success"
+                    variant="filled"
+                    color="primary"
                     sx={{ width: "100%" }}>
                     {snackbar.message}
                 </Alert>
