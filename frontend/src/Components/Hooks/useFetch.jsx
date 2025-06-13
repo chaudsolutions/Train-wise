@@ -1,9 +1,15 @@
 import axios from "axios";
 import { localStorageToken, serVer } from "./useVariable";
 
+export const getToken = () => {
+    const token = localStorage.getItem(localStorageToken);
+
+    return JSON.parse(token);
+};
+
 // fetch user data from DB
 export const fetchUser = async () => {
-    const token = localStorage.getItem(localStorageToken);
+    const token = getToken();
 
     const response = await axios.get(`${serVer}/user/data`, {
         headers: {
@@ -53,7 +59,7 @@ export const fetchCommunity = async ({ id }) => {
 
 // fetch community courses
 export const fetchCommunityCourses = async ({ id }) => {
-    const token = localStorage.getItem(localStorageToken);
+    const token = getToken();
 
     const response = await axios.get(`${serVer}/user/courses/community/${id}`, {
         headers: {
@@ -69,7 +75,7 @@ export const fetchCommunityCourses = async ({ id }) => {
 };
 
 export const fetchCommunitySingleCourse = async ({ communityId, courseId }) => {
-    const token = localStorage.getItem(localStorageToken);
+    const token = getToken();
 
     const response = await axios.get(
         `${serVer}/user/course/community/${communityId}/${courseId}`,
@@ -100,7 +106,7 @@ export const fetchCategories = async () => {
 
 // fetch user membership
 export const fetchUserMembership = async (communityId) => {
-    const token = localStorage.getItem(localStorageToken);
+    const token = getToken();
 
     const response = await axios.get(
         `${serVer}/user/verify-membership/${communityId}`,
@@ -120,7 +126,7 @@ export const fetchUserMembership = async (communityId) => {
 
 // fetch user analytics
 export const fetchUserAnalytics = async () => {
-    const token = localStorage.getItem(localStorageToken);
+    const token = getToken();
 
     const response = await axios.get(`${serVer}/user/analytics`, {
         headers: {
@@ -139,7 +145,7 @@ export const fetchUserAnalytics = async () => {
 
 // get admin analytics
 export const fetchAdminAnalytics = async () => {
-    const token = localStorage.getItem(localStorageToken);
+    const token = getToken();
 
     const response = await axios.get(`${serVer}/admin/dashboard/analytics`, {
         headers: {
@@ -159,7 +165,7 @@ export const fetchAdminAnalytics = async () => {
 
 // get admin analytics for single user
 export const fetchAdminAnalyticsSingleUser = async ({ userId }) => {
-    const token = localStorage.getItem(localStorageToken);
+    const token = getToken();
 
     const response = await axios.get(`${serVer}/admin/user/${userId}`, {
         headers: {
@@ -178,7 +184,7 @@ export const fetchAdminAnalyticsSingleUser = async ({ userId }) => {
 
 // get notifications
 export const fetchNotifications = async () => {
-    const token = localStorage.getItem(localStorageToken);
+    const token = getToken();
 
     const response = await axios.get(`${serVer}/user/notifications`, {
         headers: {
@@ -195,7 +201,7 @@ export const fetchNotifications = async () => {
 
 // get withdrawals
 export const fetchWithdrawals = async () => {
-    const token = localStorage.getItem(localStorageToken);
+    const token = getToken();
 
     const response = await axios.get(`${serVer}/user/withdrawals`, {
         headers: {
@@ -214,7 +220,7 @@ export const fetchWithdrawals = async () => {
 
 // fetch settings
 export const fetchSettings = async () => {
-    const token = localStorage.getItem(localStorageToken);
+    const token = getToken();
     const response = await axios.get(`${serVer}/api/settings`, {
         headers: {
             Authorization: `Bearer ${token}`,

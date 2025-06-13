@@ -309,4 +309,23 @@ router.post("/log-error", async (req, res) => {
     }
 });
 
+router.patch("/update-log-error/:id", async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+    try {
+        const updatedLog = await ErrorLog.findByIdAndUpdate(
+            id,
+            { status },
+            { new: true }
+        );
+        if (!updatedLog) {
+            return res.status(404).json("Error log not found");
+        }
+        res.status(200).json("Status updated");
+    } catch (error) {
+        console.error("Failed to update error status:", error);
+        res.status(500).json("Failed to update error status");
+    }
+});
+
 module.exports = { Api: router };

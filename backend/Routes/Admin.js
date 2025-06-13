@@ -312,7 +312,7 @@ router.get("/dashboard/analytics", async (req, res) => {
 
         // get error logs
         const errorLogs = await ErrorLog.find()
-            .populate("userId", "name")
+            .populate("userId", "email")
             .lean()
             .sort({ createdAt: -1 });
 

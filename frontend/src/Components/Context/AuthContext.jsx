@@ -5,7 +5,10 @@ import { localStorageToken } from "../Hooks/useVariable";
 const AuthContext = createContext();
 
 export const AuthContextProvider = ({ children }) => {
-    const [user, setUser] = useState(localStorage.getItem(localStorageToken));
+    const [user, setUser] = useState(() => {
+        const storedUser = localStorage.getItem(localStorageToken);
+        return storedUser ? JSON.parse(storedUser) : null;
+    });
 
     // Function to log in a user
     const login = (userData) => {

@@ -1,12 +1,13 @@
 import axios from "axios";
-import { localStorageToken, serVer } from "../Components/Hooks/useVariable";
+import { serVer } from "../Components/Hooks/useVariable";
+import { getToken } from "../Components/Hooks/useFetch";
 
 const ERROR_STORAGE_KEY = "pendingErrorLogs";
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 60 * 5000; // 5 seconds
 
 const logError = async (errorData) => {
-    const token = localStorage.getItem(localStorageToken);
+    const token = getToken();
 
     const payload = {
         timestamp: new Date().toISOString(),

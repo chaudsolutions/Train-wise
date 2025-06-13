@@ -18,11 +18,19 @@ import {
     Skeleton,
     useTheme,
     Grid,
+    FormControl,
+    Select,
+    InputLabel,
+    Snackbar,
+    Alert,
+    CircularProgress,
 } from "@mui/material";
 import { format } from "date-fns";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { useAdminAnalyticsData } from "../../Hooks/useQueryFetch/useQueryData";
+import axios from "axios";
+import { serVer } from "../../Hooks/useVariable";
 
 const AdminErrorLogs = () => {
     const theme = useTheme();
@@ -36,6 +44,8 @@ const AdminErrorLogs = () => {
         search: "",
     });
     const [expandedRows, setExpandedRows] = useState({});
+    const [loadingStatus, setLoadingStatus] = useState({}); // Track loading per errorId
+    const [snackbar, setSnackbar] = useState({ open: false, message: "" });
 
     const { errorLogs = [] } = analyticsData || {};
 
@@ -43,10 +53,13 @@ const AdminErrorLogs = () => {
     const filteredLogs = useMemo(() => {
         return errorLogs.filter((log) => {
             const matchesUserId = filters.userId
-                ? log.context?.userId?.includes(filters.userId)
+                ? log.userId?.email?.includes(filters.userId)
                 : true;
             const matchesType = filters.errorType
                 ? log.type === filters.errorType
+                : true;
+            const matchesStatus = filters.status
+                ? log.status === filters.status
                 : true;
             const matchesSearch = filters.search
                 ? log.error.message
@@ -72,7 +85,13 @@ const AdminErrorLogs = () => {
                 }
             }
 
-            return matchesUserId && matchesType && matchesDate && matchesSearch;
+            return (
+                matchesUserId &&
+                matchesType &&
+                matchesStatus &&
+                matchesDate &&
+                matchesSearch
+            );
         });
     }, [errorLogs, filters]);
 
@@ -80,6 +99,26 @@ const AdminErrorLogs = () => {
     const errorTypes = useMemo(() => {
         return [...new Set(errorLogs.map((log) => log.type))];
     }, [errorLogs]);
+
+    // Function to update error status
+    const updateErrorStatus = async (errorId, newStatus) => {
+        setLoadingStatus((prev) => ({ ...prev, [errorId]: true }));
+        try {
+            await axios.patch(`${serVer}/api/update-log-error/${errorId}`, {
+                status: newStatus,
+            });
+            refetchAnalyticsData(); // Refresh data after update
+            setSnackbar({
+                open: true,
+                message: "Error status updated successfully!",
+            });
+        } catch (error) {
+            console.error("Failed to update error status:", error);
+            alert("Failed to update error status. Please try again.");
+        } finally {
+            setLoadingStatus((prev) => ({ ...prev, [errorId]: false }));
+        }
+    };
 
     const handleFilterChange = (name, value) => {
         setFilters((prev) => ({ ...prev, [name]: value }));
@@ -101,6 +140,23 @@ const AdminErrorLogs = () => {
             [rowId]: !prev[rowId],
         }));
     };
+
+    const handleCloseSnackbar = () => {
+        setSnackbar({ open: false, message: "" });
+    };
+
+    // Styled TableRow component
+    const StyledTableRow = (props) => (
+        <TableRow
+            {...props}
+            sx={{
+                "&:hover": {
+                    background: `linear-gradient(135deg, ${theme.palette.info.dark}10 0%, ${theme.palette.grey[800]}30 100%)`,
+                },
+                ...props.sx,
+            }}
+        />
+    );
 
     return (
         <Box sx={{ p: { xs: 1, md: 3 } }}>
@@ -127,10 +183,10 @@ const AdminErrorLogs = () => {
                             }
                         />
                     </Grid>
-                    <Grid size={{ xs: 6, md: 12 }}>
+                    <Grid size={12}>
                         <TextField
                             fullWidth
-                            label="User ID"
+                            label="User email"
                             variant="outlined"
                             value={filters.userId}
                             onChange={(e) =>
@@ -138,7 +194,7 @@ const AdminErrorLogs = () => {
                             }
                         />
                     </Grid>
-                    <Grid size={{ xs: 6, md: 4 }}>
+                    <Grid size={6}>
                         <TextField
                             fullWidth
                             select
@@ -156,7 +212,23 @@ const AdminErrorLogs = () => {
                             ))}
                         </TextField>
                     </Grid>
-                    <Grid size={{ xs: 6, md: 4 }}>
+                    <Grid size={6}>
+                        <TextField
+                            fullWidth
+                            select
+                            label="Error Status"
+                            variant="outlined"
+                            value={filters.status}
+                            onChange={(e) =>
+                                handleFilterChange("status", e.target.value)
+                            }>
+                            <MenuItem value="">All Statuses</MenuItem>
+                            <MenuItem value="fixed">Fixed</MenuItem>
+                            <MenuItem value="pending">Pending</MenuItem>
+                            <MenuItem value="ignored">Ignored</MenuItem>
+                        </TextField>
+                    </Grid>
+                    <Grid size={6}>
                         <TextField
                             fullWidth
                             label="Start Date"
@@ -169,7 +241,7 @@ const AdminErrorLogs = () => {
                             }
                         />
                     </Grid>
-                    <Grid size={{ xs: 6, md: 4 }}>
+                    <Grid size={6}>
                         <TextField
                             fullWidth
                             label="End Date"
@@ -204,7 +276,15 @@ const AdminErrorLogs = () => {
                 component={Paper}
                 sx={{ maxHeight: "70vh", overflow: "auto" }}>
                 <Table stickyHeader>
-                    <TableHead>
+                    <TableHead
+                        sx={{
+                            "& .MuiTableCell-head": {
+                                color: theme.palette.common.white,
+                                fontWeight: 600,
+                                fontSize: "0.875rem",
+                                background: theme.palette.primary.dark,
+                            },
+                        }}>
                         <TableRow>
                             <TableCell />
                             <TableCell>Timestamp</TableCell>
@@ -212,6 +292,7 @@ const AdminErrorLogs = () => {
                             <TableCell>Type</TableCell>
                             <TableCell>Error</TableCell>
                             <TableCell>Message</TableCell>
+                            <TableCell>Status</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -240,11 +321,14 @@ const AdminErrorLogs = () => {
                                       <TableCell>
                                           <Skeleton variant="text" />
                                       </TableCell>
+                                      <TableCell>
+                                          <Skeleton variant="text" />
+                                      </TableCell>
                                   </TableRow>
                               ))
                             : filteredLogs.map((log) => (
                                   <>
-                                      <TableRow key={log._id}>
+                                      <StyledTableRow key={log._id}>
                                           <TableCell>
                                               <IconButton
                                                   aria-label="expand row"
@@ -268,8 +352,8 @@ const AdminErrorLogs = () => {
                                           <TableCell>
                                               <Chip
                                                   label={
-                                                      log.context?.userId ||
-                                                      "Unknown"
+                                                      log?.userId?.email ||
+                                                      "N/A"
                                                   }
                                                   variant="outlined"
                                                   size="small"
@@ -315,7 +399,58 @@ const AdminErrorLogs = () => {
                                           <TableCell>
                                               {log.error.message}
                                           </TableCell>
-                                      </TableRow>
+                                          <TableCell>
+                                              {loadingStatus[log._id] ? (
+                                                  <CircularProgress
+                                                      color="inherit"
+                                                      size={20}
+                                                  />
+                                              ) : (
+                                                  <Chip
+                                                      label={
+                                                          log.status ||
+                                                          "Pending"
+                                                      }
+                                                      size="small"
+                                                      sx={{
+                                                          backgroundColor:
+                                                              log.status ===
+                                                              "fixed"
+                                                                  ? theme
+                                                                        .palette
+                                                                        .success
+                                                                        .light
+                                                                  : log.status ===
+                                                                    "ignored"
+                                                                  ? theme
+                                                                        .palette
+                                                                        .grey[500]
+                                                                  : theme
+                                                                        .palette
+                                                                        .warning
+                                                                        .light,
+                                                          color: theme.palette.getContrastText(
+                                                              log.status ===
+                                                                  "fixed"
+                                                                  ? theme
+                                                                        .palette
+                                                                        .success
+                                                                        .light
+                                                                  : log.status ===
+                                                                    "ignored"
+                                                                  ? theme
+                                                                        .palette
+                                                                        .grey[500]
+                                                                  : theme
+                                                                        .palette
+                                                                        .warning
+                                                                        .light
+                                                          ),
+                                                      }}
+                                                  />
+                                              )}
+                                          </TableCell>
+                                      </StyledTableRow>
                                       <TableRow>
                                           <TableCell
                                               style={{
@@ -384,6 +519,49 @@ const AdminErrorLogs = () => {
                                                           {log.error.message}
                                                       </Typography>
                                                       <Box mt={2}>
+                                                          <FormControl
+                                                              fullWidth
+                                                              size="small">
+                                                              <InputLabel
+                                                                  id={`status-select-label-${log._id}`}>
+                                                                  Status
+                                                              </InputLabel>
+                                                              <Select
+                                                                  labelId={`status-select-label-${log._id}`}
+                                                                  value={
+                                                                      log.status ||
+                                                                      "pending"
+                                                                  }
+                                                                  label="Status"
+                                                                  onChange={(
+                                                                      e
+                                                                  ) =>
+                                                                      updateErrorStatus(
+                                                                          log._id,
+                                                                          e
+                                                                              .target
+                                                                              .value
+                                                                      )
+                                                                  }
+                                                                  disabled={
+                                                                      loadingStatus[
+                                                                          log
+                                                                              ._id
+                                                                      ]
+                                                                  }>
+                                                                  <MenuItem value="fixed">
+                                                                      Fixed
+                                                                  </MenuItem>
+                                                                  <MenuItem value="pending">
+                                                                      Pending
+                                                                  </MenuItem>
+                                                                  <MenuItem value="ignored">
+                                                                      Ignored
+                                                                  </MenuItem>
+                                                              </Select>
+                                                          </FormControl>
+                                                      </Box>
+                                                      <Box mt={2}>
                                                           <Typography
                                                               variant="body2"
                                                               gutterBottom>
@@ -451,6 +629,20 @@ const AdminErrorLogs = () => {
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            {/* Success Toast Notification */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}>
+                <Alert
+                    onClose={handleCloseSnackbar}
+                    severity="success"
+                    sx={{ width: "100%" }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

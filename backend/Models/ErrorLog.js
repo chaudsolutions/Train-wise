@@ -2,12 +2,15 @@ const mongoose = require("mongoose");
 
 const errorLogSchema = new mongoose.Schema(
     {
-        timestamp: Date,
-        userAgent: String,
-        url: String,
-        type: String,
-        attempts: Number,
-        userId: mongoose.Schema.Types.ObjectId,
+        timestamp: { type: Date },
+        userAgent: { type: String },
+        url: { type: String },
+        type: { type: String },
+        attempts: { type: Number },
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User", // Reference to the User model (if you have one)
+        },
         error: {
             name: String,
             message: String,
@@ -20,6 +23,11 @@ const errorLogSchema = new mongoose.Schema(
             customData: mongoose.Schema.Types.Mixed,
         },
         additionalInfo: mongoose.Schema.Types.Mixed,
+        status: {
+            type: String,
+            enum: ["fixed", "pending", "ignored"],
+            default: "pending",
+        },
     },
     {
         timestamps: true,
