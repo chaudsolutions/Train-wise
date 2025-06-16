@@ -6,6 +6,7 @@ import {
     useCategoriesData,
 } from "../../Hooks/useQueryFetch/useQueryData";
 import ProfileContainer from "../../Custom/profile/ProfileContainer";
+import GoBack from "../../Custom/Buttons/GoBack";
 
 const UserDetails = () => {
     const { userId } = useParams();
@@ -21,6 +22,7 @@ const UserDetails = () => {
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
+            <GoBack />
             <ProfileContainer
                 categories={categories}
                 user={user}

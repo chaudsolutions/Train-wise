@@ -20,12 +20,10 @@ import {
     Snackbar,
     Alert,
 } from "@mui/material";
-import {
-    People as PeopleIcon,
-    School as SchoolIcon,
-    Notifications as NotificationsIcon,
-    Message,
-} from "@mui/icons-material";
+import PeopleIcon from "@mui/icons-material/People";
+import SchoolIcon from "@mui/icons-material/School";
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import MessageIcon from "@mui/icons-material/Message";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import AddIcon from "@mui/icons-material/Add";
 import { useReactRouter } from "../../Hooks/useReactRouter";
@@ -49,6 +47,7 @@ import { serVer, useToken } from "../../Hooks/useVariable";
 import { useSearchParams } from "react-router-dom";
 import { ReportCommunityForm } from "../../Custom/Forms/Forms";
 import SocialShareDrawer from "../../Custom/Buttons/SocialShareDrawer";
+import GoBack from "../../Custom/Buttons/GoBack";
 
 const EnterCommunity = () => {
     const [activeTab, setActiveTab] = useState("community");
@@ -104,7 +103,7 @@ const EnterCommunity = () => {
     const tabs = [
         { id: "community", label: "Community", icon: <NotificationsIcon /> },
         { id: "classroom", label: "Classroom", icon: <SchoolIcon /> },
-        { id: "chatroom", label: "Chatroom", icon: <Message /> },
+        { id: "chatroom", label: "Chatroom", icon: <MessageIcon /> },
         { id: "members", label: "Members", icon: <PeopleIcon /> },
     ];
 
@@ -146,6 +145,7 @@ const EnterCommunity = () => {
 
     return (
         <Box sx={{ p: 2 }}>
+            <GoBack />
             <Grid container spacing={3}>
                 {/* Main Content Area */}
                 <Grid size={{ xs: 12, md: isMobile ? 12 : 8 }}>

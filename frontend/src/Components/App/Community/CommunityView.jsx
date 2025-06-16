@@ -44,6 +44,7 @@ import { useCommunityActions } from "../../Hooks/useCommunityActions";
 import { Elements } from "@stripe/react-stripe-js";
 import { PaymentDialog } from "../../Custom/payment/PaymentDialog";
 import SocialShareDrawer from "../../Custom/Buttons/SocialShareDrawer";
+import GoBack from "../../Custom/Buttons/GoBack";
 
 const CommunityView = () => {
     const theme = useTheme();
@@ -137,6 +138,8 @@ const CommunityView = () => {
                     bgcolor: theme.palette.background.default,
                     minHeight: "100vh",
                 }}>
+                <GoBack />
+
                 {/* Hero Banner */}
                 <Box
                     sx={{

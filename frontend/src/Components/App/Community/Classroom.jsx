@@ -43,6 +43,7 @@ import { jsPDF } from "jspdf";
 import { useSearchParams } from "react-router-dom";
 import ReactConfetti from "react-confetti";
 import { useWindowSize } from "react-use";
+import GoBack from "../../Custom/Buttons/GoBack";
 
 const Classroom = () => {
     const { width, height } = useWindowSize();
@@ -147,6 +148,7 @@ const Classroom = () => {
                 bgcolor: "background.default",
                 minHeight: "100vh",
             }}>
+            <GoBack />
             {/* confetti */}
 
             {completionPercentage >= 100 && (

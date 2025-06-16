@@ -49,6 +49,7 @@ import axios from "axios";
 import { serVer, useToken } from "../../Hooks/useVariable";
 import { useCategoriesData } from "../../Hooks/useQueryFetch/useQueryData";
 import toast from "react-hot-toast";
+import GoBack from "../../Custom/Buttons/GoBack";
 
 const SingleCommunityDash = () => {
     const { communityId } = useParams();
@@ -74,6 +75,8 @@ const SingleCommunityDash = () => {
 
     return (
         <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: 1200, mx: "auto" }}>
+            <GoBack />
+
             <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
                 <Tabs
                     value={activeTab}
