@@ -15,7 +15,6 @@ import {
     TextField,
 } from "@mui/material";
 import LocationIcon from "@mui/icons-material/LocationOn";
-import PhoneIcon from "@mui/icons-material/Phone";
 import EmailIcon from "@mui/icons-material/Email";
 import SendIcon from "@mui/icons-material/Send";
 import { useForm } from "react-hook-form";
@@ -84,28 +83,6 @@ const ContactUs = () => {
                                     <ListItemText
                                         primary="Our Location"
                                         secondary="5 Billington street, Northampton NN1 4DB, UK"
-                                    />
-                                </ListItem>
-
-                                <Divider
-                                    variant="inset"
-                                    component="li"
-                                    sx={{
-                                        backgroundColor:
-                                            theme.palette.primary.contrastText,
-                                        opacity: 0.2,
-                                        my: 2,
-                                    }}
-                                />
-
-                                <ListItem sx={{ px: 0 }}>
-                                    <ListItemIcon
-                                        sx={{ color: "inherit", minWidth: 40 }}>
-                                        <PhoneIcon fontSize="large" />
-                                    </ListItemIcon>
-                                    <ListItemText
-                                        primary="Call Us"
-                                        secondary="+1 (234) 567-8900 / +1 (987) 654-3210"
                                     />
                                 </ListItem>
 

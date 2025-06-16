@@ -254,9 +254,12 @@ const CreateCourse = () => {
                             <MenuItem value="" disabled>
                                 Select duration
                             </MenuItem>
-                            <MenuItem value="1">1 Week</MenuItem>
-                            <MenuItem value="2">2 Weeks</MenuItem>
-                            <MenuItem value="4">4 Weeks</MenuItem>
+                            <MenuItem value="4">4 Week</MenuItem>
+                            <MenuItem value="8">8 Weeks</MenuItem>
+                            <MenuItem value="12">12 Weeks</MenuItem>
+                            <MenuItem value="16">16 Weeks</MenuItem>
+                            <MenuItem value="20">20 Weeks</MenuItem>
+                            <MenuItem value="26">24 Weeks</MenuItem>
                         </Select>
                         <FormHelperText>
                             {errors.duration?.message}

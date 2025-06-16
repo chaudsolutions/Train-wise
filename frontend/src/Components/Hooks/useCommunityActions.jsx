@@ -29,13 +29,13 @@ export const useCommunityActions = () => {
         setLoading(true);
         try {
             const res = await axios.delete(
-                `${serVer}/creator/delete-community/${communityId}`,
+                `${serVer}/admin/community/${communityId}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             toast.success(res.data);
             return true;
         } catch (error) {
-            toast.error(error.response?.data || "Failed to delete community");
+            toast.error("Failed to delete community");
             return false;
         } finally {
             setLoading(false);

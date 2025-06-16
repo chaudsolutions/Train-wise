@@ -63,13 +63,10 @@ const deleteCommunity = async (req, res) => {
             ),
         ]);
 
-        res.status(200).json({ message: "Community deleted successfully" });
+        res.status(200).json("Community deleted successfully");
     } catch (error) {
-        console.error("Error deleting community:", error.message, error.stack);
-        res.status(500).json({
-            message: "Failed to delete community",
-            error: error.message,
-        });
+        console.error("Error deleting community:", error);
+        res.status(500).json(error);
     }
 };
 

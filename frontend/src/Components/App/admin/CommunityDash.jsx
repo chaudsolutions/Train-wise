@@ -67,7 +67,7 @@ const CommunityDash = () => {
     const handleDeleteCommunity = async () => {
         const success = await deleteCommunity(selectedCommunity._id);
         if (success) {
-            await refetchAnalyticsData();
+            refetchAnalyticsData();
             setSelectedCommunity(null);
             setOpenDialog(false);
         }
@@ -80,7 +80,7 @@ const CommunityDash = () => {
     const renderCommunityList = (communityList) => (
         <List>
             {communityList?.length > 0 ? (
-                communityList.map((community) => (
+                communityList?.map((community) => (
                     <Paper
                         key={community._id}
                         elevation={1}
