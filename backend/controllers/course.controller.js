@@ -3,22 +3,15 @@ const { uploadToCloudinary } = require("../utils/uploadMedia");
 const UsersModel = require("../Models/Users");
 const CommunityCourse = require("../Models/CommunityCourse");
 const Community = require("../Models/Community");
+const { deleteCloudinaryImage } = require("../utils/cloudinary");
 
 const createCourse = async (req, res) => {
     try {
-        console.log("1. Starting course creation");
-
         const userId = req.userId;
         const { communityId } = req.params;
         const files = req.files;
         const body = req.body;
 
-        // Add debug logging for received fields
-        console.log("Received fields:", Object.keys(body));
-        console.log(
-            "Files received:",
-            files.map((f) => f.fieldname)
-        );
         // Validate permissions
         const user = await UsersModel.findById(userId);
         const community = await Community.findById(communityId);
@@ -30,8 +23,6 @@ const createCourse = async (req, res) => {
         const parsePDFBuffer = async (buffer) => {
             try {
                 const data = await pdf(buffer);
-                console.log("PDF text length:", data.text.length);
-                console.log("First 200 characters:", data.text.slice(0, 200));
                 return data.text;
             } catch (error) {
                 console.error("PDF parsing failed:", error);
@@ -39,119 +30,184 @@ const createCourse = async (req, res) => {
             }
         };
 
-        console.log("2. Processing course summary");
         // Process course summary
         let summary;
         const summaryPdfFile = files.find((f) => f.fieldname === "summaryPdf");
         if (summaryPdfFile) {
-            console.log("2a. Parsing summary PDF");
             summary = await parsePDFBuffer(summaryPdfFile.buffer);
-            console.log("2b. Summary PDF parsed");
         } else if (body.summaryText) {
             summary = body.summaryText;
         }
 
-        console.log("3. Processing lessons");
         // Process lessons
-        const lessons = [];
         const lessonCount = parseInt(body.lessonCount);
+        let lessons = [];
+        let videoFiles = [];
+        let totalVideoSizeGB = 0;
 
+        // Step 1: Calculate total video size
         for (let i = 0; i < lessonCount; i++) {
-            console.log(`4. Processing lesson ${i}`);
-            const lessonType = body[`lessonType_${i}`]; // Changed to flat field name
-            const summaryMode = body[`lessonSummaryMode_${i}`]; // Changed to flat field name
-
-            console.log(`Lesson ${i} type: ${lessonType}`); // Add this line
-
-            // Process lesson content
-            let content;
-            switch (lessonType) {
-                case "video": {
-                    console.log(`4a. Uploading video for lesson ${i}`);
-                    const videoFile = files.find(
-                        (f) => f.fieldname === `lessonVideo_${i}`
-                    );
-
-                    if (!videoFile)
-                        throw new Error(`Missing video for lesson ${i + 1}`);
-                    const videoResult = await uploadToCloudinary(
-                        videoFile.buffer,
-                        videoFile.originalname,
-                        "video"
-                    );
-                    content = videoResult.secure_url;
-                    console.log(`4b. Video uploaded for lesson ${i}`);
-                    break;
-                }
-                case "youtube":
-                    content = body[`lessonUrl_${i}`];
-                    if (!content)
-                        throw new Error(
-                            `Missing YouTube URL for lesson ${i + 1}`
-                        );
-                    break;
-                case "pdf": {
-                    const pdfFile = files.find(
-                        (f) => f.fieldname === `lessonPdf_${i}`
-                    );
-                    console.log(`4c. Parsing PDF for lesson ${i}`);
-                    if (!pdfFile)
-                        throw new Error(`Missing PDF for lesson ${i + 1}`);
-                    content = await parsePDFBuffer(pdfFile.buffer);
-                    console.log(`4d. PDF parsed for lesson ${i}`);
-                    break;
-                }
-                default:
-                    throw new Error(`Invalid lesson type for lesson ${i + 1}`);
-            }
-
-            console.log(`5. Processing summary for lesson ${i}`);
-            // Process lesson summary
-            let lessonSummary;
-            if (summaryMode === "pdf") {
-                const summaryFile = files.find(
-                    (f) => f.fieldname === `lessonSummaryPdf_${i}`
+            if (body[`lessonType_${i}`] === "video") {
+                const videoFile = files.find(
+                    (f) => f.fieldname === `lessonVideo_${i}`
                 );
-                if (!summaryFile)
-                    throw new Error(`Missing summary PDF for lesson ${i + 1}`);
-                lessonSummary = await parsePDFBuffer(summaryFile.buffer);
-            } else {
-                lessonSummary = body[`lessonSummaryText_${i}`];
-                if (!lessonSummary)
-                    throw new Error(`Missing summary text for lesson ${i + 1}`);
-            }
 
-            lessons.push({
-                type: lessonType,
-                content,
-                summary: lessonSummary,
+                if (!videoFile) {
+                    throw new Error(`Missing video for lesson ${i + 1}`);
+                }
+
+                const videoSizeGB = videoFile.size / 1024 ** 3;
+                totalVideoSizeGB += videoSizeGB;
+                videoFiles.push({
+                    index: i,
+                    file: videoFile,
+                    sizeGB: videoSizeGB,
+                });
+            }
+        }
+
+        // Step 2: Check storage against total video size
+        const remainingStorage =
+            community.cloudStorageLimit - community.cloudStorageUsed;
+        if (totalVideoSizeGB > remainingStorage) {
+            return res.status(400).json({
+                message: `Insufficient storage. Required: ${totalVideoSizeGB.toFixed(
+                    2
+                )}GB, Available: ${remainingStorage.toFixed(2)}GB`,
             });
         }
 
-        console.log("6. Creating course object");
-        // Create course object
-        const newCourse = {
-            name: body.name,
-            duration: body.duration,
-            summary,
-            lessons,
-            createdAt: new Date(),
-        };
+        // Step 3: Upload all videos if storage is sufficient
+        const uploadedVideos = [];
+        try {
+            // Upload all videos in parallel
+            const uploadPromises = videoFiles.map((video) =>
+                uploadToCloudinary(
+                    video.file.buffer,
+                    video.file.originalname,
+                    "video"
+                ).then((result) => ({
+                    index: video.index,
+                    public_id: result.public_id,
+                    url: result.secure_url,
+                    sizeGB: video.sizeGB,
+                }))
+            );
 
-        console.log("7. Updating database");
-        // Update community course
-        await CommunityCourse.findOneAndUpdate(
-            { communityId },
-            { $push: { courses: newCourse } },
-            { upsert: true, new: true }
-        );
+            const uploadResults = await Promise.all(uploadPromises);
+            uploadedVideos.push(...uploadResults);
+        } catch (uploadError) {
+            // Cleanup any partially uploaded videos
+            await Promise.all(
+                uploadedVideos.map((video) =>
+                    deleteCloudinaryImage(video.public_id)
+                )
+            );
+            throw new Error(`Video upload failed: ${uploadError.message}`);
+        }
 
-        console.log("8. Database updated");
+        // Step 4: Update storage usage
+        community.cloudStorageUsed += totalVideoSizeGB;
+        await community.save();
 
-        res.status(201).json("Course created successfully");
+        // Step 5: Process all lessons with video URLs
+        try {
+            for (let i = 0; i < lessonCount; i++) {
+                const lessonType = body[`lessonType_${i}`];
+                const summaryMode = body[`lessonSummaryMode_${i}`];
+
+                let content;
+                switch (lessonType) {
+                    case "video": {
+                        const video = uploadedVideos.find((v) => v.index === i);
+                        if (!video)
+                            throw new Error(
+                                `Missing uploaded video for lesson ${i + 1}`
+                            );
+                        content = video.url;
+                        break;
+                    }
+                    case "youtube":
+                        content = body[`lessonUrl_${i}`];
+                        if (!content)
+                            throw new Error(
+                                `Missing YouTube URL for lesson ${i + 1}`
+                            );
+                        break;
+                    case "pdf": {
+                        const pdfFile = files.find(
+                            (f) => f.fieldname === `lessonPdf_${i}`
+                        );
+                        if (!pdfFile)
+                            throw new Error(`Missing PDF for lesson ${i + 1}`);
+                        content = await parsePDFBuffer(pdfFile.buffer);
+                        break;
+                    }
+                    default:
+                        throw new Error(
+                            `Invalid lesson type for lesson ${i + 1}`
+                        );
+                }
+
+                // Process lesson summary
+                let lessonSummary;
+                if (summaryMode === "pdf") {
+                    const summaryFile = files.find(
+                        (f) => f.fieldname === `lessonSummaryPdf_${i}`
+                    );
+                    if (!summaryFile)
+                        throw new Error(
+                            `Missing summary PDF for lesson ${i + 1}`
+                        );
+                    lessonSummary = await parsePDFBuffer(summaryFile.buffer);
+                } else {
+                    lessonSummary = body[`lessonSummaryText_${i}`];
+                    if (!lessonSummary)
+                        throw new Error(
+                            `Missing summary text for lesson ${i + 1}`
+                        );
+                }
+
+                lessons.push({
+                    type: lessonType,
+                    content,
+                    summary: lessonSummary,
+                });
+            }
+
+            // Create course object
+            const newCourse = {
+                name: body.name,
+                duration: body.duration,
+                summary,
+                lessons,
+            };
+
+            // Update community course
+            await CommunityCourse.findOneAndUpdate(
+                { communityId },
+                { $push: { courses: newCourse } },
+                { upsert: true, new: true }
+            );
+
+            res.status(201).json("Course created successfully");
+        } catch (processingError) {
+            // Cleanup videos if lesson processing fails
+            await Promise.all(
+                uploadedVideos.map((video) =>
+                    deleteCloudinaryImage(video.public_id)
+                )
+            );
+
+            // Revert storage usage
+            community.cloudStorageUsed -= totalVideoSizeGB;
+            await community.save();
+
+            throw processingError;
+        }
     } catch (error) {
         console.error("Course creation error:", error);
-        res.status(500).json("Internal Server Error");
+        res.status(500).json(error.message || "Internal Server Error");
     }
 };
 

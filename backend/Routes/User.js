@@ -458,10 +458,12 @@ router.put(
                 return res.status(404).json("Course not found.");
             }
 
-            // Find or create the watched course entry
+            // Find the watched course entry
             let watchedCourse = user.coursesWatched.find(
                 (c) => c.courseId.toString() === courseId
             );
+
+            const isNewCourse = !watchedCourse;
 
             if (watchedCourse) {
                 // Add video if not already watched
@@ -470,10 +472,20 @@ router.put(
                 }
             } else {
                 // Create new watched course entry
-                user.coursesWatched.push({
+                watchedCourse = {
                     courseId,
                     lessons: [lessonIndex],
-                });
+                    startDate: new Date(), // Set start date on first lesson
+                };
+                user.coursesWatched.push(watchedCourse);
+            }
+
+            // Set start date only when first lesson is watched
+            if (
+                isNewCourse ||
+                (!watchedCourse.startDate && watchedCourse.lessons.length === 1)
+            ) {
+                watchedCourse.startDate = new Date();
             }
 
             await user.save();

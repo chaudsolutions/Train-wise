@@ -39,6 +39,7 @@ const UsersSchema = new Schema(
                     ref: "Course",
                 },
                 lessons: [String],
+                startDate: { type: Date },
             },
         ],
         allAccess: [

@@ -15,18 +15,17 @@ import {
     Collapse,
     Button,
     Icon,
+    Grid,
 } from "@mui/material";
-import {
-    PlayCircle,
-    ArrowBack,
-    ArrowForward,
-    YouTube,
-    PictureAsPdf,
-    Description,
-    Info,
-    KeyboardArrowDown,
-    KeyboardArrowUp,
-} from "@mui/icons-material";
+import Info from "@mui/icons-material/Info";
+import PlayCircle from "@mui/icons-material/PlayCircle";
+import ArrowBack from "@mui/icons-material/ArrowBack";
+import ArrowForward from "@mui/icons-material/ArrowForward";
+import YouTube from "@mui/icons-material/YouTube";
+import PictureAsPdf from "@mui/icons-material/PictureAsPdf";
+import Description from "@mui/icons-material/Description";
+import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUp from "@mui/icons-material/KeyboardArrowUp";
 import LockIcon from "@mui/icons-material/Lock";
 import CheckCircle from "@mui/icons-material/CheckCircle";
 import axios from "axios";
@@ -78,6 +77,13 @@ const Classroom = () => {
     const currentLesson = displayLessons[selectedLesson];
     const completionPercentage = currentCourse?.lessons
         ? (currentCourse.lessons.length / lessons?.length) * 100
+        : 0;
+
+    const { startDate } = currentCourse || {};
+
+    // Calculate lessons per week
+    const lessonsPerWeek = lessons?.length
+        ? Math.ceil(lessons.length / duration)
         : 0;
 
     useEffect(() => {
@@ -134,6 +140,28 @@ const Classroom = () => {
         token,
         refetchUserData,
     ]);
+
+    // Calculate current week
+    const getCurrentWeek = () => {
+        if (!startDate) return 1;
+
+        const now = new Date();
+        const diffTime = Math.abs(now - startDate);
+        const diffWeeks = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7));
+        return Math.min(diffWeeks, duration);
+    };
+
+    const currentWeek = getCurrentWeek();
+
+    // Function to determine if lesson is locked
+    const isLessonLocked = (displayIndex) => {
+        if (displayIndex === 0) return false; // Summary is always unlocked
+
+        const lessonIndex = displayIndex - 1;
+        const lessonWeek = Math.ceil((lessonIndex + 1) / lessonsPerWeek);
+
+        return lessonWeek > currentWeek;
+    };
 
     if (isSingleCourseLoading || isUserDataLoading) {
         return <PageLoader />;
@@ -532,18 +560,13 @@ const Classroom = () => {
 
                             <List dense sx={{ p: 1 }}>
                                 {displayLessons?.map((lesson, displayIndex) => {
-                                    const isSummary = displayIndex === 0;
                                     const lessonIndex = displayIndex - 1;
                                     const isCompleted =
                                         currentCourse?.lessons?.includes(
                                             lessonIndex.toString()
                                         );
                                     const isLocked =
-                                        !isSummary &&
-                                        displayIndex > 1 &&
-                                        !currentCourse?.lessons?.includes(
-                                            (lessonIndex - 1).toString()
-                                        );
+                                        isLessonLocked(displayIndex);
                                     const isCurrent =
                                         selectedLesson === displayIndex;
 
@@ -615,49 +638,73 @@ const Classroom = () => {
 
                                             <ListItemText
                                                 primary={
-                                                    <Box
-                                                        sx={{
-                                                            display: "flex",
-                                                            alignItems:
-                                                                "center",
-                                                            justifyContent:
-                                                                "space-between",
-                                                            gap: 1,
-                                                        }}>
-                                                        <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                                fontWeight: 500,
-                                                                color: isCurrent
-                                                                    ? "primary.main"
-                                                                    : "inherit",
-                                                            }}>
-                                                            Lesson{" "}
-                                                            {displayIndex + 1}
-                                                        </Typography>
-                                                        {isCompleted && (
-                                                            <CheckCircle
-                                                                color="success"
-                                                                fontSize="small"
+                                                    <Grid
+                                                        container
+                                                        alignItems="center"
+                                                        spacing={2}>
+                                                        <Grid size={6}>
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{
+                                                                    fontWeight: 500,
+                                                                    color: isCurrent
+                                                                        ? "primary.main"
+                                                                        : "inherit",
+                                                                }}>
+                                                                Lesson{" "}
+                                                                {displayIndex +
+                                                                    1}
+                                                            </Typography>
+                                                        </Grid>
+
+                                                        <Grid size={5}>
+                                                            <Chip
+                                                                label={`Week ${Math.ceil(
+                                                                    displayIndex /
+                                                                        lessonsPerWeek
+                                                                )}`}
+                                                                size="small"
+                                                                sx={{ ml: 1 }}
                                                             />
-                                                        )}
-                                                    </Box>
+                                                        </Grid>
+
+                                                        <Grid size={1}>
+                                                            {isCompleted && (
+                                                                <CheckCircle
+                                                                    color="success"
+                                                                    fontSize="small"
+                                                                />
+                                                            )}
+                                                        </Grid>
+                                                    </Grid>
                                                 }
                                                 secondary={
-                                                    <Typography
-                                                        variant="caption"
-                                                        noWrap
-                                                        sx={{
-                                                            color: isCurrent
-                                                                ? "primary.main"
-                                                                : "text.secondary",
-                                                        }}>
-                                                        {displayIndex === 0
-                                                            ? "Course Overview"
-                                                            : lesson.summary.split(
-                                                                  "\n"
-                                                              )[0]}
-                                                    </Typography>
+                                                    isLocked ? (
+                                                        <Typography
+                                                            variant="caption"
+                                                            color="text.secondary">
+                                                            Available in week{" "}
+                                                            {Math.ceil(
+                                                                displayIndex /
+                                                                    lessonsPerWeek
+                                                            )}
+                                                        </Typography>
+                                                    ) : (
+                                                        <Typography
+                                                            variant="caption"
+                                                            noWrap
+                                                            sx={{
+                                                                color: isCurrent
+                                                                    ? "primary.main"
+                                                                    : "text.secondary",
+                                                            }}>
+                                                            {displayIndex === 0
+                                                                ? "Course Overview"
+                                                                : lesson.summary.split(
+                                                                      "\n"
+                                                                  )[0]}
+                                                        </Typography>
+                                                    )
                                                 }
                                             />
                                         </ListItem>

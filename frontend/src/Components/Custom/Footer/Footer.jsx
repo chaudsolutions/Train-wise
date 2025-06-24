@@ -12,7 +12,9 @@ import {
 import { Logo } from "../Nav/Nav";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import { useAuthContext } from "../../Context/AuthContext";
-import { Facebook, Twitter, Instagram } from "@mui/icons-material";
+import Facebook from "@mui/icons-material/Facebook";
+import Twitter from "@mui/icons-material/Twitter";
+import Instagram from "@mui/icons-material/Instagram";
 import useResponsive from "../../Hooks/useResponsive";
 
 const Footer = () => {
@@ -47,7 +49,7 @@ const Footer = () => {
                     {/* Brand Column */}
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Stack spacing={3}>
-                            <Box>
+                            <Box width="fit-content">
                                 <Logo />
                             </Box>
                             <Typography

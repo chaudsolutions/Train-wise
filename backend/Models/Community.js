@@ -54,7 +54,6 @@ const communitySchema = new mongoose.Schema(
             type: String,
             required: [true, "Community name is required"],
             trim: true,
-            maxlength: [50, "Community name cannot exceed 50 characters"],
         },
         description: {
             type: String,
@@ -107,6 +106,14 @@ const communitySchema = new mongoose.Schema(
         canExplore: {
             type: Boolean,
             default: true,
+        },
+        cloudStorageLimit: {
+            type: Number,
+            default: 5, // in GB
+        },
+        cloudStorageUsed: {
+            type: Number,
+            default: 0, // in GB
         },
         paymentId: { type: String },
         renewalDate: { type: Date, default: null },
