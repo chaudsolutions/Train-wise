@@ -177,8 +177,8 @@ const Classroom = () => {
                 minHeight: "100vh",
             }}>
             <GoBack />
-            {/* confetti */}
 
+            {/* confetti */}
             {completionPercentage >= 100 && (
                 <ReactConfetti
                     width={width}
@@ -435,56 +435,63 @@ const Classroom = () => {
 
                         <Box m={2}>
                             {/* Summary Toggle Button */}
-                            {currentLesson?.type !== "summary" && (
-                                <Button
-                                    variant="contained"
-                                    onClick={toggleSummary}
-                                    sx={{
-                                        gap: 1,
-                                        bgcolor: "background.paper",
-                                        color: "text.primary",
-                                        "&:hover": {
-                                            bgcolor: "action.hover",
-                                        },
-                                    }}>
-                                    <Info fontSize="small" />
-                                    {showLessonSummary
-                                        ? "Hide Summary"
-                                        : "Show Summary"}
-                                    <Icon
-                                        component={
-                                            showLessonSummary
-                                                ? KeyboardArrowUp
-                                                : KeyboardArrowDown
-                                        }
-                                    />
-                                </Button>
-                            )}
+                            {currentLesson?.type !== "summary" &&
+                                currentLesson?.summary && (
+                                    <Button
+                                        variant="contained"
+                                        onClick={toggleSummary}
+                                        sx={{
+                                            gap: 1,
+                                            bgcolor: "background.paper",
+                                            color: "text.primary",
+                                            "&:hover": {
+                                                bgcolor: "action.hover",
+                                            },
+                                        }}>
+                                        <Info fontSize="small" />
+                                        {showLessonSummary
+                                            ? "Hide Summary"
+                                            : "Show Summary"}
+                                        <Icon
+                                            component={
+                                                showLessonSummary
+                                                    ? KeyboardArrowUp
+                                                    : KeyboardArrowDown
+                                            }
+                                        />
+                                    </Button>
+                                )}
 
-                            {/* Summary Panel */}
-                            <Collapse
-                                in={
-                                    showLessonSummary && currentLesson?.summary
-                                }>
-                                <Box
-                                    sx={{
-                                        bgcolor: "background.paper",
-                                        boxShadow: 3,
-                                        maxHeight: "40vh",
-                                        overflowY: "auto",
-                                        p: 2,
-                                    }}>
-                                    <Typography variant="h6">
-                                        Lesson Summary
-                                    </Typography>
-                                    <Typography
-                                        variant="body2"
-                                        whiteSpace="pre-wrap"
-                                        sx={{ color: "text.secondary", mt: 1 }}>
-                                        {currentLesson?.summary}
-                                    </Typography>
-                                </Box>
-                            </Collapse>
+                            {/* Summary Panel - Only show if summary exists */}
+                            {currentLesson?.summary && (
+                                <Collapse
+                                    in={
+                                        showLessonSummary &&
+                                        currentLesson?.summary
+                                    }>
+                                    <Box
+                                        sx={{
+                                            bgcolor: "background.paper",
+                                            boxShadow: 3,
+                                            maxHeight: "40vh",
+                                            overflowY: "auto",
+                                            p: 2,
+                                        }}>
+                                        <Typography variant="h6">
+                                            Lesson Summary
+                                        </Typography>
+                                        <Typography
+                                            variant="body2"
+                                            whiteSpace="pre-wrap"
+                                            sx={{
+                                                color: "text.secondary",
+                                                mt: 1,
+                                            }}>
+                                            {currentLesson?.summary}
+                                        </Typography>
+                                    </Box>
+                                </Collapse>
+                            )}
                         </Box>
 
                         {/* Lesson Navigation */}
@@ -700,9 +707,12 @@ const Classroom = () => {
                                                             }}>
                                                             {displayIndex === 0
                                                                 ? "Course Overview"
-                                                                : lesson.summary.split(
+                                                                : // Handle lessons without summaries
+                                                                lesson.summary
+                                                                ? lesson.summary.split(
                                                                       "\n"
-                                                                  )[0]}
+                                                                  )[0]
+                                                                : "No summary available"}
                                                         </Typography>
                                                     )
                                                 }
