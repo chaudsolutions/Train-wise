@@ -30,6 +30,17 @@ router.post("/create-payment-intent", async (req, res) => {
             await user.save();
         }
 
+        // Add this before creating payment intent
+        if (user.stripeCustomerId) {
+            await stripe.customers.update(user.stripeCustomerId, {
+                metadata: {
+                    ...user.stripeMetadata,
+                    application: "Skillbay",
+                },
+                description: "Skillbay User",
+            });
+        }
+
         // Create Payment Intent
         const paymentIntent = await stripe.paymentIntents.create({
             amount: amount * 100, // Convert to cents
@@ -38,7 +49,16 @@ router.post("/create-payment-intent", async (req, res) => {
             metadata: {
                 userId: userId.toString(),
                 purpose: type,
+                application: "Skillbay",
             },
+            payment_method_options: {
+                card: {
+                    request_three_d_secure: "any", // Recommended for compliance
+                },
+            },
+            payment_method_types: ["card"],
+            statement_descriptor: "Skillbay", // Appears on bank statements
+            description: `Payment for ${type} on Skillbay`,
         });
 
         res.status(200).json({
