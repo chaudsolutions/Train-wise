@@ -16,12 +16,10 @@ import {
     Chip,
     LinearProgress,
 } from "@mui/material";
-import {
-    AddCircleOutline,
-    DeleteOutline,
-    UploadFile,
-    VideoFile,
-} from "@mui/icons-material";
+import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
+import DeleteOutline from "@mui/icons-material/DeleteOutline";
+import UploadFile from "@mui/icons-material/UploadFile";
+import VideoFile from "@mui/icons-material/VideoFile";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import { serVer, useToken } from "../../Hooks/useVariable";
 import ButtonLoad from "../../Animations/ButtonLoad";
@@ -145,7 +143,6 @@ const CreateCourse = () => {
             }
 
             // Handle lessons
-            // Handle lessons
             lessons.forEach((lesson, index) => {
                 formData.append(`lessonType_${index}`, lesson.type);
                 formData.append(
@@ -179,6 +176,7 @@ const CreateCourse = () => {
                 }
 
                 if (lesson.summaryMode === "pdf") {
+                    // Only append if file exists
                     if (files.lessonSummaryPdfs[index]) {
                         formData.append(
                             `lessonSummaryPdf_${index}`,
@@ -186,10 +184,13 @@ const CreateCourse = () => {
                         );
                     }
                 } else {
-                    formData.append(
-                        `lessonSummaryText_${index}`,
-                        data[`lessonSummaryText_${index}`]
-                    );
+                    // Only append if text exists
+                    if (data[`lessonSummaryText_${index}`]) {
+                        formData.append(
+                            `lessonSummaryText_${index}`,
+                            data[`lessonSummaryText_${index}`]
+                        );
+                    }
                 }
             });
 
@@ -510,9 +511,7 @@ const CreateCourse = () => {
                                 </Box>
 
                                 {lesson.summaryMode === "pdf" ? (
-                                    <FormControl
-                                        fullWidth
-                                        error={!files.lessonSummaryPdfs[index]}>
+                                    <FormControl fullWidth>
                                         <input
                                             type="file"
                                             accept="application/pdf"
@@ -537,14 +536,9 @@ const CreateCourse = () => {
                                                 {files.lessonSummaryPdfs[
                                                     index
                                                 ]?.name?.slice(0, 15) ||
-                                                    "Upload Summary PDF"}
+                                                    "Upload Summary PDF (Optional)"}
                                             </Button>
                                         </label>
-                                        {!files.lessonSummaryPdfs[index] && (
-                                            <FormHelperText error>
-                                                Summary PDF is required
-                                            </FormHelperText>
-                                        )}
                                     </FormControl>
                                 ) : (
                                     <TextField
@@ -552,22 +546,9 @@ const CreateCourse = () => {
                                         multiline
                                         rows={1}
                                         {...register(
-                                            `lessonSummaryText_${index}`,
-                                            {
-                                                required:
-                                                    "Summary text is required",
-                                            }
+                                            `lessonSummaryText_${index}`
                                         )}
-                                        error={
-                                            !!errors[
-                                                `lessonSummaryText_${index}`
-                                            ]
-                                        }
-                                        helperText={
-                                            errors[`lessonSummaryText_${index}`]
-                                                ?.message
-                                        }
-                                        placeholder="Enter lesson summary..."
+                                        placeholder="Enter lesson summary (Optional)"
                                     />
                                 )}
                             </Box>

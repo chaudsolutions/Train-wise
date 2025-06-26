@@ -149,23 +149,19 @@ const createCourse = async (req, res) => {
                         );
                 }
 
-                // Process lesson summary
-                let lessonSummary;
+                // Process lesson summary (now optional)
+                let lessonSummary = null;
                 if (summaryMode === "pdf") {
                     const summaryFile = files.find(
                         (f) => f.fieldname === `lessonSummaryPdf_${i}`
                     );
-                    if (!summaryFile)
-                        throw new Error(
-                            `Missing summary PDF for lesson ${i + 1}`
+                    if (summaryFile) {
+                        lessonSummary = await parsePDFBuffer(
+                            summaryFile.buffer
                         );
-                    lessonSummary = await parsePDFBuffer(summaryFile.buffer);
+                    }
                 } else {
-                    lessonSummary = body[`lessonSummaryText_${i}`];
-                    if (!lessonSummary)
-                        throw new Error(
-                            `Missing summary text for lesson ${i + 1}`
-                        );
+                    lessonSummary = body[`lessonSummaryText_${i}`] || null;
                 }
 
                 lessons.push({
