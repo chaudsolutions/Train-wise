@@ -582,13 +582,16 @@ router.put("/:communityId/send/messages", async (req, res) => {
     try {
         const { content } = req.body;
         const community = await Community.findById(communityId);
+        const admin = await UsersModel.findById(userId);
 
         if (!community) {
             return res.status(404).json("Community not found");
         }
 
         // check if admin
-        const createdBy = community.createdBy.toString() === userId.toString();
+        const createdBy =
+            community.createdBy.toString() === userId.toString() ||
+            admin.role === "admin";
 
         // Check if user is a member
         const isMember =
