@@ -31,21 +31,18 @@ import {
     StepLabel,
     StepContent,
 } from "@mui/material";
-import {
-    Info as InfoIcon,
-    PlayCircleOutline as PlayIcon,
-    Send as SendIcon,
-    Circle as OnlineIcon,
-    People,
-} from "@mui/icons-material";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import EmailIcon from "@mui/icons-material/Email";
-import PersonIcon from "@mui/icons-material/Person";
 import CheckIcon from "@mui/icons-material/CheckCircle";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
+import InfoIcon from "@mui/icons-material/Info";
+import PlayIcon from "@mui/icons-material/PlayCircleOutline";
+import SendIcon from "@mui/icons-material/Send";
+import OnlineIcon from "@mui/icons-material/Circle";
+import People from "@mui/icons-material/People";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import CourseStockImg from "../../../assets/courseStock.png";
 import { useEffect, useRef, useState } from "react";

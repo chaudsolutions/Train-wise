@@ -25,6 +25,7 @@ import { serVer, useToken } from "../../Hooks/useVariable";
 import ButtonLoad from "../../Animations/ButtonLoad";
 import axios from "axios";
 import toast from "react-hot-toast";
+import logError from "../../../utils/logger";
 
 const CreateCourse = () => {
     const { useParams, Link } = useReactRouter();
@@ -217,6 +218,18 @@ const CreateCourse = () => {
             console.error("Error creating course:", error);
             toast.error(error.response?.data || "Failed to create course");
             setUploadProgress(0);
+            logError({
+                error: error?.response.data,
+                context: {
+                    action: "user_create_course",
+                    component: "CreateCourse",
+                    customData: {
+                        communityId,
+                        courseName: data.name,
+                    },
+                },
+                type: "try_catch",
+            });
         }
     };
 
