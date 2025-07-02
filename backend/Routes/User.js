@@ -12,6 +12,9 @@ const Notification = require("../Models/Notification");
 const Withdrawal = require("../Models/Withdrawal");
 const Payment = require("../Models/Payment");
 const PaymentDetails = require("../Models/PaymentDetails");
+const { generateAlphanumericOTP } = require("../utils/generators");
+const { welcomeEmailWithOTP } = require("../utils/emailTemplates");
+const { transporter } = require("../config/nodemailer");
 
 const router = express.Router();
 
@@ -861,6 +864,134 @@ router.put("/report-community/:communityId", async (req, res) => {
     } catch (error) {
         console.error("Error reporting community:", error);
         res.status(500).json("Failed to report community");
+    }
+});
+
+// Resend Verification OTP Endpoint
+router.post("/resend-verification", async (req, res) => {
+    const userId = req.userId;
+
+    try {
+        // 1. Find the user
+        const user = await UsersModel.findById(userId);
+        if (!user) {
+            return res.status(404).json("User not found");
+        }
+
+        // 2. Check if user is already verified
+        if (user.isVerified) {
+            return res.status(400).json("Account is already verified");
+        }
+
+        // 3. Generate new OTP and expiry (24 hours from now)
+        const newOTP = generateAlphanumericOTP(6);
+        const newExpiry = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+
+        // 4. Update user document with new OTP
+        user.passwordResetOTP = newOTP;
+        user.passwordResetExpiry = newExpiry;
+        await user.save();
+
+        // 5. Send new verification email
+        const emailContent = welcomeEmailWithOTP(user.name, newOTP);
+        const mailOptions = {
+            from: process.env.EMAIL_FROM,
+            replyTo: process.env.EMAIL_REPLY_TO,
+            to: user.email,
+            subject: emailContent.subject,
+            html: emailContent.html,
+            text: emailContent.text,
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        // 6. Return success response
+        res.status(200).json("New verification OTP sent successfully");
+    } catch (error) {
+        console.error("Error resending verification OTP:", error);
+        res.status(500).json("Failed to resend verification OTP");
+    }
+});
+
+// Add OTP verification endpoint
+router.post("/verify-account", async (req, res) => {
+    const userId = req.userId;
+    const { otp } = req.body;
+
+    try {
+        const user = await UsersModel.findById(userId);
+
+        const isUserVerified = await UsersModel.findOne({
+            email: user.email,
+            passwordResetExpiry: { $gt: Date.now() },
+        });
+
+        if (
+            !isUserVerified ||
+            isUserVerified.passwordResetOTP.toUpperCase() !== otp.toUpperCase()
+        ) {
+            return res.status(400).json("Invalid or expired verification code");
+        }
+
+        // Mark user as verified
+        isUserVerified.isVerified = true;
+        isUserVerified.passwordResetOTP = undefined;
+        isUserVerified.passwordResetExpiry = undefined;
+        await isUserVerified.save();
+
+        res.status(200).json("Account verified successfully");
+    } catch (error) {
+        console.error("Error verifying account:", error);
+        res.status(500).json("Failed to verify account");
+    }
+});
+
+// endpoint to delete user account
+router.delete("/delete-account", async (req, res) => {
+    const userId = req.userId;
+
+    try {
+        const user = await UsersModel.findById(userId);
+        if (user.role === "admin") {
+            return res.status(403).json("Admin account cannot be deleted");
+        }
+
+        // check if user is part of any community or has a community and only delete if not part of any
+        const communityCreated = await Community.findOne({
+            createdBy: userId,
+        });
+
+        if (communityCreated) {
+            return res
+                .status(403)
+                .json(
+                    "User is creator of a community and cannot delete account"
+                );
+        }
+
+        const communities = await Community.find();
+
+        for (let community of communities) {
+            // check if user is part of community
+            const isMember = community.members.some(
+                (member) => member.userId.toString() === userId.toString()
+            );
+
+            if (isMember) {
+                return res
+                    .status(403)
+                    .json(
+                        "User is part of a community and cannot delete account"
+                    );
+            }
+        }
+
+        await UsersModel.findByIdAndDelete(userId);
+
+        res.status(200).json("Account deleted successfully");
+    } catch (error) {
+        console.error("Error deleting account:", error);
+        res.status(500).json("Failed to delete account");
     }
 });
 

@@ -4,7 +4,10 @@ const bcrypt = require("bcrypt");
 
 const UsersModel = require("../Models/Users.js");
 const { generateAlphanumericOTP } = require("../utils/generators.js");
-const { passwordResetOTPEmail } = require("../utils/emailTemplates.js");
+const {
+    passwordResetOTPEmail,
+    welcomeEmailWithOTP,
+} = require("../utils/emailTemplates.js");
 const transporter = require("../config/nodemailer.js");
 
 const router = express.Router();
@@ -20,8 +23,32 @@ router.post("/register", async (req, res) => {
     const { email, name, password } = req.body;
 
     try {
+        // Generate verification OTP and expiry (24 hours from now)
+        const verificationOTP = generateAlphanumericOTP(6);
+        const verificationExpiry = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+
         // Register a new user
-        const user = await UsersModel.signup({ email, name, password });
+        const user = await UsersModel.signup({
+            email,
+            name,
+            password,
+            verificationOTP,
+            verificationExpiry,
+            isVerified: false,
+        });
+
+        // Send welcome email with verification OTP
+        const emailContent = welcomeEmailWithOTP(name, verificationOTP);
+        const mailOptions = {
+            from: process.env.EMAIL_FROM,
+            replyTo: process.env.EMAIL_REPLY_TO,
+            to: user.email,
+            subject: emailContent.subject,
+            html: emailContent.html,
+            text: emailContent.text,
+        };
+
+        await transporter.sendMail(mailOptions);
 
         // Create a token for the user
         const token = createToken(user._id);
@@ -83,8 +110,7 @@ router.post("/reset-password/email", async (req, res) => {
             text: emailContent.text,
         };
 
-        const nodemailerRes = await transporter.sendMail(mailOptions);
-        console.log("email sent", nodemailerRes);
+        await transporter.sendMail(mailOptions);
 
         res.status(200).json("OTP sent successfully");
     } catch (error) {

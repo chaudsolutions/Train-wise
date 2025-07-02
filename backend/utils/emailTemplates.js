@@ -116,10 +116,10 @@ exports.passwordResetOTPEmail = (otpCode) => {
 exports.welcomeEmail = (userName) => {
     const subject = `Welcome to Our Service, ${userName}!`;
     const content = `
-        <p>Thank you for joining our community!</p>
+        <p>Thank you for joining our platform!</p>
         <p>Get started by exploring our features:</p>
-        <a href="https://yourdomain.com/dashboard" class="button">Go to Dashboard</a>
-        <p>Need help getting started? Check out our <a href="https://yourdomain.com/guides">getting started guides</a>.</p>
+        <a href="${appUrl}/profile" class="button">Go to Profile</a>
+        <p>Need help getting started? Check out our <a href="${appUrl}/tutorial">getting started guides</a>.</p>
     `;
 
     return {
@@ -129,19 +129,35 @@ exports.welcomeEmail = (userName) => {
     };
 };
 
-// Email Verification Email
-exports.verifyEmail = (verificationLink) => {
-    const subject = "Verify Your Email Address";
+// Welcome Email with Verification OTP
+exports.welcomeEmailWithOTP = (userName, otpCode) => {
+    const subject = `Welcome to Skillbay, ${userName}!`;
     const content = `
-        <p>Please verify your email address to complete your registration:</p>
-        <a href="${verificationLink}" class="button">Verify Email</a>
-        <p>If you didn't create an account, you can safely ignore this email.</p>
+        <p>Thank you for joining Skillbay! To get started, please verify your account using this OTP:</p>
+        <div style="
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #2c3e50;
+            background-color: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+            display: inline-block;
+            font-family: monospace;
+        ">
+            ${otpCode}
+        </div>
+        <p>This OTP is valid for 24 hours. Do not share this code with anyone.</p>
+        <p>Once verified, you can start exploring our platform:</p>
+        <a href="${appUrl}/profile" class="button">Go to Profile</a>
     `;
-    const note = "This verification link will expire in 24 hours.";
+    const note =
+        "Note: This code contains both letters and numbers, and is case-sensitive.";
 
     return {
         subject,
         html: baseEmailTemplate(subject, content, note),
-        text: `Email Verification Link: ${verificationLink}`,
+        text: `Welcome to Skillbay!\n\nYour verification OTP: ${otpCode}\nThis code expires in 24hrs. Do not share it.\n\nGet started: ${appUrl}/profile`,
     };
 };

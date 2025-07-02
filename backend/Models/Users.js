@@ -50,12 +50,21 @@ const UsersSchema = new Schema(
         ],
         passwordResetOTP: { type: String },
         passwordResetExpiry: { type: Date },
+        isVerified: { type: Boolean, default: false },
     },
     { timestamps: true }
 );
 
 // Static sign up method and hashing password
-UsersSchema.statics.signup = async function ({ email, name, password, role }) {
+UsersSchema.statics.signup = async function ({
+    email,
+    name,
+    password,
+    role,
+    verificationOTP,
+    verificationExpiry,
+    isVerified,
+}) {
     // validation
     if (!name || !email || !password) {
         throw Error("All Fields must be filled");
@@ -79,6 +88,9 @@ UsersSchema.statics.signup = async function ({ email, name, password, role }) {
         email,
         role,
         password: hash,
+        passwordResetOTP: verificationOTP,
+        passwordResetExpiry: verificationExpiry,
+        isVerified,
     });
 
     return user;
