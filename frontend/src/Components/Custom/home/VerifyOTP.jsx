@@ -102,7 +102,7 @@ const VerifyOTP = ({ email }) => {
 
     return (
         <Dialog
-            open={isVerified}
+            open={!isVerified}
             maxWidth="xs"
             fullWidth
             PaperProps={{
