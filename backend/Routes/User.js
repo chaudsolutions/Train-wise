@@ -14,7 +14,7 @@ const Payment = require("../Models/Payment");
 const PaymentDetails = require("../Models/PaymentDetails");
 const { generateAlphanumericOTP } = require("../utils/generators");
 const { welcomeEmailWithOTP } = require("../utils/emailTemplates");
-const { transporter } = require("../config/nodemailer");
+const transporter = require("../config/nodemailer");
 
 const router = express.Router();
 
@@ -903,7 +903,8 @@ router.post("/resend-verification", async (req, res) => {
             text: emailContent.text,
         };
 
-        await transporter.sendMail(mailOptions);
+        const mail = await transporter.sendMail(mailOptions);
+        console.log(mail);
 
         // 6. Return success response
         res.status(200).json("New verification OTP sent successfully");
