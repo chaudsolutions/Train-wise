@@ -884,7 +884,7 @@ router.post("/resend-verification", async (req, res) => {
         }
 
         // 3. Generate new OTP and expiry (24 hours from now)
-        const newOTP = generateAlphanumericOTP(6);
+        const newOTP = generateAlphanumericOTP();
         const newExpiry = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
 
         // 4. Update user document with new OTP

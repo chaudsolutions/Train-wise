@@ -8,6 +8,7 @@ import {
     Typography,
     CircularProgress,
     Alert,
+    Box,
 } from "@mui/material";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -108,7 +109,8 @@ const VerifyOTP = ({ email }) => {
             PaperProps={{
                 sx: {
                     borderRadius: 3,
-                    p: 2,
+                    p: 1,
+                    py: 3,
                 },
             }}>
             <DialogTitle sx={{ textAlign: "center", py: 3 }}>
@@ -116,7 +118,7 @@ const VerifyOTP = ({ email }) => {
                     Verify Your Account
                 </Typography>
                 <Typography variant="body2" color="text.secondary" mt={1}>
-                    Enter the 6-digit OTP sent to {email}
+                    Enter the 5-digit OTP sent to {email}
                 </Typography>
             </DialogTitle>
 
@@ -127,12 +129,23 @@ const VerifyOTP = ({ email }) => {
                     </Alert>
                 )}
 
-                <OtpKit
-                    value={otp}
-                    onChange={handleChange}
-                    type={"text"}
-                    submitOtpButton={{ show: false }}
-                />
+                <Box
+                    sx={{
+                        ".rok__input__group": {
+                            columnGap: 1,
+                        },
+                        ".rok__cta__container": {
+                            paddingTop: 3,
+                        },
+                    }}>
+                    <OtpKit
+                        value={otp}
+                        onChange={handleChange}
+                        type={"text"}
+                        numOfInputs={5}
+                        submitOtpButton={{ show: false }}
+                    />
+                </Box>
 
                 <Typography
                     variant="body2"
@@ -157,7 +170,14 @@ const VerifyOTP = ({ email }) => {
                 </Typography>
             </DialogContent>
 
-            <DialogActions sx={{ px: 3, pb: 3 }}>
+            <DialogActions
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    flexFlow: "row wrap-reverse",
+                    justifyContent: "center",
+                    gap: 2,
+                }}>
                 <Button
                     onClick={handleDeleteAccount}
                     color="warning"
@@ -173,7 +193,10 @@ const VerifyOTP = ({ email }) => {
                 <Button
                     onClick={handleVerify}
                     variant="contained"
-                    disabled={loading}>
+                    disabled={loading}
+                    sx={{
+                        flexGrow: 1,
+                    }}>
                     {loading ? (
                         <CircularProgress size={24} color="inherit" />
                     ) : (

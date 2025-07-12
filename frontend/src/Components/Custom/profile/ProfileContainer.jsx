@@ -30,7 +30,7 @@ import Groups from "@mui/icons-material/Groups";
 import CameraIcon from "@mui/icons-material/CameraAlt";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import NoProfilePhoto from "../../../assets/no-profile.png";
+import { noProfilePic } from "../../Hooks/useVariable";
 
 const ProfileContainer = ({
     categories,
@@ -120,7 +120,7 @@ const ProfileContainer = ({
                 }}>
                 <Box sx={{ position: "relative" }}>
                     <Avatar
-                        src={avatar || NoProfilePhoto}
+                        src={avatar || noProfilePic}
                         sx={{
                             width: 120,
                             height: 120,

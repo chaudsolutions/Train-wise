@@ -112,7 +112,7 @@ app.use("/payment", VerifyPayments);
 //     for (const user of users) {
 //       try {
 //         // Generate new OTP
-//         const otp = generateAlphanumericOTP(6);
+//         const otp = generateAlphanumericOTP();
 //         const expiry = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
 
 //         // Update user

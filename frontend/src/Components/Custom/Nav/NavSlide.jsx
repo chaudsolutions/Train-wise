@@ -5,6 +5,7 @@ import { useUserData } from "../../Hooks/useQueryFetch/useQueryData";
 import { Avatar, Box, Button, Typography } from "@mui/material";
 import { ChevronRight } from "@mui/icons-material";
 import { useReactRouter } from "../../Hooks/useReactRouter";
+import { noProfilePic } from "../../Hooks/useVariable";
 
 export const AuthContainer = ({ setAuthOpen }) => {
     const { user } = useAuthContext();
@@ -38,7 +39,7 @@ export const UserProfile = () => {
     return (
         <Box sx={{ p: 3, textAlign: "center" }}>
             <Avatar
-                src={avatar}
+                src={avatar || noProfilePic}
                 sx={{
                     width: 80,
                     height: 80,

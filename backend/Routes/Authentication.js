@@ -24,7 +24,7 @@ router.post("/register", async (req, res) => {
 
     try {
         // Generate verification OTP and expiry (24 hours from now)
-        const verificationOTP = generateAlphanumericOTP(6);
+        const verificationOTP = generateAlphanumericOTP();
         const verificationExpiry = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
 
         // Register a new user
@@ -91,7 +91,7 @@ router.post("/reset-password/email", async (req, res) => {
         }
 
         // Generate alphanumeric OTP and expiration
-        const otp = generateAlphanumericOTP(6); // 6-character code
+        const otp = generateAlphanumericOTP(); // 6-character code
         const otpExpiry = Date.now() + 7200000; // 2hrs
 
         // Save OTP to user document

@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 
-const generateAlphanumericOTP = (length = 6) => {
-    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const generateAlphanumericOTP = (length = 5) => {
+    const characters = "ABCDEFGHIJKLMNPQRSTUVWXYZ123456789";
     const charactersLength = characters.length;
     const randomBytes = crypto.randomBytes(length);
     let result = "";
