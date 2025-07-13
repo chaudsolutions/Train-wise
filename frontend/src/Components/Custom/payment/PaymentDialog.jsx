@@ -31,6 +31,18 @@ export const PaymentDialog = ({
     const [subscriptionPeriod, setSubscriptionPeriod] = useState("monthly");
     const [currentAmount, setCurrentAmount] = useState(initialAmount);
 
+    const isCommunityCreation = type === "community_creation";
+    const isCommunityMemberSubscription = type === "community_subscription";
+    const isCommunityMembershipRenewal = type === "community_renewal";
+    const isStoragePurchase = type === "storage_purchase";
+
+    const handleType = {
+        isCommunityCreation,
+        isCommunityMemberSubscription,
+        isCommunityMembershipRenewal,
+        isStoragePurchase,
+    };
+
     // Reset state when dialog opens
     useEffect(() => {
         if (open) {
@@ -41,20 +53,25 @@ export const PaymentDialog = ({
 
     // Update amount when subscription period changes
     useEffect(() => {
-        if (type === "community_subscription") {
+        if (handleType.isCommunityMemberSubscription) {
             const newAmount =
                 subscriptionPeriod === "yearly"
                     ? initialAmount * 12
                     : initialAmount;
             setCurrentAmount(newAmount);
         }
-    }, [subscriptionPeriod, initialAmount, type]);
+    }, [
+        subscriptionPeriod,
+        initialAmount,
+        handleType.isCommunityMemberSubscription,
+    ]);
 
     const handleSubmit = async () => {
         const success = await handlePayment({
             amount: currentAmount,
             onSuccess: onPaymentSuccess,
             type,
+            handleType,
             data,
         });
         if (success) {
@@ -66,16 +83,16 @@ export const PaymentDialog = ({
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle>
                 Pay ${currentAmount}
-                {type === "community_subscription"
-                    ? `/${
-                          subscriptionPeriod === "yearly" ? "year" : "month"
-                      } to join`
-                    : "/year to create"}{" "}
-                Community
+                {handleType.isCommunityMemberSubscription &&
+                    `${
+                        subscriptionPeriod === "yearly" ? "year" : "month"
+                    } to join`}
+                {handleType.isCommunityCreation && "/year to create"}
+                {handleType.isStoragePurchase && " for storage upgrade"}
             </DialogTitle>
             <DialogContent>
                 {/* Subscription period selector */}
-                {type === "community_subscription" && (
+                {handleType.isCommunityMemberSubscription && (
                     <FormControl fullWidth sx={{ mb: 5 }}>
                         <InputLabel>Subscription Type</InputLabel>
                         <Select

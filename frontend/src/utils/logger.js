@@ -83,7 +83,10 @@ const retryPendingErrors = async () => {
                 localStorage.removeItem(ERROR_STORAGE_KEY);
             }
         } catch (e) {
-            failed.push(error);
+            if (e) {
+                failed.push(error);
+                localStorage.removeItem(ERROR_STORAGE_KEY);
+            }
         }
     }
 

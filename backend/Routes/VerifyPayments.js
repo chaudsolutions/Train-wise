@@ -57,7 +57,7 @@ router.post("/create-payment-intent", async (req, res) => {
                 },
             },
             payment_method_types: ["card"],
-            statement_descriptor: "Skillbay", // Appears on bank statements
+            statement_descriptor_suffix: "Skillbay", // Appears on bank statements
             description: `Payment for ${type} on Skillbay`,
         });
 

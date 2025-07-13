@@ -308,6 +308,7 @@ router.get("/dashboard/analytics", async (req, res) => {
         // get settings
         const settings = await Settings.findOne().lean();
         const communityCreationFee = settings.communityCreationFee / 100;
+        const storagePrice = settings.storagePrice / 100;
         const withdrawalLimit = settings.withdrawalLimit;
 
         // get error logs
@@ -342,6 +343,7 @@ router.get("/dashboard/analytics", async (req, res) => {
             },
             settings: {
                 communityCreationFee,
+                storagePrice,
                 withdrawalLimit,
             },
             errorLogs,

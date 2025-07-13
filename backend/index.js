@@ -30,6 +30,7 @@ const { Creator } = require("./Routes/Creator");
 const { Api } = require("./Routes/Api");
 const { VerifyPayments } = require("./Routes/VerifyPayments");
 const { Admin } = require("./Routes/Admin");
+const Community = require("./Models/Community");
 //const { transporter } = require("./config/nodemailer");
 //const { welcomeEmailWithOTP } = require("./utils/emailTemplates");
 //const { generateAlphanumericOTP } = require("./utils/generators");

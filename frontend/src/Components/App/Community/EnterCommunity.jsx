@@ -41,9 +41,6 @@ import {
     CommunityInventory,
     CommunityOverview,
 } from "../../Custom/community/EnterCommunity";
-import toast from "react-hot-toast";
-import axios from "axios";
-import { serVer, useToken } from "../../Hooks/useVariable";
 import { useSearchParams } from "react-router-dom";
 import { ReportCommunityForm } from "../../Custom/Forms/Forms";
 import SocialShareDrawer from "../../Custom/Buttons/SocialShareDrawer";
@@ -52,14 +49,12 @@ import GoBack from "../../Custom/Buttons/GoBack";
 const EnterCommunity = () => {
     const [activeTab, setActiveTab] = useState("community");
     const [openSnackbar, setOpenSnackbar] = useState(false);
-    const [btn, setBtn] = useState(false);
     const [reportDialog, setReportDialog] = useState(false);
     const [selectShare, setSelectShare] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
 
     const theme = useTheme();
     const { isMobile } = useResponsive();
-    const { token } = useToken();
     const { useParams, Link } = useReactRouter();
     const { communityId } = useParams();
 
@@ -75,7 +70,6 @@ const EnterCommunity = () => {
     const {
         name,
         logo,
-        balance,
         category,
         description,
         bannerImage,
@@ -112,29 +106,6 @@ const EnterCommunity = () => {
             return;
         }
         setOpenSnackbar(false);
-    };
-
-    const withdrawCommunityBalance = async () => {
-        setBtn(true);
-        try {
-            const res = await axios.put(
-                `${serVer}/creator/withdraw/${communityId}`,
-                {},
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-
-            toast.success(res.data);
-
-            refetchCommunity();
-        } catch (error) {
-            toast.error(error?.response.data || "Withdrawal failed");
-        } finally {
-            setBtn(false);
-        }
     };
 
     const communityUrl = `${window.location.origin}/community/${community?._id}`;
@@ -284,9 +255,9 @@ const EnterCommunity = () => {
                         <Box sx={{ p: 3 }}>
                             {activeTab === "inventory" && isCommunityAdmin && (
                                 <CommunityInventory
-                                    balance={balance}
-                                    handleWithdrawal={withdrawCommunityBalance}
-                                    btn={btn}
+                                    community={community}
+                                    refetchCommunity={refetchCommunity}
+                                    setActiveTab={setActiveTab}
                                 />
                             )}
 

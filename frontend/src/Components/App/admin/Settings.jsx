@@ -32,6 +32,7 @@ const Settings = () => {
         defaultValues: {
             communityCreationFee: settings?.communityCreationFee || 0,
             withdrawalLimit: settings?.withdrawalLimit || 0,
+            storagePrice: settings?.storagePrice || 0,
         },
     });
 
@@ -41,6 +42,7 @@ const Settings = () => {
             reset({
                 communityCreationFee: settings?.communityCreationFee,
                 withdrawalLimit: settings?.withdrawalLimit,
+                storagePrice: settings?.storagePrice,
             });
         }
     }, [settings, reset]);
@@ -55,6 +57,9 @@ const Settings = () => {
                 }),
                 ...(data.withdrawalLimit !== settings?.withdrawalLimit && {
                     withdrawalLimit: data.withdrawalLimit,
+                }),
+                ...(data.storagePrice !== settings?.storagePrice && {
+                    storagePrice: data.storagePrice * 100,
                 }),
             };
 
@@ -120,6 +125,24 @@ const Settings = () => {
                             />
                             <FormHelperText error>
                                 {errors.withdrawalLimit?.message}
+                            </FormHelperText>
+                        </Grid>
+
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <TextField
+                                fullWidth
+                                label="5GB storage price"
+                                type="number"
+                                {...register("storagePrice", {
+                                    min: { value: 1, message: "Must be ≥ 1" },
+                                })}
+                                error={!!errors.storagePrice}
+                                InputProps={{
+                                    startAdornment: "$",
+                                }}
+                            />
+                            <FormHelperText error>
+                                {errors.storagePrice?.message}
                             </FormHelperText>
                         </Grid>
 

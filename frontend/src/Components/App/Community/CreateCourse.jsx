@@ -15,22 +15,34 @@ import {
     Divider,
     Chip,
     LinearProgress,
+    Grid,
+    CircularProgress,
 } from "@mui/material";
 import AddCircleOutline from "@mui/icons-material/AddCircleOutline";
 import DeleteOutline from "@mui/icons-material/DeleteOutline";
 import UploadFile from "@mui/icons-material/UploadFile";
 import VideoFile from "@mui/icons-material/VideoFile";
 import { useReactRouter } from "../../Hooks/useReactRouter";
-import { serVer, useToken } from "../../Hooks/useVariable";
+import { serVer, stripePromise, useToken } from "../../Hooks/useVariable";
 import ButtonLoad from "../../Animations/ButtonLoad";
 import axios from "axios";
 import toast from "react-hot-toast";
 import logError from "../../../utils/logger";
+import CloudStorage from "../../Custom/community/CloudStorage";
+import { useCommunityByIdData } from "../../Hooks/useQueryFetch/useQueryData";
+import { Elements } from "@stripe/react-stripe-js";
 
 const CreateCourse = () => {
     const { useParams, Link } = useReactRouter();
     const { communityId } = useParams();
     const { token } = useToken();
+
+    const { community, isCommunityLoading, refetchCommunity } =
+        useCommunityByIdData({
+            id: communityId,
+        });
+
+    const { cloudStorageLimit, cloudStorageUsed, _id } = community || {};
 
     const {
         register,
@@ -234,418 +246,448 @@ const CreateCourse = () => {
     };
 
     return (
-        <Box sx={{ p: 3, maxWidth: 800, mx: "auto" }}>
-            <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
-                <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-                    Create New Course
-                </Typography>
-
-                <form onSubmit={handleSubmit(onSubmit)}>
-                    {/* Course Name Field */}
-                    <TextField
-                        fullWidth
-                        label="Course Name"
-                        {...register("name", {
-                            required: "Course name is required",
-                        })}
-                        error={!!errors.name}
-                        helperText={errors.name?.message}
-                        sx={{ mb: 3 }}
-                    />
-
-                    {/* Duration Field */}
-                    <FormControl
-                        fullWidth
-                        sx={{ mb: 3 }}
-                        error={!!errors.duration}>
-                        <InputLabel>Duration</InputLabel>
-                        <Select
-                            {...register("duration", {
-                                required: "Duration is required",
-                            })}
-                            label="Duration"
-                            defaultValue="">
-                            <MenuItem value="" disabled>
-                                Select duration
-                            </MenuItem>
-                            <MenuItem value="4">4 Week</MenuItem>
-                            <MenuItem value="8">8 Weeks</MenuItem>
-                            <MenuItem value="12">12 Weeks</MenuItem>
-                            <MenuItem value="16">16 Weeks</MenuItem>
-                            <MenuItem value="20">20 Weeks</MenuItem>
-                            <MenuItem value="26">24 Weeks</MenuItem>
-                        </Select>
-                        <FormHelperText>
-                            {errors.duration?.message}
-                        </FormHelperText>
-                    </FormControl>
-
-                    {/* Course Summary Section */}
-                    <Box sx={{ mb: 3 }}>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                                mb: 2,
-                            }}>
-                            <Typography variant="subtitle1">
-                                Course Summary
-                            </Typography>
-                            <Chip
-                                label={summaryMode.toUpperCase()}
-                                onClick={() =>
-                                    setSummaryMode((prev) =>
-                                        prev === "pdf" ? "text" : "pdf"
-                                    )
-                                }
-                                color="primary"
-                                size="small"
-                                variant="outlined"
-                            />
-                        </Box>
-
-                        {summaryMode === "pdf" ? (
-                            <FormControl fullWidth error={!!errors.summaryPdf}>
-                                <input
-                                    type="file"
-                                    accept="application/pdf"
-                                    hidden
-                                    id="summaryPdf"
-                                    onChange={(e) => {
-                                        const file = e.target.files[0];
-                                        handleFileUpload(
-                                            "summaryPdf",
-                                            null,
-                                            file
-                                        );
-                                    }}
-                                />
-                                <label htmlFor="summaryPdf">
-                                    <Button
-                                        variant="outlined"
-                                        component="span"
-                                        startIcon={<UploadFile />}
-                                        fullWidth>
-                                        {files.summaryPdf?.name?.slice(0, 15) ||
-                                            "Upload Summary PDF"}
-                                    </Button>
-                                </label>
-                                {!files.summaryPdf && (
-                                    <FormHelperText error>
-                                        PDF is required
-                                    </FormHelperText>
-                                )}
-                            </FormControl>
-                        ) : (
-                            <TextField
-                                fullWidth
-                                multiline
-                                rows={1}
-                                {...register("summaryText", {
-                                    required: "Summary text is required",
-                                })}
-                                error={!!errors.summaryText}
-                                helperText={errors.summaryText?.message}
-                                placeholder="Enter course summary..."
-                            />
-                        )}
-                    </Box>
-
-                    {/* Lessons Section */}
-                    <Divider sx={{ my: 4 }} />
-                    <Typography variant="h6" gutterBottom>
-                        Course Lessons
+        <Elements stripe={stripePromise}>
+            <Box sx={{ p: 3, maxWidth: 800, mx: "auto" }}>
+                <Paper elevation={3} sx={{ p: 3, borderRadius: 2, mb: 4 }}>
+                    <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
+                        Create New Course
                     </Typography>
 
-                    {lessons.map((lesson, index) => (
-                        <Box
-                            key={index}
-                            sx={{ mb: 4, border: 1, p: 2, borderRadius: 1 }}>
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                        {/* Course Name Field */}
+                        <TextField
+                            fullWidth
+                            label="Course Name"
+                            {...register("name", {
+                                required: "Course name is required",
+                            })}
+                            error={!!errors.name}
+                            helperText={errors.name?.message}
+                            sx={{ mb: 3 }}
+                        />
+
+                        {/* Duration Field */}
+                        <FormControl
+                            fullWidth
+                            sx={{ mb: 3 }}
+                            error={!!errors.duration}>
+                            <InputLabel>Duration</InputLabel>
+                            <Select
+                                {...register("duration", {
+                                    required: "Duration is required",
+                                })}
+                                label="Duration"
+                                defaultValue="">
+                                <MenuItem value="" disabled>
+                                    Select duration
+                                </MenuItem>
+                                <MenuItem value="4">4 Week</MenuItem>
+                                <MenuItem value="8">8 Weeks</MenuItem>
+                                <MenuItem value="12">12 Weeks</MenuItem>
+                                <MenuItem value="16">16 Weeks</MenuItem>
+                                <MenuItem value="20">20 Weeks</MenuItem>
+                                <MenuItem value="26">24 Weeks</MenuItem>
+                            </Select>
+                            <FormHelperText>
+                                {errors.duration?.message}
+                            </FormHelperText>
+                        </FormControl>
+
+                        {/* Course Summary Section */}
+                        <Box sx={{ mb: 3 }}>
                             <Box
                                 sx={{
                                     display: "flex",
-                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    gap: 1,
                                     mb: 2,
                                 }}>
                                 <Typography variant="subtitle1">
-                                    Lesson {index + 1}
+                                    Course Summary
                                 </Typography>
-                                {lessons.length > 1 && (
-                                    <IconButton
-                                        onClick={() => removeLesson(index)}>
-                                        <DeleteOutline color="error" />
-                                    </IconButton>
-                                )}
-                            </Box>
-                            {/* Lesson Type Selection */}
-                            <FormControl fullWidth sx={{ mb: 2 }}>
-                                <InputLabel>Lesson Type</InputLabel>
-                                <Select
-                                    value={lesson.type}
-                                    onChange={(e) => {
-                                        const updated = [...lessons];
-                                        updated[index].type = e.target.value;
-                                        setLessons(updated);
-                                    }}
-                                    label="Lesson Type">
-                                    <MenuItem value="video">
-                                        Video Upload
-                                    </MenuItem>
-                                    <MenuItem value="youtube">
-                                        YouTube Link
-                                    </MenuItem>
-                                    <MenuItem value="pdf">PDF Content</MenuItem>
-                                </Select>
-                            </FormControl>
-
-                            {/* Lesson Content */}
-                            {lesson.type === "video" && (
-                                <FormControl
-                                    fullWidth
-                                    error={!files.lessonVideos[index]}>
-                                    <input
-                                        type="file"
-                                        accept="video/*"
-                                        hidden
-                                        id={`lessonVideo_${index}`}
-                                        onChange={(e) => {
-                                            const file = e.target.files[0];
-                                            handleFileUpload(
-                                                "lessonVideo",
-                                                index,
-                                                file
-                                            );
-                                        }}
-                                    />
-                                    <label htmlFor={`lessonVideo_${index}`}>
-                                        <Button
-                                            variant="outlined"
-                                            component="span"
-                                            startIcon={<VideoFile />}
-                                            fullWidth>
-                                            {files.lessonVideos[
-                                                index
-                                            ]?.name?.slice(0, 15) ||
-                                                "Upload Lesson Video"}
-                                        </Button>
-                                    </label>
-                                    {!files.lessonVideos[index] && (
-                                        <FormHelperText error>
-                                            Video is required
-                                        </FormHelperText>
-                                    )}
-                                </FormControl>
-                            )}
-
-                            {lesson.type === "youtube" && (
-                                <TextField
-                                    fullWidth
-                                    label="YouTube Video URL"
-                                    {...register(`lessonUrl_${index}`, {
-                                        required: "URL is required",
-                                        pattern: {
-                                            value: /^(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+/,
-                                            message: "Invalid YouTube URL",
-                                        },
-                                    })}
-                                    error={!!errors[`lessonUrl_${index}`]}
-                                    helperText={
-                                        errors[`lessonUrl_${index}`]?.message
+                                <Chip
+                                    label={summaryMode.toUpperCase()}
+                                    onClick={() =>
+                                        setSummaryMode((prev) =>
+                                            prev === "pdf" ? "text" : "pdf"
+                                        )
                                     }
+                                    color="primary"
+                                    size="small"
+                                    variant="outlined"
                                 />
-                            )}
+                            </Box>
 
-                            {lesson.type === "pdf" && (
+                            {summaryMode === "pdf" ? (
                                 <FormControl
                                     fullWidth
-                                    error={!files.lessonPdfs[index]}>
+                                    error={!!errors.summaryPdf}>
                                     <input
                                         type="file"
                                         accept="application/pdf"
                                         hidden
-                                        id={`lessonPdf_${index}`}
+                                        id="summaryPdf"
                                         onChange={(e) => {
                                             const file = e.target.files[0];
                                             handleFileUpload(
-                                                "lessonPdf",
-                                                index,
+                                                "summaryPdf",
+                                                null,
                                                 file
                                             );
                                         }}
                                     />
-                                    <label htmlFor={`lessonPdf_${index}`}>
+                                    <label htmlFor="summaryPdf">
                                         <Button
                                             variant="outlined"
                                             component="span"
                                             startIcon={<UploadFile />}
                                             fullWidth>
-                                            {files.lessonPdfs[
-                                                index
-                                            ]?.name?.slice(0, 15) ||
-                                                "Upload Lesson PDF"}
+                                            {files.summaryPdf?.name?.slice(
+                                                0,
+                                                15
+                                            ) || "Upload Summary PDF"}
                                         </Button>
                                     </label>
-                                    {!files.lessonPdfs[index] && (
+                                    {!files.summaryPdf && (
                                         <FormHelperText error>
                                             PDF is required
                                         </FormHelperText>
                                     )}
                                 </FormControl>
+                            ) : (
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    rows={1}
+                                    {...register("summaryText", {
+                                        required: "Summary text is required",
+                                    })}
+                                    error={!!errors.summaryText}
+                                    helperText={errors.summaryText?.message}
+                                    placeholder="Enter course summary..."
+                                />
                             )}
+                        </Box>
 
-                            {/* Lesson Summary */}
-                            <Box sx={{ mt: 2 }}>
+                        {/* Lessons Section */}
+                        <Divider sx={{ my: 4 }} />
+                        <Typography variant="h6" gutterBottom>
+                            Course Lessons
+                        </Typography>
+
+                        {lessons.map((lesson, index) => (
+                            <Box
+                                key={index}
+                                sx={{
+                                    mb: 4,
+                                    border: 1,
+                                    p: 2,
+                                    borderRadius: 1,
+                                }}>
                                 <Box
                                     sx={{
                                         display: "flex",
-                                        alignItems: "center",
-                                        gap: 1,
+                                        justifyContent: "space-between",
                                         mb: 2,
                                     }}>
-                                    <Typography variant="body2">
-                                        Lesson Summary
+                                    <Typography variant="subtitle1">
+                                        Lesson {index + 1}
                                     </Typography>
-                                    <Chip
-                                        label={lesson.summaryMode.toUpperCase()}
-                                        onClick={() => {
+                                    {lessons.length > 1 && (
+                                        <IconButton
+                                            onClick={() => removeLesson(index)}>
+                                            <DeleteOutline color="error" />
+                                        </IconButton>
+                                    )}
+                                </Box>
+                                {/* Lesson Type Selection */}
+                                <FormControl fullWidth sx={{ mb: 2 }}>
+                                    <InputLabel>Lesson Type</InputLabel>
+                                    <Select
+                                        value={lesson.type}
+                                        onChange={(e) => {
                                             const updated = [...lessons];
-                                            updated[index].summaryMode =
-                                                updated[index].summaryMode ===
-                                                "pdf"
-                                                    ? "text"
-                                                    : "pdf";
+                                            updated[index].type =
+                                                e.target.value;
                                             setLessons(updated);
                                         }}
-                                        color="secondary"
-                                        size="small"
-                                        variant="outlined"
-                                    />
-                                </Box>
+                                        label="Lesson Type">
+                                        <MenuItem value="video">
+                                            Video Upload
+                                        </MenuItem>
+                                        <MenuItem value="youtube">
+                                            YouTube Link
+                                        </MenuItem>
+                                        <MenuItem value="pdf">
+                                            PDF Content
+                                        </MenuItem>
+                                    </Select>
+                                </FormControl>
 
-                                {lesson.summaryMode === "pdf" ? (
-                                    <FormControl fullWidth>
+                                {/* Lesson Content */}
+                                {lesson.type === "video" && (
+                                    <FormControl
+                                        fullWidth
+                                        error={!files.lessonVideos[index]}>
                                         <input
                                             type="file"
-                                            accept="application/pdf"
+                                            accept="video/*"
                                             hidden
-                                            id={`lessonSummaryPdf_${index}`}
+                                            id={`lessonVideo_${index}`}
                                             onChange={(e) => {
                                                 const file = e.target.files[0];
                                                 handleFileUpload(
-                                                    "lessonSummaryPdf",
+                                                    "lessonVideo",
                                                     index,
                                                     file
                                                 );
                                             }}
                                         />
-                                        <label
-                                            htmlFor={`lessonSummaryPdf_${index}`}>
+                                        <label htmlFor={`lessonVideo_${index}`}>
+                                            <Button
+                                                variant="outlined"
+                                                component="span"
+                                                startIcon={<VideoFile />}
+                                                fullWidth>
+                                                {files.lessonVideos[
+                                                    index
+                                                ]?.name?.slice(0, 15) ||
+                                                    "Upload Lesson Video"}
+                                            </Button>
+                                        </label>
+                                        {!files.lessonVideos[index] && (
+                                            <FormHelperText error>
+                                                Video is required
+                                            </FormHelperText>
+                                        )}
+                                    </FormControl>
+                                )}
+
+                                {lesson.type === "youtube" && (
+                                    <TextField
+                                        fullWidth
+                                        label="YouTube Video URL"
+                                        {...register(`lessonUrl_${index}`, {
+                                            required: "URL is required",
+                                            pattern: {
+                                                value: /^(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+/,
+                                                message: "Invalid YouTube URL",
+                                            },
+                                        })}
+                                        error={!!errors[`lessonUrl_${index}`]}
+                                        helperText={
+                                            errors[`lessonUrl_${index}`]
+                                                ?.message
+                                        }
+                                    />
+                                )}
+
+                                {lesson.type === "pdf" && (
+                                    <FormControl
+                                        fullWidth
+                                        error={!files.lessonPdfs[index]}>
+                                        <input
+                                            type="file"
+                                            accept="application/pdf"
+                                            hidden
+                                            id={`lessonPdf_${index}`}
+                                            onChange={(e) => {
+                                                const file = e.target.files[0];
+                                                handleFileUpload(
+                                                    "lessonPdf",
+                                                    index,
+                                                    file
+                                                );
+                                            }}
+                                        />
+                                        <label htmlFor={`lessonPdf_${index}`}>
                                             <Button
                                                 variant="outlined"
                                                 component="span"
                                                 startIcon={<UploadFile />}
                                                 fullWidth>
-                                                {files.lessonSummaryPdfs[
+                                                {files.lessonPdfs[
                                                     index
                                                 ]?.name?.slice(0, 15) ||
-                                                    "Upload Summary PDF (Optional)"}
+                                                    "Upload Lesson PDF"}
                                             </Button>
                                         </label>
-                                    </FormControl>
-                                ) : (
-                                    <TextField
-                                        fullWidth
-                                        multiline
-                                        rows={1}
-                                        {...register(
-                                            `lessonSummaryText_${index}`
+                                        {!files.lessonPdfs[index] && (
+                                            <FormHelperText error>
+                                                PDF is required
+                                            </FormHelperText>
                                         )}
-                                        placeholder="Enter lesson summary (Optional)"
-                                    />
+                                    </FormControl>
                                 )}
+
+                                {/* Lesson Summary */}
+                                <Box sx={{ mt: 2 }}>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                            mb: 2,
+                                        }}>
+                                        <Typography variant="body2">
+                                            Lesson Summary
+                                        </Typography>
+                                        <Chip
+                                            label={lesson.summaryMode.toUpperCase()}
+                                            onClick={() => {
+                                                const updated = [...lessons];
+                                                updated[index].summaryMode =
+                                                    updated[index]
+                                                        .summaryMode === "pdf"
+                                                        ? "text"
+                                                        : "pdf";
+                                                setLessons(updated);
+                                            }}
+                                            color="secondary"
+                                            size="small"
+                                            variant="outlined"
+                                        />
+                                    </Box>
+
+                                    {lesson.summaryMode === "pdf" ? (
+                                        <FormControl fullWidth>
+                                            <input
+                                                type="file"
+                                                accept="application/pdf"
+                                                hidden
+                                                id={`lessonSummaryPdf_${index}`}
+                                                onChange={(e) => {
+                                                    const file =
+                                                        e.target.files[0];
+                                                    handleFileUpload(
+                                                        "lessonSummaryPdf",
+                                                        index,
+                                                        file
+                                                    );
+                                                }}
+                                            />
+                                            <label
+                                                htmlFor={`lessonSummaryPdf_${index}`}>
+                                                <Button
+                                                    variant="outlined"
+                                                    component="span"
+                                                    startIcon={<UploadFile />}
+                                                    fullWidth>
+                                                    {files.lessonSummaryPdfs[
+                                                        index
+                                                    ]?.name?.slice(0, 15) ||
+                                                        "Upload Summary PDF (Optional)"}
+                                                </Button>
+                                            </label>
+                                        </FormControl>
+                                    ) : (
+                                        <TextField
+                                            fullWidth
+                                            multiline
+                                            rows={1}
+                                            {...register(
+                                                `lessonSummaryText_${index}`
+                                            )}
+                                            placeholder="Enter lesson summary (Optional)"
+                                        />
+                                    )}
+                                </Box>
                             </Box>
-                        </Box>
-                    ))}
+                        ))}
 
-                    <Box
-                        sx={{
-                            display: "flex",
-                            justifyContent: "center",
-                            mt: 3,
-                        }}>
-                        <Button
-                            variant="outlined"
-                            onClick={addLesson}
-                            disabled={lessons.length >= 10}
-                            startIcon={<AddCircleOutline />}>
-                            Add Lesson ({10 - lessons.length} remaining)
-                        </Button>
-                    </Box>
-
-                    <Box sx={{ mt: 4, textAlign: "center" }}>
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            size="large"
-                            disabled={isSubmitting}
+                        <Box
                             sx={{
-                                position: "relative",
-                                overflow: "hidden",
-                                minWidth: 200,
-                                transition: "all 0.3s ease",
+                                display: "flex",
+                                justifyContent: "center",
+                                mt: 3,
                             }}>
-                            <Box
+                            <Button
+                                variant="outlined"
+                                onClick={addLesson}
+                                disabled={lessons.length >= 10}
+                                startIcon={<AddCircleOutline />}>
+                                Add Lesson ({10 - lessons.length} remaining)
+                            </Button>
+                        </Box>
+
+                        <Box sx={{ mt: 4, textAlign: "center" }}>
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                size="large"
+                                disabled={isSubmitting}
                                 sx={{
                                     position: "relative",
-                                    zIndex: 1,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1,
+                                    overflow: "hidden",
+                                    minWidth: 200,
+                                    transition: "all 0.3s ease",
                                 }}>
-                                {isSubmitting ? (
-                                    <>
-                                        <ButtonLoad />
-                                        <span>{uploadProgress}%</span>
-                                    </>
-                                ) : (
-                                    "Create Course"
-                                )}
-                            </Box>
-                            {isSubmitting && (
-                                <LinearProgress
-                                    variant={
-                                        uploadProgress === 100
-                                            ? "indeterminate"
-                                            : "determinate"
-                                    }
-                                    value={uploadProgress}
+                                <Box
                                     sx={{
-                                        position: "absolute",
-                                        bottom: 0,
-                                        left: 0,
-                                        right: 0,
-                                        height: "100%",
-                                        opacity: 0.3,
-                                    }}
-                                />
-                            )}
-                        </Button>
-                    </Box>
-                </form>
-            </Paper>
+                                        position: "relative",
+                                        zIndex: 1,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                    }}>
+                                    {isSubmitting ? (
+                                        <>
+                                            <ButtonLoad />
+                                            <span>{uploadProgress}%</span>
+                                        </>
+                                    ) : (
+                                        "Create Course"
+                                    )}
+                                </Box>
+                                {isSubmitting && (
+                                    <LinearProgress
+                                        variant={
+                                            uploadProgress === 100
+                                                ? "indeterminate"
+                                                : "determinate"
+                                        }
+                                        value={uploadProgress}
+                                        sx={{
+                                            position: "absolute",
+                                            bottom: 0,
+                                            left: 0,
+                                            right: 0,
+                                            height: "100%",
+                                            opacity: 0.3,
+                                        }}
+                                    />
+                                )}
+                            </Button>
+                        </Box>
+                    </form>
+                </Paper>
 
-            <Box display="flex" justifyContent="center" mt={8}>
-                <Button
-                    variant="contained"
-                    color="secondary"
-                    size="large"
-                    component={Link}
-                    to={`/community/access/${communityId}`}>
-                    Go Back to Community
-                </Button>
+                {isCommunityLoading ? (
+                    <CircularProgress size={20} color="inherit" />
+                ) : (
+                    <Grid container spacing={2}>
+                        {/* Storage Card */}
+                        <CloudStorage
+                            cloudStorageLimit={cloudStorageLimit}
+                            cloudStorageUsed={cloudStorageUsed}
+                            communityId={_id}
+                            refetchCommunity={refetchCommunity}
+                        />
+                    </Grid>
+                )}
+
+                <Box display="flex" justifyContent="center" mt={8}>
+                    <Button
+                        variant="contained"
+                        color="secondary"
+                        size="large"
+                        component={Link}
+                        to={`/community/access/${communityId}`}>
+                        Go Back to Community
+                    </Button>
+                </Box>
             </Box>
-        </Box>
+        </Elements>
     );
 };
 

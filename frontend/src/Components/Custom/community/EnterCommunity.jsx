@@ -32,8 +32,8 @@ import {
     StepContent,
 } from "@mui/material";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
-import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
-import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import BalanceIcon from "@mui/icons-material/AccountBalanceWallet";
+import MembersIcon from "@mui/icons-material/People";
 import EmailIcon from "@mui/icons-material/Email";
 import CheckIcon from "@mui/icons-material/CheckCircle";
 import SearchIcon from "@mui/icons-material/Search";
@@ -43,6 +43,8 @@ import PlayIcon from "@mui/icons-material/PlayCircleOutline";
 import SendIcon from "@mui/icons-material/Send";
 import OnlineIcon from "@mui/icons-material/Circle";
 import People from "@mui/icons-material/People";
+import EventRepeatIcon from "@mui/icons-material/EventRepeat";
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import CourseStockImg from "../../../assets/courseStock.png";
 import { useEffect, useRef, useState } from "react";
@@ -50,6 +52,7 @@ import { serVer, useToken } from "../../Hooks/useVariable";
 import axios from "axios";
 import toast from "react-hot-toast";
 import useResponsive from "../../Hooks/useResponsive";
+import CloudStorage from "./CloudStorage";
 
 export const CommunityOverview = ({ notifications, createdAt }) => {
     const theme = useTheme();
@@ -937,101 +940,387 @@ export const CommunityChatroom = ({
     );
 };
 
-export const CommunityInventory = ({ balance, handleWithdrawal, btn }) => {
+export const CommunityInventory = ({
+    community,
+    refetchCommunity,
+    setActiveTab,
+}) => {
     const theme = useTheme();
 
+    const { token } = useToken();
+    const [loading, setLoading] = useState(false);
+    const [renewalLoading, setRenewalLoading] = useState(false);
+
+    const {
+        balance = 0,
+        _id,
+        cloudStorageLimit,
+        cloudStorageUsed,
+        renewalDate,
+        members = [],
+        createdBy,
+    } = community || {};
+
+    // Calculate days until renewal
+    const daysUntilRenewal = renewalDate
+        ? Math.ceil(
+              (new Date(renewalDate) - Date.now()) / (1000 * 60 * 60 * 24)
+          )
+        : null;
+
+    // Calculate renewal progress (percentage of time passed)
+    const renewalProgress = () => {
+        if (!renewalDate || !community.createdAt) return 0;
+
+        const totalDuration =
+            new Date(renewalDate) - new Date(community.createdAt);
+        const timePassed = Date.now() - new Date(community.createdAt);
+        return Math.min(100, (timePassed / totalDuration) * 100);
+    };
+
+    const getRenewalColor = () => {
+        if (!daysUntilRenewal) return "primary";
+        if (daysUntilRenewal <= 7) return "error";
+        if (daysUntilRenewal <= 30) return "warning";
+        return "success";
+    };
+
+    const withdrawCommunityBalance = async () => {
+        setLoading(true);
+        try {
+            const res = await axios.put(
+                `${serVer}/creator/withdraw/${_id}`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            toast.success(res.data);
+            refetchCommunity();
+        } catch (error) {
+            toast.error(error?.response?.data || "Withdrawal failed");
+        } finally {
+            setLoading(false);
+        }
+    };
+    const handleRenewal = async () => {
+        setRenewalLoading(true);
+        try {
+            // Simulate renewal payment processing
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+
+            // Extend renewal by 1 year
+            const newRenewalDate = new Date();
+            newRenewalDate.setFullYear(newRenewalDate.getFullYear() + 1);
+
+            // Update renewal date in backend
+            const res = await axios.put(
+                `${serVer}/creator/renew/${_id}`,
+                { renewalDate: newRenewalDate.toISOString() },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            toast.success(res.data);
+            refetchCommunity();
+        } catch (error) {
+            toast.error(error?.response?.data || "Renewal failed");
+        } finally {
+            setRenewalLoading(false);
+        }
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return "Not set";
+        const date = new Date(dateString);
+        return date.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+        });
+    };
+
     return (
-        <Paper
-            elevation={3}
-            sx={{
-                p: 3,
-                borderRadius: 2,
-                bgcolor: theme.palette.background.paper,
-                display: "flex",
-                flexDirection: "column",
-                gap: 2,
-                alignItems: "center",
-                maxWidth: 400,
-                mx: "auto",
-                border: `1px solid ${theme.palette.divider}`,
-            }}>
-            <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    mb: 1,
-                }}>
-                <AccountBalanceWalletIcon color="primary" fontSize="large" />
-                <Typography variant="h6" component="h2" fontWeight="bold">
-                    Community Inventory
-                </Typography>
-            </Box>
-
-            {/* Balance Display */}
+        <>
             <Paper
-                elevation={0}
+                elevation={3}
                 sx={{
-                    p: 2,
-                    width: "100%",
-                    bgcolor: theme.palette.grey[100],
-                    borderRadius: 1,
-                    textAlign: "center",
-                    border: `1px solid ${theme.palette.divider}`,
+                    p: 3,
+                    borderRadius: 4,
+                    bgcolor: theme.palette.background.paper,
+                    backgroundImage: `linear-gradient(145deg, ${theme.palette.background.default}, ${theme.palette.background.paper})`,
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.05)",
+                    overflow: "hidden",
+                    position: "relative",
+                    "&:before": {
+                        content: '""',
+                        position: "absolute",
+                        top: 0,
+                        right: 0,
+                        width: "100%",
+                        height: "4px",
+                        background: theme.palette.primary.main,
+                        zIndex: 1,
+                    },
                 }}>
-                <Typography
-                    variant="subtitle2"
-                    color="text.secondary"
-                    gutterBottom>
-                    Available Balance
-                </Typography>
-                <Typography
-                    variant="h4"
-                    fontWeight="bold"
-                    color="primary"
-                    sx={{
-                        fontFamily: "monospace",
-                    }}>
-                    <AttachMoneyIcon /> {balance?.toFixed(2) || "0.00"}
-                </Typography>
+                <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    mb={3}>
+                    <Typography
+                        variant="h5"
+                        fontWeight="bold"
+                        color="text.primary">
+                        Community Dashboard
+                    </Typography>
+                    <Box display="flex" gap={1}>
+                        <Typography variant="caption" color="text.secondary">
+                            Community ID: {_id?.slice(-6)}
+                        </Typography>
+                    </Box>
+                </Box>
+
+                <Grid container spacing={3}>
+                    {/* Balance Card */}
+                    <Grid size={{ xs: 12, md: 4 }}>
+                        <Paper
+                            sx={{
+                                p: 2.5,
+                                height: "100%",
+                                borderRadius: 3,
+                                borderLeft: `4px solid ${theme.palette.primary.main}`,
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "space-between",
+                                background:
+                                    theme.palette.mode === "dark"
+                                        ? "linear-gradient(45deg, #1a237e, #311b92)"
+                                        : "linear-gradient(45deg, #e3f2fd, #bbdefb)",
+                            }}>
+                            <Box
+                                display="flex"
+                                alignItems="center"
+                                gap={1.5}
+                                mb={2}>
+                                <BalanceIcon fontSize="large" color="primary" />
+                                <Typography variant="h6" fontWeight="bold">
+                                    Community Balance
+                                </Typography>
+                            </Box>
+
+                            <Box mb={2}>
+                                <Typography
+                                    variant="h3"
+                                    fontWeight="bold"
+                                    sx={{
+                                        fontFamily: "monospace",
+                                        letterSpacing: 1,
+                                        color: theme.palette.primary.dark,
+                                    }}>
+                                    ${balance.toFixed(2)}
+                                </Typography>
+                                <Typography
+                                    variant="caption"
+                                    color="text.secondary">
+                                    Available for withdrawal
+                                </Typography>
+                            </Box>
+
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={withdrawCommunityBalance}
+                                disabled={loading || balance <= 0}
+                                fullWidth
+                                sx={{
+                                    borderRadius: 2,
+                                    py: 1.5,
+                                    fontWeight: "bold",
+                                    boxShadow: "none",
+                                    "&:hover": {
+                                        boxShadow: `0 4px 12px ${theme.palette.primary.light}`,
+                                    },
+                                }}>
+                                {loading ? (
+                                    <CircularProgress
+                                        size={24}
+                                        color="inherit"
+                                    />
+                                ) : (
+                                    "Withdraw Funds"
+                                )}
+                            </Button>
+                        </Paper>
+                    </Grid>
+
+                    {/* Members Card */}
+                    <Grid size={{ xs: 12, md: 4 }}>
+                        <Paper
+                            sx={{
+                                p: 2.5,
+                                height: "100%",
+                                borderRadius: 3,
+                                borderLeft: `4px solid ${theme.palette.secondary.main}`,
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "space-between",
+                                background:
+                                    theme.palette.mode === "dark"
+                                        ? "linear-gradient(45deg, #004d40, #00695c)"
+                                        : "linear-gradient(45deg, #e8f5e9, #c8e6c9)",
+                            }}>
+                            <Box
+                                display="flex"
+                                alignItems="center"
+                                gap={1.5}
+                                mb={2}>
+                                <MembersIcon
+                                    fontSize="large"
+                                    color="secondary"
+                                />
+                                <Typography variant="h6" fontWeight="bold">
+                                    Community Members
+                                </Typography>
+                            </Box>
+
+                            <Box mb={2}>
+                                <Typography
+                                    variant="h3"
+                                    fontWeight="bold"
+                                    sx={{
+                                        fontFamily: "monospace",
+                                        letterSpacing: 1,
+                                        color: theme.palette.secondary.dark,
+                                    }}>
+                                    {members.length}
+                                </Typography>
+                                <Typography
+                                    variant="caption"
+                                    color="text.secondary">
+                                    Active members
+                                </Typography>
+                            </Box>
+
+                            <Box>
+                                <Typography variant="body2" mb={1}>
+                                    <Box component="span" fontWeight="bold">
+                                        Creator:
+                                    </Box>{" "}
+                                    {createdBy?.name || "N/A"}
+                                </Typography>
+                                <Button
+                                    variant="outlined"
+                                    color="secondary"
+                                    fullWidth
+                                    onClick={() => setActiveTab("members")}
+                                    sx={{ borderRadius: 2 }}>
+                                    View Members
+                                </Button>
+                            </Box>
+                        </Paper>
+                    </Grid>
+
+                    {/* Storage Card */}
+                    <CloudStorage
+                        cloudStorageLimit={cloudStorageLimit}
+                        cloudStorageUsed={cloudStorageUsed}
+                        communityId={_id}
+                        refetchCommunity={refetchCommunity}
+                    />
+
+                    {/* Renewal Card */}
+                    <Grid size={{ xs: 12, md: 4 }}>
+                        <Paper
+                            sx={{
+                                p: 2.5,
+                                height: "100%",
+                                borderRadius: 3,
+                                borderLeft: `4px solid ${theme.palette.info.main}`,
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "space-between",
+                                background:
+                                    theme.palette.mode === "dark"
+                                        ? "linear-gradient(45deg, #01579b, #0288d1)"
+                                        : "linear-gradient(45deg, #e1f5fe, #b3e5fc)",
+                            }}>
+                            <Box
+                                display="flex"
+                                alignItems="center"
+                                gap={1.5}
+                                mb={2}>
+                                <EventRepeatIcon
+                                    fontSize="large"
+                                    color="info"
+                                />
+                                <Typography variant="h6" fontWeight="bold">
+                                    Subscription Renewal
+                                </Typography>
+                            </Box>
+
+                            <Box mb={2}>
+                                <Typography
+                                    variant="body2"
+                                    fontWeight="bold"
+                                    gutterBottom>
+                                    Renewal Date: {formatDate(renewalDate)}
+                                </Typography>
+
+                                {daysUntilRenewal > 0 ? (
+                                    <>
+                                        <Typography
+                                            variant="h4"
+                                            fontWeight="bold"
+                                            color={getRenewalColor()}
+                                            sx={{ mb: 1 }}>
+                                            {daysUntilRenewal} days left
+                                        </Typography>
+                                        <LinearProgress
+                                            variant="determinate"
+                                            value={renewalProgress()}
+                                            color={getRenewalColor()}
+                                            sx={{ height: 10, borderRadius: 5 }}
+                                        />
+                                    </>
+                                ) : (
+                                    <Typography
+                                        variant="h5"
+                                        color="error"
+                                        fontWeight="bold">
+                                        Subscription Expired
+                                    </Typography>
+                                )}
+                            </Box>
+
+                            <Button
+                                variant="contained"
+                                color="info"
+                                onClick={handleRenewal}
+                                disabled={renewalLoading}
+                                startIcon={
+                                    renewalLoading ? (
+                                        <CircularProgress
+                                            size={20}
+                                            color="inherit"
+                                        />
+                                    ) : (
+                                        <EventAvailableIcon />
+                                    )
+                                }
+                                fullWidth
+                                sx={{
+                                    borderRadius: 2,
+                                    py: 1.5,
+                                    fontWeight: "bold",
+                                    color: theme.palette.getContrastText(
+                                        theme.palette.info.main
+                                    ),
+                                }}>
+                                {renewalLoading ? "Processing..." : "Renew Now"}
+                            </Button>
+                        </Paper>
+                    </Grid>
+                </Grid>
             </Paper>
-
-            {/* Withdrawal Button */}
-            <Button
-                variant="contained"
-                color="primary"
-                onClick={handleWithdrawal}
-                disabled={btn || !balance || balance <= 0}
-                fullWidth
-                startIcon={
-                    btn && (
-                        <CircularProgress
-                            size={24}
-                            color="inherit"
-                            sx={{ mr: 1 }}
-                        />
-                    )
-                }
-                sx={{
-                    mt: 1,
-                    py: 1.5,
-                    borderRadius: 1,
-                    textTransform: "none",
-                    fontSize: "1rem",
-                    fontWeight: "bold",
-                }}>
-                {btn ? "Processing..." : "Withdraw Funds"}
-            </Button>
-
-            {(!balance || balance <= 0) && (
-                <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mt: -1, alignSelf: "flex-start" }}>
-                    No funds available for withdrawal
-                </Typography>
-            )}
-        </Paper>
+        </>
     );
 };
 

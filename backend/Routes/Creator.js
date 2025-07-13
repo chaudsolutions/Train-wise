@@ -396,4 +396,62 @@ router.put("/add-member/:communityId", async (req, res) => {
     }
 });
 
+// endpoint to verify storage payment and add storage to community
+router.put("/storage-upgrade/:communityId", async (req, res) => {
+    try {
+        const { communityId } = req.params;
+        const { storage, price, paymentId } = req.body;
+
+        if (!paymentId) {
+            return res.status(400).json("Payment is required");
+        }
+
+        // If paymentId is provided, verify payment
+        const paymentIntent = await stripe.paymentIntents.retrieve(paymentId);
+
+        if (
+            paymentIntent.status !== "succeeded" ||
+            paymentIntent.amount !== parseInt(price)
+        ) {
+            return res.status(400).json("Invalid or unverified payment");
+        }
+
+        // find community
+        const community = await Community.findById(communityId);
+
+        if (!community) {
+            return res.status(404).json("Community not found");
+        }
+
+        const [creator, admin] = await Promise.all([
+            UsersModel.findById(community.createdBy),
+            UsersModel.findOne({ role: "admin" }),
+        ]);
+
+        if (!creator) {
+            return res.status(404).json("creator doesn't exist");
+        }
+
+        // add new storage to community storage
+        community.cloudStorageLimit += storage;
+
+        await Promise.all([
+            community.save(),
+            createNotification(
+                community.createdBy,
+                `You have upgraded your community ${community.name} storage to ${community.cloudStorageLimit}GB`
+            ),
+            createNotification(
+                admin.id,
+                `${community.name} creator, ${creator.name} have upgraded their community storage to ${community.cloudStorageLimit}GB`
+            ),
+        ]);
+
+        res.status(200).json("Storage upgraded successfully");
+    } catch (error) {
+        console.error("Error searching for members:", error);
+        res.status(500).json("Failed to search for members");
+    }
+});
+
 module.exports = { Creator: router };

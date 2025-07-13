@@ -12,6 +12,11 @@ const settingsSchema = new mongoose.Schema(
             required: true,
             min: 1,
         },
+        storagePrice: {
+            type: Number,
+            required: true,
+            min: 0,
+        },
     },
     { timestamps: true }
 );
