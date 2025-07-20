@@ -2718,7 +2718,7 @@ export const ViewEvent = ({
                                 value={newMessage}
                                 onChange={(e) => setNewMessage(e.target.value)}
                                 onKeyPress={handleKeyPress}
-                                disabled={loading || !isConnected}
+                                disabled={loading}
                                 maxRows={4}
                                 sx={{
                                     "& .MuiOutlinedInput-root": {
