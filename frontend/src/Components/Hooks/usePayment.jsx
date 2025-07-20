@@ -62,7 +62,9 @@ export const usePayment = () => {
             if (paymentIntent.status === "succeeded") {
                 // Step 4: Call onSuccess with subscriptionId
                 await onSuccess(
-                    handleType.isCommunityCreation ? paymentIntent.id : data,
+                    handleType.isCommunityMemberSubscription
+                        ? paymentIntent.id
+                        : data,
                     paymentIntent.id
                 );
                 return true; // Indicate success

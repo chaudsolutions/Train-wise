@@ -731,7 +731,6 @@ const CommunityView = () => {
                 open={paymentDialogOpen}
                 onClose={() => setPaymentDialogOpen(false)}
                 amount={subscriptionFee}
-                communityId={communityId}
                 onPaymentSuccess={handlePaymentSuccess}
                 type="community_subscription"
             />
