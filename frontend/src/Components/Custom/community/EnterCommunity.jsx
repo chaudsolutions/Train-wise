@@ -30,6 +30,9 @@ import {
     Step,
     StepLabel,
     StepContent,
+    Menu,
+    MenuItem,
+    ListItemIcon,
 } from "@mui/material";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -55,6 +58,7 @@ import ViewIcon from "@mui/icons-material/ChevronRight";
 import CalendarIcon from "@mui/icons-material/CalendarToday";
 import ClosedIcon from "@mui/icons-material/Close";
 import EventIcon from "@mui/icons-material/Event";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { format, isBefore, isToday, parseISO } from "date-fns";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import CourseStockImg from "../../../assets/courseStock.png";
@@ -1647,7 +1651,12 @@ export const AddMember = ({ communityId, refetchCommunity }) => {
 };
 
 // calendars tab
-export const CalendarTab = ({ communityId, setActiveTab, setEventData }) => {
+export const CalendarTab = ({
+    communityId,
+    setActiveTab,
+    setEventData,
+    isCommunityAdmin,
+}) => {
     const [openDialog, setOpenDialog] = useState(false);
     const [newEventDate, setNewEventDate] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -1672,8 +1681,6 @@ export const CalendarTab = ({ communityId, setActiveTab, setEventData }) => {
     const closedEvents = communityCalendarData?.filter(
         (e) => e.status === "closed"
     );
-
-    console.log({ pendingEvents });
 
     const handleCreateEvent = async () => {
         if (!newEventDate) {
@@ -1709,6 +1716,99 @@ export const CalendarTab = ({ communityId, setActiveTab, setEventData }) => {
     const handleViewEvent = (event) => {
         setActiveTab("viewEvent");
         setEventData(event);
+    };
+
+    const handleStatusChange = async (newStatus, eventData) => {
+        const token = getToken();
+        try {
+            await axios.post(
+                `${serVer}/creator/community-calendar/events/${eventData._id}/status`,
+                { status: newStatus },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            toast.success(`Event marked as ${newStatus}`);
+            refetchCommunityCalendar();
+        } catch (error) {
+            toast.error(
+                `Failed to update status: ${
+                    error.response?.data?.message || error.message
+                }`
+            );
+            console.error("Error updating status:", error);
+        }
+    };
+
+    const StatusMenu = ({ eventData }) => {
+        const [anchorEl, setAnchorEl] = useState(null);
+        const open = Boolean(anchorEl);
+
+        const handleClick = (event) => {
+            setAnchorEl(event.currentTarget);
+        };
+
+        const handleClose = () => {
+            setAnchorEl(null);
+        };
+
+        return (
+            <Box>
+                <IconButton
+                    onClick={handleClick}
+                    size="small"
+                    sx={{ ml: 2 }}
+                    aria-controls={open ? "status-menu" : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={open ? "true" : undefined}>
+                    <MoreVertIcon />
+                </IconButton>
+                <Menu
+                    anchorEl={anchorEl}
+                    id="status-menu"
+                    open={open}
+                    onClose={handleClose}
+                    onClick={handleClose}
+                    PaperProps={{
+                        elevation: 3,
+                        sx: {
+                            overflow: "visible",
+                            mt: 1.5,
+                            "&:before": {
+                                content: '""',
+                                display: "block",
+                                position: "absolute",
+                                top: 0,
+                                right: 14,
+                                width: 10,
+                                height: 10,
+                                bgcolor: "background.paper",
+                                transform: "translateY(-50%) rotate(45deg)",
+                                zIndex: 0,
+                            },
+                        },
+                    }}
+                    transformOrigin={{ horizontal: "right", vertical: "top" }}
+                    anchorOrigin={{ horizontal: "right", vertical: "bottom" }}>
+                    <MenuItem
+                        onClick={() =>
+                            handleStatusChange("approved", eventData)
+                        }>
+                        <ListItemIcon>
+                            <CheckIcon fontSize="small" color="success" />
+                        </ListItemIcon>
+                        <ListItemText>Approve</ListItemText>
+                    </MenuItem>
+                    <MenuItem
+                        onClick={() =>
+                            handleStatusChange("rejected", eventData)
+                        }>
+                        <ListItemIcon>
+                            <RejectedIcon fontSize="small" color="error" />
+                        </ListItemIcon>
+                        <ListItemText>Reject</ListItemText>
+                    </MenuItem>
+                </Menu>
+            </Box>
+        );
     };
 
     if (isCommunityCalendarLoading) {
@@ -1838,6 +1938,11 @@ export const CalendarTab = ({ communityId, setActiveTab, setEventData }) => {
                                 {pendingEvents?.map((event) => (
                                     <ListItem
                                         key={event._id}
+                                        secondaryAction={
+                                            isCommunityAdmin && (
+                                                <StatusMenu eventData={event} />
+                                            )
+                                        }
                                         sx={{
                                             mb: 1,
                                             borderRadius: 1,
@@ -2130,6 +2235,7 @@ export const ViewEvent = ({
     setActiveTab,
     setEventData,
     userId,
+    isCommunityAdmin,
 }) => {
     const theme = useTheme();
     const { token } = useToken();
@@ -2138,8 +2244,15 @@ export const ViewEvent = ({
     const [loading, setLoading] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
     const [onlineUsers, setOnlineUsers] = useState([]);
+    const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
     const eventSourceRef = useRef(null);
     const chatContainerRef = useRef(null);
+
+    const { refetchCommunityCalendar } = useCommunityCalendarData({
+        communityId,
+    });
+
+    console.log(onlineUsers);
 
     // Connect to SSE for real-time updates
     useEffect(() => {
@@ -2245,7 +2358,28 @@ export const ViewEvent = ({
         }
     };
 
-    console.log(messages);
+    const handleMarkEventAsClosed = () => {
+        if (!isCommunityAdmin) {
+            toast.error("Only community admins can close events");
+            return;
+        }
+
+        try {
+            axios.post(
+                `${serVer}/creator/community-calendar/events/${eventData._id}/status`,
+                { status: "closed" },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            toast.success("Event closed successfully");
+
+            refetchCommunityCalendar();
+
+            handleCloseEvent();
+        } catch (error) {
+            toast.error("Failed to close event");
+            console.error("Error closing event:", error);
+        }
+    };
 
     return (
         <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -2365,36 +2499,40 @@ export const ViewEvent = ({
                             variant="body2"
                             fontWeight="bold"
                             sx={{ mb: 1 }}>
-                            Online Participants ({onlineUsers.length})
+                            Online Participants ({onlineUsers?.length})
                         </Typography>
                         <List dense>
-                            {onlineUsers.map((user) => (
-                                <ListItem key={user.id} sx={{ px: 0 }}>
-                                    <ListItemAvatar>
-                                        <Badge
-                                            overlap="circular"
-                                            anchorOrigin={{
-                                                vertical: "bottom",
-                                                horizontal: "right",
-                                            }}
-                                            variant="dot"
-                                            color="success">
-                                            <Avatar
-                                                src={user.avatar}
-                                                alt={user.name}
-                                                sx={{ width: 32, height: 32 }}
-                                            />
-                                        </Badge>
-                                    </ListItemAvatar>
-                                    <ListItemText
-                                        primary={
-                                            <Typography variant="body2">
-                                                {user.name}
-                                            </Typography>
-                                        }
-                                    />
-                                </ListItem>
-                            ))}
+                            {onlineUsers?.length > 0 &&
+                                onlineUsers?.map((user) => (
+                                    <ListItem key={user.id} sx={{ px: 0 }}>
+                                        <ListItemAvatar>
+                                            <Badge
+                                                overlap="circular"
+                                                anchorOrigin={{
+                                                    vertical: "bottom",
+                                                    horizontal: "right",
+                                                }}
+                                                variant="dot"
+                                                color="success">
+                                                <Avatar
+                                                    src={user.avatar}
+                                                    alt={user.name}
+                                                    sx={{
+                                                        width: 32,
+                                                        height: 32,
+                                                    }}
+                                                />
+                                            </Badge>
+                                        </ListItemAvatar>
+                                        <ListItemText
+                                            primary={
+                                                <Typography variant="body2">
+                                                    {user.name}
+                                                </Typography>
+                                            }
+                                        />
+                                    </ListItem>
+                                ))}
                         </List>
                     </Box>
                 </Paper>
@@ -2519,7 +2657,7 @@ export const ViewEvent = ({
                                                               new Date(
                                                                   msg.createdAt
                                                               ),
-                                                              "PPpp"
+                                                              "h:mm a"
                                                           )
                                                         : "N/A"}
                                                 </Typography>
@@ -2599,8 +2737,45 @@ export const ViewEvent = ({
                             </IconButton>
                         </Box>
                     </Paper>
+
+                    {/* close by community creator */}
+                    {isCommunityAdmin && (
+                        <Button
+                            variant="contained"
+                            color="error"
+                            onClick={() => setConfirmCloseOpen(true)}>
+                            Close this event
+                        </Button>
+                    )}
                 </Box>
             </Box>
+
+            <Dialog
+                open={confirmCloseOpen}
+                onClose={() => setConfirmCloseOpen(false)}
+                maxWidth="xs"
+                fullWidth>
+                <DialogTitle>Confirm Close Event</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to close this event?
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmCloseOpen(false)}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            setConfirmCloseOpen(false);
+                            handleMarkEventAsClosed();
+                        }}
+                        color="error"
+                        variant="contained">
+                        Close Event
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

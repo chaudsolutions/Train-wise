@@ -8,6 +8,7 @@ const Settings = require("../Models/Settings.js");
 const ErrorLog = require("../Models/ErrorLog.js");
 const { verifyToken } = require("../utils/verifyJWT.js");
 const CommunityCalendar = require("../Models/CommunityCalendar.js");
+const UsersModel = require("../Models/Users.js");
 
 const router = express.Router();
 
@@ -305,14 +306,38 @@ router.get(
             }
 
             // Function to get online users for this event
-            const getOnlineUsers = () => {
-                return community.members
-                    .filter((member) => member.userId?.onlineStatus)
-                    .map((member) => ({
-                        id: member.userId._id,
-                        name: member.userId.name,
-                        avatar: member.userId.avatar,
-                    }));
+            const getOnlineUsers = async () => {
+                const creator = await UsersModel.findById(community.createdBy);
+                const currentUser = community.members.find(
+                    (member) =>
+                        member.userId._id.toString() === userId.toString()
+                )?.userId;
+
+                const onlineUsers = [];
+
+                // Add creator if online
+                if (creator.onlineStatus) {
+                    onlineUsers.push({
+                        id: creator._id,
+                        name: creator.name,
+                        avatar: creator.avatar,
+                    });
+                }
+
+                // Add current user if online and not the creator
+                if (
+                    currentUser &&
+                    currentUser.onlineStatus &&
+                    currentUser._id.toString() !== creator._id.toString()
+                ) {
+                    onlineUsers.push({
+                        id: currentUser._id,
+                        name: currentUser.name,
+                        avatar: currentUser.avatar,
+                    });
+                }
+
+                return onlineUsers;
             };
 
             // Send initial data (messages + online users)

@@ -351,6 +351,7 @@ const EnterCommunity = () => {
                                     setActiveTab={setActiveTab}
                                     setEventData={setEventData}
                                     userId={_id}
+                                    isCommunityAdmin={isCommunityAdmin}
                                 />
                             )}
 
