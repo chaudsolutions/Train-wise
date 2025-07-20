@@ -1895,6 +1895,29 @@ export const CalendarTab = ({
                         </Box>
                     </Paper>
                 </Grid>
+
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <Paper
+                        elevation={3}
+                        sx={{
+                            p: 3,
+                            borderRadius: 2,
+                            borderLeft: `4px solid ${theme.palette.error.main}`,
+                            height: "100%",
+                        }}>
+                        <Box display="flex" alignItems="center" gap={2}>
+                            <ClosedIcon fontSize="large" color="error" />
+                            <Box>
+                                <Typography variant="h3" fontWeight="bold">
+                                    {closedEvents?.length || 0}
+                                </Typography>
+                                <Typography variant="subtitle1">
+                                    Closed Events
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </Paper>
+                </Grid>
             </Grid>
 
             <Box display="flex" justifyContent="flex-end" sx={{ mb: 3 }}>
@@ -2116,7 +2139,7 @@ export const CalendarTab = ({
                             <ClosedIcon color="error" /> Closed Events
                         </Typography>
                         <Divider sx={{ mb: 2 }} />
-                        {rejectedEvents?.length === 0 ? (
+                        {closedEvents?.length === 0 ? (
                             <Typography color="text.secondary" sx={{ p: 2 }}>
                                 No closed events
                             </Typography>
@@ -2365,7 +2388,7 @@ export const ViewEvent = ({
         }
 
         try {
-            axios.post(
+            axios.put(
                 `${serVer}/creator/community-calendar/events/${eventData._id}/status`,
                 { status: "closed" },
                 { headers: { Authorization: `Bearer ${token}` } }
@@ -2373,7 +2396,6 @@ export const ViewEvent = ({
             toast.success("Event closed successfully");
 
             refetchCommunityCalendar();
-
             handleCloseEvent();
         } catch (error) {
             toast.error("Failed to close event");
