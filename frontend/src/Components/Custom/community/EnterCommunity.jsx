@@ -2381,21 +2381,21 @@ export const ViewEvent = ({
         }
     };
 
-    const handleMarkEventAsClosed = () => {
+    const handleMarkEventAsClosed = async () => {
         if (!isCommunityAdmin) {
             toast.error("Only community admins can close events");
             return;
         }
 
         try {
-            axios.put(
+            await axios.put(
                 `${serVer}/creator/community-calendar/events/${eventData._id}/status`,
                 { status: "closed" },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             toast.success("Event closed successfully");
 
-            refetchCommunityCalendar();
+            await refetchCommunityCalendar();
             handleCloseEvent();
         } catch (error) {
             toast.error("Failed to close event");
