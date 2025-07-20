@@ -1721,7 +1721,7 @@ export const CalendarTab = ({
     const handleStatusChange = async (newStatus, eventData) => {
         const token = getToken();
         try {
-            await axios.post(
+            await axios.put(
                 `${serVer}/creator/community-calendar/events/${eventData._id}/status`,
                 { status: newStatus },
                 { headers: { Authorization: `Bearer ${token}` } }
