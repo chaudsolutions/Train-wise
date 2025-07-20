@@ -40,7 +40,7 @@ const Community = require("./Models/Community");
 const connectDB = async () => {
     try {
         const conn = await mongoose.connect(mongoUrl, {
-            serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+            serverSelectionTimeoutMS: 15000, // Timeout after 5 seconds
             socketTimeoutMS: 45000, // Close sockets after 45s inactivity
         });
 

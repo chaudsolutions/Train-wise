@@ -112,23 +112,6 @@ exports.passwordResetOTPEmail = (otpCode) => {
     };
 };
 
-// Welcome Email
-exports.welcomeEmail = (userName) => {
-    const subject = `Welcome to Our Service, ${userName}!`;
-    const content = `
-        <p>Thank you for joining our platform!</p>
-        <p>Get started by exploring our features:</p>
-        <a href="${appUrl}/profile" class="button">Go to Profile</a>
-        <p>Need help getting started? Check out our <a href="${appUrl}/tutorial">getting started guides</a>.</p>
-    `;
-
-    return {
-        subject,
-        html: baseEmailTemplate(subject, content),
-        text: `Welcome to Our Service!\n\nGet started: https://yourdomain.com/dashboard`,
-    };
-};
-
 // Welcome Email with Verification OTP
 exports.welcomeEmailWithOTP = (userName, otpCode) => {
     const subject = `Welcome to Skillbay, ${userName}!`;

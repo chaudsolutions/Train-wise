@@ -225,13 +225,15 @@ const CreateCourse = () => {
                 }
             );
 
+            refetchCommunity();
+
             toast.success(response.data);
         } catch (error) {
             console.error("Error creating course:", error);
             toast.error(error.response?.data || "Failed to create course");
             setUploadProgress(0);
             logError({
-                error: error?.response.data,
+                error: error?.response.data || "Failed to create course",
                 context: {
                     action: "user_create_course",
                     component: "CreateCourse",

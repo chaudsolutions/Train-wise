@@ -7,6 +7,7 @@ const Category = require("../Models/Category.js");
 const Settings = require("../Models/Settings.js");
 const ErrorLog = require("../Models/ErrorLog.js");
 const { verifyToken } = require("../utils/verifyJWT.js");
+const CommunityCalendar = require("../Models/CommunityCalendar.js");
 
 const router = express.Router();
 
@@ -246,6 +247,227 @@ router.get("/communities/:communityId/messages/stream", async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 });
+
+// SSE endpoint for real-time calendar event messages
+router.get(
+    "/community-calendar/:communityId/events/:eventId/stream/:userId",
+    async (req, res) => {
+        const { communityId, eventId, userId } = req.params;
+
+        try {
+            // Verify community exists and user has access
+            const community = await Community.findById(communityId).populate(
+                "members.userId",
+                "name avatar onlineStatus"
+            );
+
+            if (!community) {
+                return res.status(404).json("Community not found");
+            }
+
+            // Check if user is member or creator
+            const isMember =
+                community.members.some(
+                    (member) =>
+                        member.userId._id.toString() === userId.toString()
+                ) || community.createdBy.toString() === userId.toString();
+
+            if (!isMember) {
+                return res.status(403).json("Not authorized");
+            }
+
+            // Set SSE headers
+            res.setHeader("Content-Type", "text/event-stream");
+            res.setHeader("Cache-Control", "no-cache");
+            res.setHeader("Connection", "keep-alive");
+            res.flushHeaders();
+
+            // Find the calendar and specific event
+            let calendar = await CommunityCalendar.findOne({
+                communityId: community._id,
+            }).populate(
+                "events.memberId events.messages.sender",
+                "name avatar"
+            );
+
+            if (!calendar) {
+                calendar = new CommunityCalendar({
+                    communityId: community._id,
+                    events: [],
+                });
+                await calendar.save();
+            }
+
+            // Find or create the specific event
+            let event = calendar.events.id(eventId);
+            if (!event) {
+                return res.status(404).json("Event not found");
+            }
+
+            // Function to get online users for this event
+            const getOnlineUsers = () => {
+                return community.members
+                    .filter((member) => member.userId?.onlineStatus)
+                    .map((member) => ({
+                        id: member.userId._id,
+                        name: member.userId.name,
+                        avatar: member.userId.avatar,
+                    }));
+            };
+
+            // Send initial data (messages + online users)
+            res.write(
+                `event: initial\ndata: ${JSON.stringify({
+                    messages: event.messages,
+                    onlineUsers: getOnlineUsers(),
+                })}\n\n`
+            );
+
+            // Set up MongoDB change stream for CommunityCalendar
+            const changeStream = CommunityCalendar.watch(
+                [
+                    {
+                        $match: {
+                            "fullDocument.communityId":
+                                new mongoose.Types.ObjectId(communityId),
+                            "fullDocument.events._id":
+                                new mongoose.Types.ObjectId(eventId),
+                        },
+                    },
+                ],
+                { fullDocument: "updateLookup" }
+            );
+
+            changeStream.on("change", async (change) => {
+                try {
+                    if (
+                        change.operationType === "update" &&
+                        change.fullDocument
+                    ) {
+                        // Find the updated event
+                        const updatedCalendar = await CommunityCalendar.findOne(
+                            {
+                                communityId: community._id,
+                            }
+                        ).populate(
+                            "events.memberId events.messages.sender",
+                            "name avatar"
+                        );
+
+                        if (!updatedCalendar) {
+                            console.error("Updated calendar not found");
+                            return;
+                        }
+
+                        const updatedEvent = updatedCalendar.events.id(eventId);
+                        if (!updatedEvent) {
+                            console.error(
+                                "Event not found in updated calendar"
+                            );
+                            return;
+                        }
+
+                        // Check for new messages
+                        if (
+                            updatedEvent.messages.length > event.messages.length
+                        ) {
+                            const newMessages = updatedEvent.messages.slice(
+                                event.messages.length
+                            );
+                            event = updatedEvent;
+                            newMessages.forEach((message) => {
+                                res.write(
+                                    `event: newMessage\ndata: ${JSON.stringify(
+                                        message
+                                    )}\n\n`
+                                );
+                            });
+                        }
+
+                        // Check for deleted messages
+                        if (
+                            updatedEvent.messages.length < event.messages.length
+                        ) {
+                            const oldMessageIds = event.messages.map((msg) =>
+                                msg._id.toString()
+                            );
+                            const newMessageIds = updatedEvent.messages.map(
+                                (msg) => msg._id.toString()
+                            );
+                            const deletedMessageIds = oldMessageIds.filter(
+                                (id) => !newMessageIds.includes(id)
+                            );
+
+                            event = updatedEvent;
+                            deletedMessageIds.forEach((messageId) => {
+                                res.write(
+                                    `event: deleteMessage\ndata: ${JSON.stringify(
+                                        {
+                                            _id: messageId,
+                                        }
+                                    )}\n\n`
+                                );
+                            });
+                        }
+
+                        // Check for event status changes
+                        if (updatedEvent.status !== event.status) {
+                            res.write(
+                                `event: statusChange\ndata: ${JSON.stringify({
+                                    status: updatedEvent.status,
+                                })}\n\n`
+                            );
+                            event.status = updatedEvent.status;
+                        }
+                    }
+                } catch (error) {
+                    console.error("Change stream error:", error);
+                }
+            });
+
+            changeStream.on("error", (error) => {
+                console.error("Change stream failed:", error);
+                changeStream.close();
+                res.write(
+                    `event: error\ndata: ${JSON.stringify({
+                        message: "Stream error",
+                    })}\n\n`
+                );
+            });
+
+            // Poll for online status changes
+            let lastOnlineUsers = JSON.stringify(getOnlineUsers());
+            const onlineStatusPoll = setInterval(async () => {
+                await community.populate(
+                    "members.userId",
+                    "name avatar onlineStatus"
+                );
+                const currentOnlineUsers = getOnlineUsers();
+                const currentOnlineUsersStr =
+                    JSON.stringify(currentOnlineUsers);
+                if (currentOnlineUsersStr !== lastOnlineUsers) {
+                    lastOnlineUsers = currentOnlineUsersStr;
+                    res.write(
+                        `event: onlineUsers\ndata: ${JSON.stringify(
+                            currentOnlineUsers
+                        )}\n\n`
+                    );
+                }
+            }, 5000);
+
+            // Handle client disconnect
+            req.on("close", () => {
+                changeStream.close();
+                clearInterval(onlineStatusPoll);
+                res.end();
+                console.log("SSE client disconnected");
+            });
+        } catch (error) {
+            console.error("SSE error:", error);
+            res.status(500).json({ message: "Server error" });
+        }
+    }
+);
 
 // Get current settings
 router.get("/settings", async (req, res) => {

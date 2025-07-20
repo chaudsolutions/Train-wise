@@ -31,6 +31,10 @@ import {
     StepLabel,
     StepContent,
 } from "@mui/material";
+import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import BalanceIcon from "@mui/icons-material/AccountBalanceWallet";
 import MembersIcon from "@mui/icons-material/People";
@@ -45,6 +49,13 @@ import OnlineIcon from "@mui/icons-material/Circle";
 import People from "@mui/icons-material/People";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
+import RejectedIcon from "@mui/icons-material/Cancel";
+import PendingIcon from "@mui/icons-material/Schedule";
+import ViewIcon from "@mui/icons-material/ChevronRight";
+import CalendarIcon from "@mui/icons-material/CalendarToday";
+import ClosedIcon from "@mui/icons-material/Close";
+import EventIcon from "@mui/icons-material/Event";
+import { format, isBefore, isToday, parseISO } from "date-fns";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import CourseStockImg from "../../../assets/courseStock.png";
 import { useEffect, useRef, useState } from "react";
@@ -53,6 +64,8 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import useResponsive from "../../Hooks/useResponsive";
 import CloudStorage from "./CloudStorage";
+import { useCommunityCalendarData } from "../../Hooks/useQueryFetch/useQueryData";
+import { getToken } from "../../Hooks/useFetch";
 
 export const CommunityOverview = ({ notifications, createdAt }) => {
     const theme = useTheme();
@@ -1630,5 +1643,964 @@ export const AddMember = ({ communityId, refetchCommunity }) => {
                 </Step>
             </Stepper>
         </Paper>
+    );
+};
+
+// calendars tab
+export const CalendarTab = ({ communityId, setActiveTab, setEventData }) => {
+    const [openDialog, setOpenDialog] = useState(false);
+    const [newEventDate, setNewEventDate] = useState(null);
+    const [loading, setLoading] = useState(false);
+
+    const theme = useTheme();
+
+    const {
+        communityCalendarData,
+        isCommunityCalendarLoading,
+        refetchCommunityCalendar,
+    } = useCommunityCalendarData({ communityId });
+
+    const pendingEvents = communityCalendarData?.filter(
+        (e) => e.status === "pending"
+    );
+    const approvedEvents = communityCalendarData?.filter(
+        (e) => e.status === "approved"
+    );
+    const rejectedEvents = communityCalendarData?.filter(
+        (e) => e.status === "rejected"
+    );
+    const closedEvents = communityCalendarData?.filter(
+        (e) => e.status === "closed"
+    );
+
+    console.log({ pendingEvents });
+
+    const handleCreateEvent = async () => {
+        if (!newEventDate) {
+            toast.error("Please select a date");
+            return;
+        }
+        setLoading(true);
+        const token = getToken();
+
+        try {
+            await axios.post(
+                `${serVer}/user/community-calendar/${communityId}/events`,
+                { start: newEventDate },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            refetchCommunityCalendar();
+            toast.success("Event created successfully");
+            setOpenDialog(false);
+            setNewEventDate(null);
+        } catch (error) {
+            toast.error(error.response?.data || "Failed to create event");
+            console.error("Error creating event:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const canViewEvent = (eventDate) => {
+        const date = parseISO(eventDate);
+        return isBefore(date, new Date()) || isToday(date);
+    };
+
+    const handleViewEvent = (event) => {
+        setActiveTab("viewEvent");
+        setEventData(event);
+    };
+
+    if (isCommunityCalendarLoading) {
+        return (
+            <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+                <CircularProgress size={20} />
+            </Box>
+        );
+    }
+
+    return (
+        <Box sx={{ p: 3 }}>
+            <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
+                Community Calendar
+            </Typography>
+
+            {/* Stats Cards */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid size={{ xs: 12, md: 4 }}>
+                    <Paper
+                        elevation={3}
+                        sx={{
+                            p: 3,
+                            borderRadius: 2,
+                            borderLeft: `4px solid ${theme.palette.warning.main}`,
+                            height: "100%",
+                        }}>
+                        <Box display="flex" alignItems="center" gap={2}>
+                            <PendingIcon fontSize="large" color="warning" />
+                            <Box>
+                                <Typography variant="h3" fontWeight="bold">
+                                    {pendingEvents?.length || 0}
+                                </Typography>
+                                <Typography variant="subtitle1">
+                                    Pending Events
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </Paper>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <Paper
+                        elevation={3}
+                        sx={{
+                            p: 3,
+                            borderRadius: 2,
+                            borderLeft: `4px solid ${theme.palette.success.main}`,
+                            height: "100%",
+                        }}>
+                        <Box display="flex" alignItems="center" gap={2}>
+                            <CheckIcon fontSize="large" color="success" />
+                            <Box>
+                                <Typography variant="h3" fontWeight="bold">
+                                    {approvedEvents?.length || 0}
+                                </Typography>
+                                <Typography variant="subtitle1">
+                                    Approved Events
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </Paper>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <Paper
+                        elevation={3}
+                        sx={{
+                            p: 3,
+                            borderRadius: 2,
+                            borderLeft: `4px solid ${theme.palette.error.main}`,
+                            height: "100%",
+                        }}>
+                        <Box display="flex" alignItems="center" gap={2}>
+                            <RejectedIcon fontSize="large" color="error" />
+                            <Box>
+                                <Typography variant="h3" fontWeight="bold">
+                                    {rejectedEvents?.length || 0}
+                                </Typography>
+                                <Typography variant="subtitle1">
+                                    Rejected Events
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </Paper>
+                </Grid>
+            </Grid>
+
+            <Box display="flex" justifyContent="flex-end" sx={{ mb: 3 }}>
+                <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => setOpenDialog(true)}
+                    sx={{
+                        borderRadius: 2,
+                        px: 3,
+                        py: 1.5,
+                        fontWeight: "bold",
+                        boxShadow: theme.shadows[3],
+                    }}>
+                    New Event
+                </Button>
+            </Box>
+
+            {/* Events Sections */}
+            <Grid container spacing={3}>
+                {/* Pending Events */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <Paper elevation={2} sx={{ p: 2, borderRadius: 2 }}>
+                        <Typography
+                            variant="h6"
+                            gutterBottom
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                            }}>
+                            <PendingIcon color="warning" /> Pending Events
+                        </Typography>
+                        <Divider sx={{ mb: 2 }} />
+                        {pendingEvents?.length === 0 ? (
+                            <Typography color="text.secondary" sx={{ p: 2 }}>
+                                No pending events
+                            </Typography>
+                        ) : (
+                            <List>
+                                {pendingEvents?.map((event) => (
+                                    <ListItem
+                                        key={event._id}
+                                        sx={{
+                                            mb: 1,
+                                            borderRadius: 1,
+                                            bgcolor: theme.palette.grey[100],
+                                        }}>
+                                        <ListItemAvatar>
+                                            <Avatar
+                                                sx={{
+                                                    bgcolor:
+                                                        theme.palette.warning
+                                                            .light,
+                                                }}>
+                                                <CalendarIcon />
+                                            </Avatar>
+                                        </ListItemAvatar>
+                                        <ListItemText
+                                            primary={format(
+                                                parseISO(event.start),
+                                                "PPP"
+                                            )}
+                                            secondary={`Created: ${format(
+                                                parseISO(event.createdAt),
+                                                "PP"
+                                            )}`}
+                                        />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        )}
+                    </Paper>
+                </Grid>
+
+                {/* Approved Events */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <Paper elevation={2} sx={{ p: 2, borderRadius: 2 }}>
+                        <Typography
+                            variant="h6"
+                            gutterBottom
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                            }}>
+                            <CheckIcon color="success" /> Approved Events
+                        </Typography>
+                        <Divider sx={{ mb: 2 }} />
+                        {approvedEvents?.length === 0 ? (
+                            <Typography color="text.secondary" sx={{ p: 2 }}>
+                                No approved events
+                            </Typography>
+                        ) : (
+                            <List>
+                                {approvedEvents?.map((event) => (
+                                    <ListItem
+                                        key={event._id}
+                                        secondaryAction={
+                                            <Button
+                                                edge="end"
+                                                size="small"
+                                                variant="contained"
+                                                color="success"
+                                                onClick={() =>
+                                                    handleViewEvent(event)
+                                                }
+                                                endIcon={<ViewIcon />}
+                                                disabled={
+                                                    !canViewEvent(event.start)
+                                                }>
+                                                View
+                                            </Button>
+                                        }
+                                        sx={{
+                                            mb: 1,
+                                            borderRadius: 1,
+                                            bgcolor: theme.palette.grey[100],
+                                            cursor: "pointer",
+                                        }}>
+                                        <ListItemAvatar>
+                                            <Avatar
+                                                sx={{
+                                                    bgcolor:
+                                                        theme.palette.success
+                                                            .light,
+                                                }}>
+                                                <CalendarIcon />
+                                            </Avatar>
+                                        </ListItemAvatar>
+                                        <ListItemText
+                                            primary={format(
+                                                parseISO(event.start),
+                                                "PPP"
+                                            )}
+                                            secondary={`Created: ${format(
+                                                parseISO(event.createdAt),
+                                                "PP"
+                                            )}`}
+                                        />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        )}
+                    </Paper>
+                </Grid>
+
+                {/* Rejected Events */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <Paper elevation={2} sx={{ p: 2, borderRadius: 2 }}>
+                        <Typography
+                            variant="h6"
+                            gutterBottom
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                            }}>
+                            <RejectedIcon color="error" /> Rejected Events
+                        </Typography>
+                        <Divider sx={{ mb: 2 }} />
+                        {rejectedEvents?.length === 0 ? (
+                            <Typography color="text.secondary" sx={{ p: 2 }}>
+                                No rejected events
+                            </Typography>
+                        ) : (
+                            <List>
+                                {rejectedEvents?.map((event) => (
+                                    <ListItem
+                                        key={event._id}
+                                        sx={{
+                                            mb: 1,
+                                            borderRadius: 1,
+                                            bgcolor: theme.palette.grey[100],
+                                        }}>
+                                        <ListItemAvatar>
+                                            <Avatar
+                                                sx={{
+                                                    bgcolor:
+                                                        theme.palette.error
+                                                            .light,
+                                                }}>
+                                                <CalendarIcon />
+                                            </Avatar>
+                                        </ListItemAvatar>
+                                        <ListItemText
+                                            primary={format(
+                                                parseISO(event.start),
+                                                "PPP"
+                                            )}
+                                            secondary={`Created: ${format(
+                                                parseISO(event.createdAt),
+                                                "PP"
+                                            )}`}
+                                        />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        )}
+                    </Paper>
+                </Grid>
+
+                {/* Closed Events */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <Paper elevation={2} sx={{ p: 2, borderRadius: 2 }}>
+                        <Typography
+                            variant="h6"
+                            gutterBottom
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                            }}>
+                            <ClosedIcon color="error" /> Closed Events
+                        </Typography>
+                        <Divider sx={{ mb: 2 }} />
+                        {rejectedEvents?.length === 0 ? (
+                            <Typography color="text.secondary" sx={{ p: 2 }}>
+                                No closed events
+                            </Typography>
+                        ) : (
+                            <List>
+                                {closedEvents?.map((event) => (
+                                    <ListItem
+                                        key={event._id}
+                                        secondaryAction={
+                                            <Button
+                                                edge="end"
+                                                size="small"
+                                                variant="contained"
+                                                color="success"
+                                                endIcon={<ViewIcon />}
+                                                disabled={
+                                                    !canViewEvent(event.start)
+                                                }>
+                                                Review
+                                            </Button>
+                                        }
+                                        sx={{
+                                            mb: 1,
+                                            borderRadius: 1,
+                                            bgcolor: theme.palette.grey[100],
+                                        }}>
+                                        <ListItemAvatar>
+                                            <Avatar
+                                                sx={{
+                                                    bgcolor:
+                                                        theme.palette.error
+                                                            .light,
+                                                }}>
+                                                <CalendarIcon />
+                                            </Avatar>
+                                        </ListItemAvatar>
+                                        <ListItemText
+                                            primary={format(
+                                                parseISO(event.start),
+                                                "PPP"
+                                            )}
+                                            secondary={`Created: ${format(
+                                                parseISO(event.createdAt),
+                                                "PP"
+                                            )}`}
+                                        />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        )}
+                    </Paper>
+                </Grid>
+            </Grid>
+
+            {/* Create Event Dialog */}
+            <Dialog
+                open={openDialog}
+                onClose={() => setOpenDialog(false)}
+                maxWidth="xs"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        p: 2,
+                    },
+                }}>
+                <DialogTitle>
+                    <Typography variant="h6" fontWeight="bold">
+                        Schedule New Event
+                    </Typography>
+                </DialogTitle>
+                <DialogContent>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <DemoContainer components={["DatePicker"]}>
+                            <DatePicker
+                                label="Event Date"
+                                value={newEventDate}
+                                onChange={(date) => setNewEventDate(date)}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        fullWidth
+                                        margin="normal"
+                                        sx={{ mt: 2 }}
+                                    />
+                                )}
+                            />
+                        </DemoContainer>
+                    </LocalizationProvider>
+                </DialogContent>
+                <DialogActions sx={{ p: 3 }}>
+                    <Button
+                        onClick={() => setOpenDialog(false)}
+                        sx={{ borderRadius: 2, px: 3 }}>
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleCreateEvent}
+                        sx={{ borderRadius: 2, px: 3 }}>
+                        {loading ? (
+                            <CircularProgress size={20} />
+                        ) : (
+                            "Create Event"
+                        )}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </Box>
+    );
+};
+
+export const ViewEvent = ({
+    communityId,
+    eventData,
+    setActiveTab,
+    setEventData,
+    userId,
+}) => {
+    const theme = useTheme();
+    const { token } = useToken();
+    const [messages, setMessages] = useState([]);
+    const [newMessage, setNewMessage] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [isConnected, setIsConnected] = useState(false);
+    const [onlineUsers, setOnlineUsers] = useState([]);
+    const eventSourceRef = useRef(null);
+    const chatContainerRef = useRef(null);
+
+    // Connect to SSE for real-time updates
+    useEffect(() => {
+        if (!eventData?._id) return;
+
+        const url = new URL(
+            `${serVer}/api/community-calendar/${communityId}/events/${eventData._id}/stream/${userId}`
+        );
+
+        const connectToSSE = () => {
+            const eventSource = new EventSource(url.toString());
+            eventSourceRef.current = eventSource;
+
+            eventSource.onopen = () => {
+                setIsConnected(true);
+                console.log("SSE connection opened");
+            };
+
+            eventSource.addEventListener("initial", (e) => {
+                const { messages, onlineUsers } = JSON.parse(e.data);
+                setMessages(messages);
+                setOnlineUsers(onlineUsers);
+            });
+
+            eventSource.addEventListener("newMessage", (e) => {
+                const newMessage = JSON.parse(e.data);
+                setMessages((prev) => [...prev, newMessage]);
+            });
+
+            eventSource.addEventListener("onlineUsers", (e) => {
+                const updatedOnlineUsers = JSON.parse(e.data);
+                setOnlineUsers(updatedOnlineUsers);
+            });
+
+            eventSource.onerror = (err) => {
+                console.error("EventSource failed:", err);
+                setIsConnected(false);
+                eventSource.close();
+                setTimeout(connectToSSE, 5000);
+            };
+        };
+
+        connectToSSE();
+
+        return () => {
+            if (eventSourceRef.current) {
+                eventSourceRef.current.close();
+                console.log("SSE connection closed");
+            }
+        };
+    }, [communityId, eventData?._id, token, userId]);
+
+    // Auto-scroll to bottom when new messages arrive
+    useEffect(() => {
+        const container = chatContainerRef.current;
+        if (container) {
+            container.scrollTo({
+                top: container.scrollHeight,
+                behavior: "smooth",
+            });
+        }
+    }, [messages]);
+
+    const handleSendMessage = async () => {
+        if (!newMessage.trim()) return;
+
+        setLoading(true);
+        try {
+            await axios.post(
+                `${serVer}/user/community-calendar/events/${eventData._id}/messages`,
+                { content: newMessage },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setNewMessage("");
+        } catch (error) {
+            console.error("Error sending message:", error);
+            toast.error("Failed to send message");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
+        }
+    };
+
+    const handleCloseEvent = () => {
+        setActiveTab("calendar");
+        setEventData(null);
+    };
+
+    const getStatusIcon = () => {
+        switch (eventData.status) {
+            case "approved":
+                return <CheckIcon color="success" />;
+            case "rejected":
+                return <RejectedIcon color="error" />;
+            default:
+                return <PendingIcon color="warning" />;
+        }
+    };
+
+    console.log(messages);
+
+    return (
+        <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+            {/* Event Header */}
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 2,
+                    borderRadius: "12px 12px 0 0",
+                    border: `1px solid ${theme.palette.divider}`,
+                    bgcolor: theme.palette.background.paper,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                }}>
+                <Box display="flex" alignItems="center" gap={2}>
+                    <EventIcon color="primary" />
+                    <Box>
+                        <Typography variant="h6" fontWeight="bold">
+                            Event Discussion
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            {format(parseISO(eventData.start), "PPP")}
+                        </Typography>
+                    </Box>
+                </Box>
+
+                <Box display="flex" alignItems="center" gap={1}>
+                    <Chip
+                        label={isConnected ? "Live" : "Connecting..."}
+                        size="small"
+                        color={isConnected ? "success" : "warning"}
+                        icon={
+                            isConnected ? (
+                                <CheckIcon fontSize="small" />
+                            ) : (
+                                <PendingIcon fontSize="small" />
+                            )
+                        }
+                    />
+                    <Chip
+                        label={eventData.status}
+                        size="small"
+                        icon={getStatusIcon()}
+                        sx={{
+                            bgcolor:
+                                eventData.status === "approved"
+                                    ? theme.palette.success.light
+                                    : eventData.status === "rejected"
+                                    ? theme.palette.error.light
+                                    : theme.palette.warning.light,
+                            color: theme.palette.getContrastText(
+                                eventData.status === "approved"
+                                    ? theme.palette.success.light
+                                    : eventData.status === "rejected"
+                                    ? theme.palette.error.light
+                                    : theme.palette.warning.light
+                            ),
+                        }}
+                    />
+                    <IconButton onClick={handleCloseEvent}>
+                        <ClosedIcon />
+                    </IconButton>
+                </Box>
+            </Paper>
+
+            {/* Main Content */}
+            <Box
+                sx={{
+                    flexGrow: 1,
+                    display: "flex",
+                    overflow: "hidden",
+                    flexDirection: { xs: "column", md: "row" },
+                }}>
+                {/* Event Details */}
+                <Paper
+                    elevation={0}
+                    sx={{
+                        width: { xs: "100%", md: 300 },
+                        p: 2,
+                        borderRight: {
+                            md: `1px solid ${theme.palette.divider}`,
+                        },
+                        borderBottom: {
+                            xs: `1px solid ${theme.palette.divider}`,
+                            md: "none",
+                        },
+                        bgcolor: theme.palette.background.default,
+                    }}>
+                    <Typography
+                        variant="subtitle2"
+                        color="text.secondary"
+                        sx={{ mb: 2 }}>
+                        Event Details
+                    </Typography>
+
+                    <Box sx={{ mb: 3 }}>
+                        <Typography variant="body2" fontWeight="bold">
+                            Date
+                        </Typography>
+                        <Typography variant="body2">
+                            {format(parseISO(eventData.start), "PPPP")}
+                        </Typography>
+                    </Box>
+
+                    <Box sx={{ mb: 3 }}>
+                        <Typography variant="body2" fontWeight="bold">
+                            Created
+                        </Typography>
+                        <Typography variant="body2">
+                            {format(parseISO(eventData.createdAt), "PP")}
+                        </Typography>
+                    </Box>
+
+                    <Box>
+                        <Typography
+                            variant="body2"
+                            fontWeight="bold"
+                            sx={{ mb: 1 }}>
+                            Online Participants ({onlineUsers.length})
+                        </Typography>
+                        <List dense>
+                            {onlineUsers.map((user) => (
+                                <ListItem key={user.id} sx={{ px: 0 }}>
+                                    <ListItemAvatar>
+                                        <Badge
+                                            overlap="circular"
+                                            anchorOrigin={{
+                                                vertical: "bottom",
+                                                horizontal: "right",
+                                            }}
+                                            variant="dot"
+                                            color="success">
+                                            <Avatar
+                                                src={user.avatar}
+                                                alt={user.name}
+                                                sx={{ width: 32, height: 32 }}
+                                            />
+                                        </Badge>
+                                    </ListItemAvatar>
+                                    <ListItemText
+                                        primary={
+                                            <Typography variant="body2">
+                                                {user.name}
+                                            </Typography>
+                                        }
+                                    />
+                                </ListItem>
+                            ))}
+                        </List>
+                    </Box>
+                </Paper>
+
+                {/* Chat Messages */}
+                <Box
+                    sx={{
+                        flexGrow: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                    }}>
+                    {/* Messages Container */}
+                    <Box
+                        ref={chatContainerRef}
+                        sx={{
+                            flexGrow: 1,
+                            p: 2,
+                            overflowY: "auto",
+                            bgcolor: theme.palette.background.paper,
+                            backgroundImage:
+                                "linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))",
+                        }}>
+                        {messages.length === 0 ? (
+                            <Box
+                                sx={{
+                                    height: "100%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}>
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary">
+                                    No messages yet. Start the conversation!
+                                </Typography>
+                            </Box>
+                        ) : (
+                            <List>
+                                {messages?.map((msg) => (
+                                    <Box key={msg._id}>
+                                        <ListItem
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "flex-start",
+                                                justifyContent:
+                                                    msg.sender._id === userId
+                                                        ? "flex-end"
+                                                        : "flex-start",
+                                                px: 0,
+                                                py: 1,
+                                            }}>
+                                            {msg.sender?._id !== userId && (
+                                                <ListItemAvatar
+                                                    sx={{
+                                                        minWidth: 40,
+                                                        alignSelf: "flex-start",
+                                                    }}>
+                                                    <Avatar
+                                                        src={msg.sender?.avatar}
+                                                        alt={msg.sender?.name}>
+                                                        {msg.sender.name.charAt(
+                                                            0
+                                                        )}
+                                                    </Avatar>
+                                                </ListItemAvatar>
+                                            )}
+                                            <Box
+                                                sx={{
+                                                    maxWidth: "70%",
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    alignItems:
+                                                        msg.sender._id ===
+                                                        userId
+                                                            ? "flex-end"
+                                                            : "flex-start",
+                                                }}>
+                                                {msg.sender?._id !== userId && (
+                                                    <Typography
+                                                        variant="caption"
+                                                        color="text.secondary">
+                                                        {msg.sender?.name}
+                                                    </Typography>
+                                                )}
+                                                <Paper
+                                                    elevation={0}
+                                                    sx={{
+                                                        px: 2,
+                                                        py: 1,
+                                                        borderRadius:
+                                                            msg.sender._id ===
+                                                            userId
+                                                                ? "18px 18px 0 18px"
+                                                                : "18px 18px 18px 0",
+                                                        bgcolor:
+                                                            msg.sender._id ===
+                                                            userId
+                                                                ? theme.palette
+                                                                      .primary
+                                                                      .main
+                                                                : theme.palette
+                                                                      .grey[100],
+                                                        color:
+                                                            msg.sender._id ===
+                                                            userId
+                                                                ? theme.palette
+                                                                      .primary
+                                                                      .contrastText
+                                                                : "inherit",
+                                                    }}>
+                                                    <Typography variant="body1">
+                                                        {msg.content}
+                                                    </Typography>
+                                                </Paper>
+                                                <Typography
+                                                    variant="caption"
+                                                    color="text.secondary"
+                                                    fontSize="0.6rem"
+                                                    sx={{ mt: 0.5 }}>
+                                                    {msg?.createdAt
+                                                        ? format(
+                                                              new Date(
+                                                                  msg.createdAt
+                                                              ),
+                                                              "PPpp"
+                                                          )
+                                                        : "N/A"}
+                                                </Typography>
+                                            </Box>
+                                        </ListItem>
+                                        <Divider
+                                            variant="inset"
+                                            component="li"
+                                            sx={{ opacity: 0.5 }}
+                                        />
+                                    </Box>
+                                ))}
+                            </List>
+                        )}
+                    </Box>
+
+                    {/* Message Input */}
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: 2,
+                            borderTop: `1px solid ${theme.palette.divider}`,
+                            bgcolor: theme.palette.background.paper,
+                        }}>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                            }}>
+                            <TextField
+                                fullWidth
+                                placeholder="Type your message..."
+                                variant="outlined"
+                                size="small"
+                                value={newMessage}
+                                onChange={(e) => setNewMessage(e.target.value)}
+                                onKeyPress={handleKeyPress}
+                                disabled={loading || !isConnected}
+                                maxRows={4}
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        borderRadius: 20,
+                                        bgcolor:
+                                            theme.palette.background.default,
+                                    },
+                                }}
+                            />
+                            <IconButton
+                                size="large"
+                                onClick={handleSendMessage}
+                                disabled={
+                                    !newMessage.trim() ||
+                                    loading ||
+                                    !isConnected
+                                }
+                                sx={{
+                                    bgcolor: theme.palette.primary.main,
+                                    color: theme.palette.primary.contrastText,
+                                    "&:hover": {
+                                        bgcolor: theme.palette.primary.dark,
+                                    },
+                                    "&:disabled": {
+                                        bgcolor:
+                                            theme.palette.action
+                                                .disabledBackground,
+                                    },
+                                }}>
+                                {loading ? (
+                                    <CircularProgress
+                                        size={22}
+                                        color="inherit"
+                                    />
+                                ) : (
+                                    <SendIcon />
+                                )}
+                            </IconButton>
+                        </Box>
+                    </Paper>
+                </Box>
+            </Box>
+        </Box>
     );
 };

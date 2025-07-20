@@ -24,6 +24,7 @@ import PeopleIcon from "@mui/icons-material/People";
 import SchoolIcon from "@mui/icons-material/School";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import MessageIcon from "@mui/icons-material/Message";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import AddIcon from "@mui/icons-material/Add";
 import { useReactRouter } from "../../Hooks/useReactRouter";
@@ -36,10 +37,12 @@ import PageLoader from "../../Animations/PageLoader";
 import useResponsive from "../../Hooks/useResponsive";
 import {
     AddMember,
+    CalendarTab,
     CommunityChatroom,
     CommunityClassroom,
     CommunityInventory,
     CommunityOverview,
+    ViewEvent,
 } from "../../Custom/community/EnterCommunity";
 import { useSearchParams } from "react-router-dom";
 import { ReportCommunityForm } from "../../Custom/Forms/Forms";
@@ -52,6 +55,7 @@ const EnterCommunity = () => {
     const [reportDialog, setReportDialog] = useState(false);
     const [selectShare, setSelectShare] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
+    const [eventData, setEventData] = useState(null);
 
     const theme = useTheme();
     const { isMobile } = useResponsive();
@@ -99,6 +103,7 @@ const EnterCommunity = () => {
         { id: "classroom", label: "Classroom", icon: <SchoolIcon /> },
         { id: "chatroom", label: "Chatroom", icon: <MessageIcon /> },
         { id: "members", label: "Members", icon: <PeopleIcon /> },
+        { id: "calendar", label: "Calendar", icon: <CalendarMonthIcon /> },
     ];
 
     const handleCloseSnackbar = (event, reason) => {
@@ -329,6 +334,24 @@ const EnterCommunity = () => {
                                         ))}
                                     </List>
                                 </Box>
+                            )}
+
+                            {activeTab === "calendar" && (
+                                <CalendarTab
+                                    communityId={communityId}
+                                    setActiveTab={setActiveTab}
+                                    setEventData={setEventData}
+                                />
+                            )}
+
+                            {activeTab === "viewEvent" && eventData && (
+                                <ViewEvent
+                                    communityId={communityId}
+                                    eventData={eventData}
+                                    setActiveTab={setActiveTab}
+                                    setEventData={setEventData}
+                                    userId={_id}
+                                />
                             )}
 
                             {activeTab === "addAMember" && (

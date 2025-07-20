@@ -29,8 +29,6 @@ const CommunityLayout = () => {
 
     const { onlineStatus } = userData || {};
 
-    console.log(userMembershipData);
-
     useEffect(() => {
         // Redirect if the user is not a member
         if (userMembershipData && userMembershipData === null) {

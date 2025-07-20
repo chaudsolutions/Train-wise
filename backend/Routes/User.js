@@ -7,7 +7,6 @@ const Community = require("../Models/Community");
 const CommunityCourse = require("../Models/CommunityCourse");
 const { upload, uploadToCloudinary } = require("../utils/uploadMedia");
 const CommunityMessage = require("../Models/CommunityMessage");
-const { createNotification } = require("../utils/notifications");
 const Notification = require("../Models/Notification");
 const Withdrawal = require("../Models/Withdrawal");
 const Payment = require("../Models/Payment");
@@ -15,6 +14,8 @@ const PaymentDetails = require("../Models/PaymentDetails");
 const { generateAlphanumericOTP } = require("../utils/generators");
 const { welcomeEmailWithOTP } = require("../utils/emailTemplates");
 const transporter = require("../config/nodemailer");
+const CommunityCalendar = require("../Models/CommunityCalendar");
+const { createNotification } = require("../utils/notifications");
 
 const router = express.Router();
 
@@ -81,10 +82,8 @@ router.put("/joinCommunity/:communityId", async (req, res) => {
                 status: "active",
             });
 
-            await createNotification(
-                userId,
-                `You joined the free community ${community.name}`
-            );
+            await (userId, `You have created an event in ${community.name}`),
+                (userId, `You joined the free community ${community.name}`);
 
             await community.save();
             return res.status(200).json("Successfully joined free community");
@@ -995,5 +994,138 @@ router.delete("/delete-account", async (req, res) => {
         res.status(500).json("Failed to delete account");
     }
 });
+
+// endpoint to get the community calendar for user or creator
+router.get("/community-calendar/:communityId", async (req, res) => {
+    const userId = req.userId;
+    const { communityId } = req.params;
+    try {
+        const community = await Community.findById(communityId);
+
+        if (!community) {
+            return res.status(404).json("Community not found");
+        }
+
+        // check if user is part of community
+        const isMember = community.members.some(
+            (member) => member.userId.toString() === userId.toString()
+        );
+
+        const isCommunityCreator =
+            community.createdBy.toString() === userId.toString();
+
+        if (!isMember && !isCommunityCreator) {
+            return res
+                .status(403)
+                .json("User is not a member/creator of the community");
+        }
+
+        // find community calendar
+        const communityCalendar = await CommunityCalendar.findOne({
+            communityId: community.id,
+        });
+
+        // if none, create one
+        if (!communityCalendar) {
+            await CommunityCalendar.create({
+                communityId: community.id,
+                events: [],
+            });
+        }
+
+        // sort events by user
+        const events = isCommunityCreator
+            ? communityCalendar.events
+            : communityCalendar.events.filter(
+                  (event) => event.memberId.toString() === userId.toString()
+              );
+
+        res.status(200).json(events);
+    } catch (error) {
+        console.error("Error fetching community calendar:", error);
+        res.status(500).json("Failed to fetch community calendar");
+    }
+});
+
+// endpoint to create a new event
+router.post("/community-calendar/:communityId/events", async (req, res) => {
+    try {
+        const { start } = req.body;
+        const userId = req.userId;
+        const { communityId } = req.params;
+
+        const community = await Community.findById(communityId);
+
+        if (!community) {
+            return res.status(404).json("Community not found");
+        }
+
+        const calendar = await CommunityCalendar.findOne({ communityId });
+
+        const newEvent = {
+            start,
+            memberId: userId,
+            status: "pending",
+            messages: [],
+        };
+
+        calendar.events.push(newEvent);
+        await calendar.save();
+
+        // send notifications for created event
+        await Promise.all([
+            createNotification(
+                userId,
+                `You have created a calendar event in ${community.name}`
+            ),
+            createNotification(
+                community.createdBy,
+                `A calendar event has been created in ${community.name} by ${userId}`
+            ),
+        ]);
+
+        res.status(201).json("Event created successfully");
+    } catch (error) {
+        console.error("Error creating event:", error);
+        res.status(500).json("Failed to create event");
+    }
+});
+
+// endpoint to send messages
+router.post(
+    "/community-calendar/events/:eventId/messages",
+    async (req, res) => {
+        try {
+            const { content } = req.body;
+            const userId = req.userId;
+            const eventId = req.params.eventId;
+
+            const calendar = await CommunityCalendar.findOne({
+                "events._id": eventId,
+            });
+
+            if (!calendar) {
+                return res.status(404).json("Calendar not found");
+            }
+
+            const event = calendar.events.id(eventId);
+            const user = await UsersModel.findById(userId);
+
+            const newMessage = {
+                sender: user._id,
+                content,
+                createdAt: new Date(),
+            };
+
+            event.messages.push(newMessage);
+            await calendar.save();
+
+            res.status(201).json(newMessage);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json("Failed to send message");
+        }
+    }
+);
 
 module.exports = { User: router };

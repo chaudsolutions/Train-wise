@@ -70,9 +70,7 @@ const createCourse = async (req, res) => {
         const remainingStorage =
             community.cloudStorageLimit - community.cloudStorageUsed;
         if (totalVideoSizeGB > remainingStorage) {
-            return res.status(400).json({
-                message: `Insufficient storage`,
-            });
+            return res.status(400).json(`Insufficient storage`);
         }
 
         // Step 3: Upload all videos if storage is sufficient

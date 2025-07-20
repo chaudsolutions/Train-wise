@@ -105,6 +105,14 @@ const CloudStorage = ({
         return "primary";
     };
 
+    const formatStorageSize = (size) => {
+        if (size < 1) {
+            return `${(size * 1024).toFixed(1)} MB`;
+        } else {
+            return `${size.toFixed(1)} GB`;
+        }
+    };
+
     return (
         <>
             <Grid size={{ xs: 12, md: 4 }}>
@@ -136,8 +144,8 @@ const CloudStorage = ({
                             justifyContent="space-between"
                             mb={1}>
                             <Typography variant="body2" fontWeight="bold">
-                                {cloudStorageUsed?.toFixed(1)} GB of{" "}
-                                {cloudStorageLimit} GB used
+                                {formatStorageSize(cloudStorageUsed)} of{" "}
+                                {formatStorageSize(cloudStorageLimit)} used
                             </Typography>
                             <Typography variant="body2" fontWeight="bold">
                                 {storagePercentage.toFixed(0)}%

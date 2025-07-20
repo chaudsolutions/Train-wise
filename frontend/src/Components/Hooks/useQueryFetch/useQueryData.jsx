@@ -5,6 +5,7 @@ import {
     fetchCategories,
     fetchCommunities,
     fetchCommunity,
+    fetchCommunityCalendar,
     fetchCommunityCourses,
     fetchCommunitySingleCourse,
     fetchNotifications,
@@ -327,5 +328,28 @@ export const useSettingsData = () => {
         isSettingsLoading,
         isSettingsError,
         refetchSettings,
+    };
+};
+
+// use community calendar data
+export const useCommunityCalendarData = ({ communityId }) => {
+    const { user } = useAuthContext();
+
+    const {
+        data: communityCalendarData,
+        isLoading: isCommunityCalendarLoading,
+        isError: isCommunityCalendarError,
+        refetch: refetchCommunityCalendar,
+    } = useQuery({
+        queryKey: ["communityCalendar", communityId], // Use the new object-based syntax
+        queryFn: () => fetchCommunityCalendar(communityId),
+        enabled: !!user && !!communityId,
+    });
+
+    return {
+        communityCalendarData,
+        isCommunityCalendarLoading,
+        isCommunityCalendarError,
+        refetchCommunityCalendar,
     };
 };

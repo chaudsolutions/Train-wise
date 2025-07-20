@@ -233,3 +233,23 @@ export const fetchSettings = async () => {
 
     return response.data;
 };
+
+// fetch community calendar
+export const fetchCommunityCalendar = async (communityId) => {
+    const token = getToken();
+
+    const response = await axios.get(
+        `${serVer}/user/community-calendar/${communityId}`,
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+
+    if (response.status !== 200) {
+        throw new Error("Network response was not ok");
+    }
+
+    return response.data;
+};

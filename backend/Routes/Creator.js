@@ -10,6 +10,7 @@ const Payment = require("../Models/Payment");
 const { createNotification } = require("../utils/notifications");
 const { createCourse } = require("../controllers/course.controller");
 const Settings = require("../Models/Settings");
+const CommunityCalendar = require("../Models/CommunityCalendar");
 
 const router = express.Router();
 
@@ -451,6 +452,31 @@ router.put("/storage-upgrade/:communityId", async (req, res) => {
     } catch (error) {
         console.error("Error searching for members:", error);
         res.status(500).json("Failed to search for members");
+    }
+});
+
+// endpoint to update event status
+router.put("/community-calendar/events/:eventId/status", async (req, res) => {
+    try {
+        const { status } = req.body;
+        const eventId = req.params.eventId;
+
+        const calendar = await CommunityCalendar.findOne({
+            "events._id": eventId,
+        });
+
+        if (!calendar) {
+            return res.status(404).json("Calendar not found");
+        }
+
+        const event = calendar.events.id(eventId);
+        event.status = status;
+        await calendar.save();
+
+        res.status(200).json(event);
+    } catch (error) {
+        console.error("Error updating event status:", error);
+        res.status(500).json("Failed to update event status");
     }
 });
 
