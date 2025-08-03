@@ -8,15 +8,11 @@ const UsersModel = require("../Models/Users");
 const { createNotification } = require("../utils/notifications");
 const Withdrawal = require("../Models/Withdrawal");
 const Settings = require("../Models/Settings");
-const {
-    extractPublicId,
-    deleteCloudinaryImage,
-} = require("../utils/cloudinary");
-const { upload, uploadToCloudinary } = require("../utils/uploadMedia");
 const { deleteCommunity } = require("../controllers/community.controller");
 const CommunityCourse = require("../Models/CommunityCourse");
 const CommunityMessage = require("../Models/CommunityMessage");
 const ErrorLog = require("../Models/ErrorLog");
+const { upload, uploadToS3, deleteFromS3ByUrl } = require("../utils/s3bucket");
 
 const router = express.Router();
 
@@ -690,20 +686,15 @@ router.put(
             if (bannerImage) {
                 try {
                     // Delete old banner image
-                    const oldBannerPublicId = extractPublicId(
-                        community.bannerImage
-                    );
-                    if (oldBannerPublicId) {
-                        await deleteCloudinaryImage(oldBannerPublicId);
-                    }
+                    await deleteFromS3ByUrl(community.bannerImage);
 
                     // Upload new banner image
                     const file = bannerImage[0];
 
-                    const result = await uploadToCloudinary(
+                    const result = await uploadToS3(
                         file.buffer,
                         file.originalname,
-                        "image"
+                        file.mimetype
                     );
 
                     updateFields.bannerImage = result.secure_url;
@@ -719,18 +710,15 @@ router.put(
             if (logo) {
                 try {
                     // Delete old logo
-                    const oldLogoPublicId = extractPublicId(community.logo);
-                    if (oldLogoPublicId) {
-                        await deleteCloudinaryImage(oldLogoPublicId);
-                    }
+                    await deleteFromS3ByUrl(community.logo);
 
                     // Upload new logo
                     const file = logo[0];
 
-                    const result = await uploadToCloudinary(
+                    const result = await uploadToS3(
                         file.buffer,
                         file.originalname,
-                        "image"
+                        file.mimetype
                     );
 
                     updateFields.logo = result.secure_url;
@@ -823,14 +811,14 @@ router.post(
                 return res.status(404).json("User not found");
             }
 
-            // Upload banner and logo image to Cloudinary
+            // Upload banner and logo image to S3 bucket
             const [bannerImageResult, logoResult] = await Promise.all([
-                uploadToCloudinary(
+                uploadToS3(
                     bannerImage.buffer,
                     bannerImage.originalname,
-                    "image"
+                    bannerImage.mimetype
                 ),
-                uploadToCloudinary(logo.buffer, logo.originalname, "image"),
+                uploadToS3(logo.buffer, logo.originalname, logo.mimetype),
             ]);
 
             // add 1yr to date

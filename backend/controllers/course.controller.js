@@ -1,9 +1,8 @@
 const pdf = require("pdf-parse");
-const { uploadToCloudinary } = require("../utils/uploadMedia");
 const UsersModel = require("../Models/Users");
 const CommunityCourse = require("../Models/CommunityCourse");
 const Community = require("../Models/Community");
-const { deleteCloudinaryImage } = require("../utils/cloudinary");
+const { uploadToS3, deleteFromS3 } = require("../utils/s3bucket");
 
 const createCourse = async (req, res) => {
     try {
@@ -78,10 +77,10 @@ const createCourse = async (req, res) => {
         try {
             // Upload all videos in parallel
             const uploadPromises = videoFiles.map((video) =>
-                uploadToCloudinary(
+                uploadToS3(
                     video.file.buffer,
                     video.file.originalname,
-                    "video"
+                    video.file.mimetype
                 ).then((result) => ({
                     index: video.index,
                     public_id: result.public_id,
@@ -95,9 +94,7 @@ const createCourse = async (req, res) => {
         } catch (uploadError) {
             // Cleanup any partially uploaded videos
             await Promise.all(
-                uploadedVideos.map((video) =>
-                    deleteCloudinaryImage(video.public_id)
-                )
+                uploadedVideos.map((video) => deleteFromS3(video.key))
             );
             throw new Error(`Video upload failed: ${uploadError.message}`);
         }
@@ -186,9 +183,7 @@ const createCourse = async (req, res) => {
         } catch (processingError) {
             // Cleanup videos if lesson processing fails
             await Promise.all(
-                uploadedVideos.map((video) =>
-                    deleteCloudinaryImage(video.public_id)
-                )
+                uploadedVideos.map((video) => deleteFromS3(video.key))
             );
 
             // Revert storage usage

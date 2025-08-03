@@ -1,11 +1,9 @@
 const express = require("express");
-const cloudinary = require("cloudinary").v2;
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const UsersModel = require("../Models/Users");
 const Community = require("../Models/Community");
 const CommunityCourse = require("../Models/CommunityCourse");
-const { upload, uploadToCloudinary } = require("../utils/uploadMedia");
 const CommunityMessage = require("../Models/CommunityMessage");
 const Notification = require("../Models/Notification");
 const Withdrawal = require("../Models/Withdrawal");
@@ -16,6 +14,7 @@ const { welcomeEmailWithOTP } = require("../utils/emailTemplates");
 const transporter = require("../config/nodemailer");
 const CommunityCalendar = require("../Models/CommunityCalendar");
 const { createNotification } = require("../utils/notifications");
+const { upload, deleteFromS3ByUrl, uploadToS3 } = require("../utils/s3bucket");
 
 const router = express.Router();
 
@@ -520,26 +519,21 @@ router.put("/upload-avatar", upload.single("avatar"), async (req, res) => {
         // delete existing avatar if exists
         if (user.avatar) {
             try {
-                const publicId = user.avatar
-                    .split("/")
-                    .slice(-2)
-                    .join("/")
-                    .split(".")[0];
-                await cloudinary.uploader.destroy(publicId);
-            } catch (cloudinaryError) {
-                console.error("Error deleting old avatar:", cloudinaryError);
+                await deleteFromS3ByUrl(user.avatar);
+            } catch (error) {
+                console.error("Error deleting old avatar:", error);
                 // Continue even if deletion fails - we don't want to block the upload
             }
         }
 
-        // Upload new avatar to Cloudinary
-        const avatarResult = await uploadToCloudinary(
+        // Upload new avatar to S3 bucket
+        const avatarResult = await uploadToS3(
             req.file.buffer, // Access buffer directly from req.file
             req.file.originalname,
-            "image"
+            req.file.mimetype
         );
 
-        user.avatar = avatarResult.secure_url;
+        user.avatar = avatarResult.url;
 
         await user.save();
 

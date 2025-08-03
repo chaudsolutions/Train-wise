@@ -30,11 +30,6 @@ const { Creator } = require("./Routes/Creator");
 const { Api } = require("./Routes/Api");
 const { VerifyPayments } = require("./Routes/VerifyPayments");
 const { Admin } = require("./Routes/Admin");
-const Community = require("./Models/Community");
-//const { transporter } = require("./config/nodemailer");
-//const { welcomeEmailWithOTP } = require("./utils/emailTemplates");
-//const { generateAlphanumericOTP } = require("./utils/generators");
-//const UsersModel = require("./Models/Users");
 
 //connect to DB
 const connectDB = async () => {
@@ -96,71 +91,6 @@ app.use("/admin", Admin);
 // Use payments verification route
 app.use("/payment", requireAuth);
 app.use("/payment", VerifyPayments);
-
-// Main function
-// const resetVerificationForAllUsers = async () => {
-//   try {
-//     console.log('Starting verification reset process...');
-
-//     // 1. Find all non-admin users
-//     const users = await UsersModel.find({ role: { $ne: 'admin' } });
-//     console.log(`Found ${users.length} non-admin users to process`);
-
-//     // 2. Process each user
-//     let successCount = 0;
-//     let errorCount = 0;
-
-//     for (const user of users) {
-//       try {
-//         // Generate new OTP
-//         const otp = generateAlphanumericOTP();
-//         const expiry = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-
-//         // Update user
-//         user.isVerified = false;
-//         user.passwordResetOTP = otp;
-//         user.passwordResetExpiry = expiry;
-//         await user.save();
-
-//         // Prepare email
-//         const emailContent = welcomeEmailWithOTP(user.name, otp);
-//         const mailOptions = {
-//           from: process.env.EMAIL_FROM,
-//           replyTo: process.env.EMAIL_REPLY_TO,
-//           to: user.email,
-//           subject: emailContent.subject,
-//           html: emailContent.html,
-//           text: emailContent.text,
-//         };
-
-//         // Send email
-//         await transporter.sendMail(mailOptions);
-//         console.log(`Processed user ${user.email}`);
-//         successCount++;
-
-//       } catch (error) {
-//         console.error(`Error processing user ${user.email}:`, error.message);
-//         errorCount++;
-//         continue; // Continue with next user even if one fails
-//       }
-//     }
-
-//     // 3. Report results
-//     console.log('\nProcess completed:');
-//     console.log(`- Successfully processed: ${successCount} users`);
-//     console.log(`- Failed to process: ${errorCount} users`);
-//     console.log('Verification reset complete!');
-
-//   } catch (error) {
-//     console.error('Global error:', error);
-//   } finally {
-//     mongoose.disconnect();
-//     process.exit(0);
-//   }
-// };
-
-// // Execute the script
-// resetVerificationForAllUsers();
 
 app.listen(serverPort, () => {
     console.log(`server is running on port ${serverPort}`);

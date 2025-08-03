@@ -1,10 +1,7 @@
 const Community = require("../Models/Community");
 const CommunityCourse = require("../Models/CommunityCourse");
-const {
-    extractPublicId,
-    deleteCloudinaryImage,
-} = require("../utils/cloudinary");
 const { createNotification } = require("../utils/notifications");
+const { deleteFromS3ByUrl } = require("../utils/s3bucket");
 
 const deleteCommunity = async (req, res) => {
     const { communityId } = req.params;
@@ -26,12 +23,7 @@ const deleteCommunity = async (req, res) => {
                     return Promise.all(
                         lessons.map(async (lesson) => {
                             if (lesson.type === "video") {
-                                const publicId = extractPublicId(
-                                    lesson.content
-                                );
-                                if (publicId) {
-                                    await deleteCloudinaryImage(publicId);
-                                }
+                                await deleteFromS3ByUrl(lesson.content);
                             }
                         })
                     );
@@ -43,13 +35,10 @@ const deleteCommunity = async (req, res) => {
             await CommunityCourse.findByIdAndDelete(communityCourse._id);
         }
 
-        const logoId = extractPublicId(community.logo);
-        const bannerImage = extractPublicId(community.bannerImage);
-
         await Promise.all([
             Community.findByIdAndDelete(communityId), // Delete community
-            deleteCloudinaryImage(logoId),
-            deleteCloudinaryImage(bannerImage),
+            deleteFromS3ByUrl(community.logo),
+            deleteFromS3ByUrl(community.bannerImage),
             // Notify creator
             createNotification(
                 community.createdBy,

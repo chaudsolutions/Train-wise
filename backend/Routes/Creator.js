@@ -4,13 +4,13 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const Community = require("../Models/Community");
 const UsersModel = require("../Models/Users");
 const CommunityCourse = require("../Models/CommunityCourse");
-const { uploadToCloudinary, upload } = require("../utils/uploadMedia");
 const CommunityMessage = require("../Models/CommunityMessage");
 const Payment = require("../Models/Payment");
 const { createNotification } = require("../utils/notifications");
 const { createCourse } = require("../controllers/course.controller");
 const Settings = require("../Models/Settings");
 const CommunityCalendar = require("../Models/CommunityCalendar");
+const { upload, uploadToS3 } = require("../utils/s3bucket");
 
 const router = express.Router();
 
@@ -89,23 +89,19 @@ router.post(
                 }
             }
 
-            // Upload banner image to Cloudinary
+            // Upload banner image to S3 Bucket
             const bannerImageBuffer = bannerImage.buffer;
             const bannerImageName = bannerImage.originalname;
-            const bannerImageResult = await uploadToCloudinary(
+            const bannerImageResult = await uploadToS3(
                 bannerImageBuffer,
                 bannerImageName,
                 "image"
             );
 
-            // Upload logo to Cloudinary
+            // Upload logo to S3 Bucket
             const logoBuffer = logo.buffer;
             const logoName = logo.originalname;
-            const logoResult = await uploadToCloudinary(
-                logoBuffer,
-                logoName,
-                "image"
-            );
+            const logoResult = await uploadToS3(logoBuffer, logoName, "image");
 
             // Create the community
             const communityData = {
