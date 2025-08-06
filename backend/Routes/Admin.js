@@ -697,7 +697,7 @@ router.put(
                         file.mimetype
                     );
 
-                    updateFields.bannerImage = result.secure_url;
+                    updateFields.bannerImage = result.url;
                 } catch (error) {
                     console.error("Error updating banner image:", error);
                     return res
@@ -721,7 +721,7 @@ router.put(
                         file.mimetype
                     );
 
-                    updateFields.logo = result.secure_url;
+                    updateFields.logo = result.url;
                 } catch (error) {
                     console.error("Error updating logo:", error);
                     return res.status(500).json("Error updating logo");
@@ -833,8 +833,8 @@ router.post(
                 visions,
                 subscriptionFee: parseFloat(subscriptionFee),
                 category,
-                bannerImage: bannerImageResult.secure_url,
-                logo: logoResult.secure_url,
+                bannerImage: bannerImageResult.url,
+                logo: logoResult.url,
                 createdBy: creator._id,
                 creatorName: creator.name,
                 canExplore: true,

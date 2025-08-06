@@ -84,7 +84,7 @@ const createCourse = async (req, res) => {
                 ).then((result) => ({
                     index: video.index,
                     public_id: result.public_id,
-                    url: result.secure_url,
+                    url: result.url,
                     sizeGB: video.sizeGB,
                 }))
             );
