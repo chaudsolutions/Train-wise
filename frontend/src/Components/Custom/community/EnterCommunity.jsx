@@ -33,8 +33,9 @@ import {
     Menu,
     MenuItem,
     ListItemIcon,
+    Tabs,
+    Tab,
 } from "@mui/material";
-import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -54,12 +55,14 @@ import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import RejectedIcon from "@mui/icons-material/Cancel";
 import PendingIcon from "@mui/icons-material/Schedule";
-import ViewIcon from "@mui/icons-material/ChevronRight";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import LockIcon from "@mui/icons-material/Lock";
 import CalendarIcon from "@mui/icons-material/CalendarToday";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ClosedIcon from "@mui/icons-material/Close";
 import EventIcon from "@mui/icons-material/Event";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { format, isBefore, isToday, parseISO } from "date-fns";
+import { format, isAfter, isBefore, isToday, parseISO } from "date-fns";
 import { useReactRouter } from "../../Hooks/useReactRouter";
 import CourseStockImg from "../../../assets/courseStock.png";
 import { useEffect, useRef, useState } from "react";
@@ -1660,7 +1663,7 @@ export const CalendarTab = ({
     const [openDialog, setOpenDialog] = useState(false);
     const [newEventDate, setNewEventDate] = useState(null);
     const [loading, setLoading] = useState(false);
-
+    const [activeStatusTab, setActiveStatusTab] = useState(0);
     const theme = useTheme();
 
     const {
@@ -1669,6 +1672,7 @@ export const CalendarTab = ({
         refetchCommunityCalendar,
     } = useCommunityCalendarData({ communityId });
 
+    // Filter events by status
     const pendingEvents = communityCalendarData?.filter(
         (e) => e.status === "pending"
     );
@@ -1681,6 +1685,14 @@ export const CalendarTab = ({
     const closedEvents = communityCalendarData?.filter(
         (e) => e.status === "closed"
     );
+
+    // Get upcoming approved events (today + future)
+    const upcomingApprovedEvents = approvedEvents
+        ?.filter((event) => {
+            const eventDate = parseISO(event.start);
+            return isAfter(eventDate, new Date()) || isToday(eventDate);
+        })
+        .sort((a, b) => new Date(a.start) - new Date(b.start));
 
     const handleCreateEvent = async () => {
         if (!newEventDate) {
@@ -1755,35 +1767,22 @@ export const CalendarTab = ({
                 <IconButton
                     onClick={handleClick}
                     size="small"
-                    sx={{ ml: 2 }}
+                    sx={{ ml: 1 }}
                     aria-controls={open ? "status-menu" : undefined}
                     aria-haspopup="true"
                     aria-expanded={open ? "true" : undefined}>
-                    <MoreVertIcon />
+                    <MoreVertIcon fontSize="small" />
                 </IconButton>
                 <Menu
                     anchorEl={anchorEl}
-                    id="status-menu"
                     open={open}
                     onClose={handleClose}
                     onClick={handleClose}
                     PaperProps={{
-                        elevation: 3,
                         sx: {
-                            overflow: "visible",
-                            mt: 1.5,
-                            "&:before": {
-                                content: '""',
-                                display: "block",
-                                position: "absolute",
-                                top: 0,
-                                right: 14,
-                                width: 10,
-                                height: 10,
-                                bgcolor: "background.paper",
-                                transform: "translateY(-50%) rotate(45deg)",
-                                zIndex: 0,
-                            },
+                            borderRadius: 2,
+                            boxShadow: theme.shadows[4],
+                            minWidth: 180,
                         },
                     }}
                     transformOrigin={{ horizontal: "right", vertical: "top" }}
@@ -1802,7 +1801,7 @@ export const CalendarTab = ({
                             handleStatusChange("rejected", eventData)
                         }>
                         <ListItemIcon>
-                            <RejectedIcon fontSize="small" color="error" />
+                            <ClosedIcon fontSize="small" color="error" />
                         </ListItemIcon>
                         <ListItemText>Reject</ListItemText>
                     </MenuItem>
@@ -1813,114 +1812,25 @@ export const CalendarTab = ({
 
     if (isCommunityCalendarLoading) {
         return (
-            <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
-                <CircularProgress size={20} />
+            <Box sx={{ display: "flex", justifyContent: "center", p: 6 }}>
+                <CircularProgress size={32} />
             </Box>
         );
     }
 
     return (
         <Box sx={{ p: 3 }}>
-            <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-                Community Calendar
-            </Typography>
-
-            {/* Stats Cards */}
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid size={{ xs: 12, md: 4 }}>
-                    <Paper
-                        elevation={3}
-                        sx={{
-                            p: 3,
-                            borderRadius: 2,
-                            borderLeft: `4px solid ${theme.palette.warning.main}`,
-                            height: "100%",
-                        }}>
-                        <Box display="flex" alignItems="center" gap={2}>
-                            <PendingIcon fontSize="large" color="warning" />
-                            <Box>
-                                <Typography variant="h3" fontWeight="bold">
-                                    {pendingEvents?.length || 0}
-                                </Typography>
-                                <Typography variant="subtitle1">
-                                    Pending Events
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </Paper>
-                </Grid>
-
-                <Grid size={{ xs: 12, md: 6 }}>
-                    <Paper
-                        elevation={3}
-                        sx={{
-                            p: 3,
-                            borderRadius: 2,
-                            borderLeft: `4px solid ${theme.palette.success.main}`,
-                            height: "100%",
-                        }}>
-                        <Box display="flex" alignItems="center" gap={2}>
-                            <CheckIcon fontSize="large" color="success" />
-                            <Box>
-                                <Typography variant="h3" fontWeight="bold">
-                                    {approvedEvents?.length || 0}
-                                </Typography>
-                                <Typography variant="subtitle1">
-                                    Approved Events
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </Paper>
-                </Grid>
-
-                <Grid size={{ xs: 12, md: 6 }}>
-                    <Paper
-                        elevation={3}
-                        sx={{
-                            p: 3,
-                            borderRadius: 2,
-                            borderLeft: `4px solid ${theme.palette.error.main}`,
-                            height: "100%",
-                        }}>
-                        <Box display="flex" alignItems="center" gap={2}>
-                            <RejectedIcon fontSize="large" color="error" />
-                            <Box>
-                                <Typography variant="h3" fontWeight="bold">
-                                    {rejectedEvents?.length || 0}
-                                </Typography>
-                                <Typography variant="subtitle1">
-                                    Rejected Events
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </Paper>
-                </Grid>
-
-                <Grid size={{ xs: 12, md: 6 }}>
-                    <Paper
-                        elevation={3}
-                        sx={{
-                            p: 3,
-                            borderRadius: 2,
-                            borderLeft: `4px solid ${theme.palette.error.main}`,
-                            height: "100%",
-                        }}>
-                        <Box display="flex" alignItems="center" gap={2}>
-                            <ClosedIcon fontSize="large" color="error" />
-                            <Box>
-                                <Typography variant="h3" fontWeight="bold">
-                                    {closedEvents?.length || 0}
-                                </Typography>
-                                <Typography variant="subtitle1">
-                                    Closed Events
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </Paper>
-                </Grid>
-            </Grid>
-
-            <Box display="flex" justifyContent="flex-end" sx={{ mb: 3 }}>
+            {/* Header Section */}
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 4,
+                }}>
+                <Typography variant="h4" fontWeight="bold">
+                    Community Calendar
+                </Typography>
                 <Button
                     variant="contained"
                     startIcon={<AddIcon />}
@@ -1928,271 +1838,272 @@ export const CalendarTab = ({
                     sx={{
                         borderRadius: 2,
                         px: 3,
-                        py: 1.5,
+                        py: 1,
                         fontWeight: "bold",
-                        boxShadow: theme.shadows[3],
+                        boxShadow: theme.shadows[2],
+                        "&:hover": {
+                            boxShadow: theme.shadows[4],
+                        },
                     }}>
                     New Event
                 </Button>
             </Box>
 
-            {/* Events Sections */}
-            <Grid container spacing={3}>
-                {/* Pending Events */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                    <Paper elevation={2} sx={{ p: 2, borderRadius: 2 }}>
-                        <Typography
-                            variant="h6"
-                            gutterBottom
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                            }}>
-                            <PendingIcon color="warning" /> Pending Events
-                        </Typography>
-                        <Divider sx={{ mb: 2 }} />
-                        {pendingEvents?.length === 0 ? (
-                            <Typography color="text.secondary" sx={{ p: 2 }}>
-                                No pending events
+            {/* Upcoming Events Section */}
+            <Paper
+                sx={{
+                    mb: 4,
+                    borderRadius: 3,
+                    overflow: "hidden",
+                    background: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.dark} 100%)`,
+                    color: "white",
+                    boxShadow: theme.shadows[6],
+                }}>
+                <Box sx={{ p: 3, position: "relative" }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                        }}>
+                        <Box>
+                            <Typography
+                                variant="h5"
+                                fontWeight="bold"
+                                gutterBottom>
+                                Upcoming Events
                             </Typography>
-                        ) : (
-                            <List>
-                                {pendingEvents?.map((event) => (
-                                    <ListItem
-                                        key={event._id}
-                                        secondaryAction={
-                                            isCommunityAdmin && (
-                                                <StatusMenu eventData={event} />
-                                            )
-                                        }
-                                        sx={{
-                                            mb: 1,
-                                            borderRadius: 1,
-                                            bgcolor: theme.palette.grey[100],
-                                        }}>
-                                        <ListItemAvatar>
-                                            <Avatar
+                            <Typography variant="h2" fontWeight="bold">
+                                {upcomingApprovedEvents?.length || 0}
+                            </Typography>
+                            <Typography
+                                variant="body1"
+                                sx={{ opacity: 0.9, mt: 1 }}>
+                                Scheduled events in your community
+                            </Typography>
+                        </Box>
+                        <EventIcon sx={{ fontSize: 80, opacity: 0.2 }} />
+                    </Box>
+
+                    {upcomingApprovedEvents?.length > 0 && (
+                        <Box sx={{ mt: 3 }}>
+                            <Typography
+                                variant="subtitle1"
+                                fontWeight="bold"
+                                sx={{ mb: 1 }}>
+                                Next Events:
+                            </Typography>
+                            <Grid container spacing={2}>
+                                {upcomingApprovedEvents
+                                    .slice(0, 3)
+                                    .map((event) => (
+                                        <Grid
+                                            item
+                                            xs={12}
+                                            sm={6}
+                                            md={4}
+                                            key={event._id}>
+                                            <Paper
                                                 sx={{
-                                                    bgcolor:
-                                                        theme.palette.warning
-                                                            .light,
+                                                    p: 2,
+                                                    borderRadius: 2,
+                                                    background:
+                                                        "rgba(255,255,255,0.15)",
+                                                    backdropFilter:
+                                                        "blur(10px)",
                                                 }}>
-                                                <CalendarIcon />
-                                            </Avatar>
-                                        </ListItemAvatar>
-                                        <ListItemText
-                                            primary={format(
-                                                parseISO(event.start),
-                                                "PPP"
-                                            )}
-                                            secondary={`Created: ${format(
-                                                parseISO(event.createdAt),
-                                                "PP"
-                                            )}`}
-                                        />
-                                    </ListItem>
-                                ))}
-                            </List>
-                        )}
-                    </Paper>
-                </Grid>
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                    }}>
+                                                    <CalendarIcon
+                                                        sx={{ mr: 1.5 }}
+                                                    />
+                                                    <Typography
+                                                        variant="body1"
+                                                        fontWeight="medium">
+                                                        {format(
+                                                            parseISO(
+                                                                event.start
+                                                            ),
+                                                            "MMM dd, yyyy"
+                                                        )}
+                                                    </Typography>
+                                                </Box>
+                                                <Button
+                                                    size="small"
+                                                    endIcon={
+                                                        <ArrowForwardIcon />
+                                                    }
+                                                    onClick={() =>
+                                                        handleViewEvent(event)
+                                                    }
+                                                    sx={{
+                                                        mt: 1,
+                                                        color: "white",
+                                                        "&:hover": {
+                                                            background:
+                                                                "rgba(255,255,255,0.2)",
+                                                        },
+                                                    }}>
+                                                    View Details
+                                                </Button>
+                                            </Paper>
+                                        </Grid>
+                                    ))}
+                            </Grid>
+                        </Box>
+                    )}
+                </Box>
+            </Paper>
+
+            {/* Status Tabs */}
+            <Paper
+                sx={{
+                    mb: 3,
+                    borderRadius: 3,
+                    boxShadow: theme.shadows[2],
+                    overflow: "hidden",
+                }}>
+                <Tabs
+                    value={activeStatusTab}
+                    onChange={(e, newValue) => setActiveStatusTab(newValue)}
+                    variant="scrollable"
+                    scrollButtons="auto"
+                    sx={{
+                        "& .MuiTabs-indicator": {
+                            height: 4,
+                            borderRadius: 2,
+                        },
+                    }}>
+                    <Tab
+                        label={
+                            <Box sx={{ display: "flex", alignItems: "center" }}>
+                                <PendingIcon sx={{ fontSize: 20, mr: 1 }} />
+                                Pending
+                                <Chip
+                                    label={pendingEvents?.length || 0}
+                                    size="small"
+                                    color="warning"
+                                    sx={{ ml: 1, fontWeight: "bold" }}
+                                />
+                            </Box>
+                        }
+                    />
+                    <Tab
+                        label={
+                            <Box sx={{ display: "flex", alignItems: "center" }}>
+                                <CheckIcon sx={{ fontSize: 20, mr: 1 }} />
+                                Approved
+                                <Chip
+                                    label={approvedEvents?.length || 0}
+                                    size="small"
+                                    color="success"
+                                    sx={{ ml: 1, fontWeight: "bold" }}
+                                />
+                            </Box>
+                        }
+                    />
+                    <Tab
+                        label={
+                            <Box sx={{ display: "flex", alignItems: "center" }}>
+                                <ClosedIcon sx={{ fontSize: 20, mr: 1 }} />
+                                Rejected
+                                <Chip
+                                    label={rejectedEvents?.length || 0}
+                                    size="small"
+                                    color="error"
+                                    sx={{ ml: 1, fontWeight: "bold" }}
+                                />
+                            </Box>
+                        }
+                    />
+                    <Tab
+                        label={
+                            <Box sx={{ display: "flex", alignItems: "center" }}>
+                                <LockIcon sx={{ fontSize: 20, mr: 1 }} />
+                                Closed
+                                <Chip
+                                    label={closedEvents?.length || 0}
+                                    size="small"
+                                    color="secondary"
+                                    sx={{ ml: 1, fontWeight: "bold" }}
+                                />
+                            </Box>
+                        }
+                    />
+                </Tabs>
+            </Paper>
+
+            {/* Tab Content */}
+            <Box>
+                {/* Pending Events */}
+                {activeStatusTab === 0 && (
+                    <EventList
+                        events={pendingEvents}
+                        status="pending"
+                        icon={<PendingIcon color="warning" />}
+                        emptyText="No pending events"
+                        isAdmin={isCommunityAdmin}
+                        onAction={(event) => <StatusMenu eventData={event} />}
+                    />
+                )}
 
                 {/* Approved Events */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                    <Paper elevation={2} sx={{ p: 2, borderRadius: 2 }}>
-                        <Typography
-                            variant="h6"
-                            gutterBottom
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                            }}>
-                            <CheckIcon color="success" /> Approved Events
-                        </Typography>
-                        <Divider sx={{ mb: 2 }} />
-                        {approvedEvents?.length === 0 ? (
-                            <Typography color="text.secondary" sx={{ p: 2 }}>
-                                No approved events
-                            </Typography>
-                        ) : (
-                            <List>
-                                {approvedEvents?.map((event) => (
-                                    <ListItem
-                                        key={event._id}
-                                        secondaryAction={
-                                            <Button
-                                                edge="end"
-                                                size="small"
-                                                variant="contained"
-                                                color="success"
-                                                onClick={() =>
-                                                    handleViewEvent(event)
-                                                }
-                                                endIcon={<ViewIcon />}
-                                                disabled={
-                                                    !canViewEvent(event.start)
-                                                }>
-                                                View
-                                            </Button>
-                                        }
-                                        sx={{
-                                            mb: 1,
-                                            borderRadius: 1,
-                                            bgcolor: theme.palette.grey[100],
-                                            cursor: "pointer",
-                                        }}>
-                                        <ListItemAvatar>
-                                            <Avatar
-                                                sx={{
-                                                    bgcolor:
-                                                        theme.palette.success
-                                                            .light,
-                                                }}>
-                                                <CalendarIcon />
-                                            </Avatar>
-                                        </ListItemAvatar>
-                                        <ListItemText
-                                            primary={format(
-                                                parseISO(event.start),
-                                                "PPP"
-                                            )}
-                                            secondary={`Created: ${format(
-                                                parseISO(event.createdAt),
-                                                "PP"
-                                            )}`}
-                                        />
-                                    </ListItem>
-                                ))}
-                            </List>
+                {activeStatusTab === 1 && (
+                    <EventList
+                        events={approvedEvents}
+                        status="approved"
+                        icon={<CheckIcon color="success" />}
+                        emptyText="No approved events"
+                        onAction={(event) => (
+                            <Button
+                                size="small"
+                                variant="contained"
+                                color="primary"
+                                onClick={() => handleViewEvent(event)}
+                                endIcon={<VisibilityIcon />}
+                                disabled={!canViewEvent(event.start)}
+                                sx={{ borderRadius: 2 }}>
+                                View
+                            </Button>
                         )}
-                    </Paper>
-                </Grid>
+                    />
+                )}
 
                 {/* Rejected Events */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                    <Paper elevation={2} sx={{ p: 2, borderRadius: 2 }}>
-                        <Typography
-                            variant="h6"
-                            gutterBottom
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                            }}>
-                            <RejectedIcon color="error" /> Rejected Events
-                        </Typography>
-                        <Divider sx={{ mb: 2 }} />
-                        {rejectedEvents?.length === 0 ? (
-                            <Typography color="text.secondary" sx={{ p: 2 }}>
-                                No rejected events
-                            </Typography>
-                        ) : (
-                            <List>
-                                {rejectedEvents?.map((event) => (
-                                    <ListItem
-                                        key={event._id}
-                                        sx={{
-                                            mb: 1,
-                                            borderRadius: 1,
-                                            bgcolor: theme.palette.grey[100],
-                                        }}>
-                                        <ListItemAvatar>
-                                            <Avatar
-                                                sx={{
-                                                    bgcolor:
-                                                        theme.palette.error
-                                                            .light,
-                                                }}>
-                                                <CalendarIcon />
-                                            </Avatar>
-                                        </ListItemAvatar>
-                                        <ListItemText
-                                            primary={format(
-                                                parseISO(event.start),
-                                                "PPP"
-                                            )}
-                                            secondary={`Created: ${format(
-                                                parseISO(event.createdAt),
-                                                "PP"
-                                            )}`}
-                                        />
-                                    </ListItem>
-                                ))}
-                            </List>
-                        )}
-                    </Paper>
-                </Grid>
+                {activeStatusTab === 2 && (
+                    <EventList
+                        events={rejectedEvents}
+                        status="rejected"
+                        icon={<ClosedIcon color="error" />}
+                        emptyText="No rejected events"
+                    />
+                )}
 
                 {/* Closed Events */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                    <Paper elevation={2} sx={{ p: 2, borderRadius: 2 }}>
-                        <Typography
-                            variant="h6"
-                            gutterBottom
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                            }}>
-                            <ClosedIcon color="error" /> Closed Events
-                        </Typography>
-                        <Divider sx={{ mb: 2 }} />
-                        {closedEvents?.length === 0 ? (
-                            <Typography color="text.secondary" sx={{ p: 2 }}>
-                                No closed events
-                            </Typography>
-                        ) : (
-                            <List>
-                                {closedEvents?.map((event) => (
-                                    <ListItem
-                                        key={event._id}
-                                        secondaryAction={
-                                            <Button
-                                                edge="end"
-                                                size="small"
-                                                variant="contained"
-                                                color="success"
-                                                endIcon={<ViewIcon />}
-                                                disabled={
-                                                    !canViewEvent(event.start)
-                                                }>
-                                                Review
-                                            </Button>
-                                        }
-                                        sx={{
-                                            mb: 1,
-                                            borderRadius: 1,
-                                            bgcolor: theme.palette.grey[100],
-                                        }}>
-                                        <ListItemAvatar>
-                                            <Avatar
-                                                sx={{
-                                                    bgcolor:
-                                                        theme.palette.error
-                                                            .light,
-                                                }}>
-                                                <CalendarIcon />
-                                            </Avatar>
-                                        </ListItemAvatar>
-                                        <ListItemText
-                                            primary={format(
-                                                parseISO(event.start),
-                                                "PPP"
-                                            )}
-                                            secondary={`Created: ${format(
-                                                parseISO(event.createdAt),
-                                                "PP"
-                                            )}`}
-                                        />
-                                    </ListItem>
-                                ))}
-                            </List>
+                {activeStatusTab === 3 && (
+                    <EventList
+                        events={closedEvents}
+                        status="closed"
+                        icon={<LockIcon color="secondary" />}
+                        emptyText="No closed events"
+                        onAction={(event) => (
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                color="secondary"
+                                onClick={() => handleViewEvent(event)}
+                                endIcon={<VisibilityIcon />}
+                                disabled={!canViewEvent(event.start)}
+                                sx={{ borderRadius: 2 }}>
+                                Review
+                            </Button>
                         )}
-                    </Paper>
-                </Grid>
-            </Grid>
+                    />
+                )}
+            </Box>
 
             {/* Create Event Dialog */}
             <Dialog
@@ -2203,31 +2114,33 @@ export const CalendarTab = ({
                 PaperProps={{
                     sx: {
                         borderRadius: 3,
-                        p: 2,
+                        boxShadow: theme.shadows[10],
                     },
                 }}>
-                <DialogTitle>
+                <DialogTitle
+                    sx={{
+                        bgcolor: theme.palette.primary.main,
+                        color: "white",
+                    }}>
                     <Typography variant="h6" fontWeight="bold">
                         Schedule New Event
                     </Typography>
                 </DialogTitle>
-                <DialogContent>
+                <DialogContent sx={{ p: 3 }}>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <DemoContainer components={["DatePicker"]}>
-                            <DatePicker
-                                label="Event Date"
-                                value={newEventDate}
-                                onChange={(date) => setNewEventDate(date)}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        fullWidth
-                                        margin="normal"
-                                        sx={{ mt: 2 }}
-                                    />
-                                )}
-                            />
-                        </DemoContainer>
+                        <DatePicker
+                            label="Event Date"
+                            value={newEventDate}
+                            onChange={(date) => setNewEventDate(date)}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    fullWidth
+                                    margin="normal"
+                                    sx={{ mt: 2 }}
+                                />
+                            )}
+                        />
                     </LocalizationProvider>
                 </DialogContent>
                 <DialogActions sx={{ p: 3 }}>
@@ -2239,9 +2152,17 @@ export const CalendarTab = ({
                     <Button
                         variant="contained"
                         onClick={handleCreateEvent}
-                        sx={{ borderRadius: 2, px: 3 }}>
+                        disabled={loading}
+                        sx={{
+                            borderRadius: 2,
+                            px: 3,
+                            bgcolor: theme.palette.primary.main,
+                            "&:hover": {
+                                bgcolor: theme.palette.primary.dark,
+                            },
+                        }}>
                         {loading ? (
-                            <CircularProgress size={20} />
+                            <CircularProgress size={20} color="inherit" />
                         ) : (
                             "Create Event"
                         )}
@@ -2249,6 +2170,84 @@ export const CalendarTab = ({
                 </DialogActions>
             </Dialog>
         </Box>
+    );
+};
+
+// Reusable Event List Component
+const EventList = ({ events, status, icon, emptyText, onAction }) => {
+    const theme = useTheme();
+
+    const statusColors = {
+        pending: theme.palette.warning.light,
+        approved: theme.palette.success.light,
+        rejected: theme.palette.error.light,
+        closed: theme.palette.secondary.light,
+    };
+
+    if (!events || events.length === 0) {
+        return (
+            <Paper
+                sx={{
+                    p: 4,
+                    textAlign: "center",
+                    borderRadius: 3,
+                    boxShadow: theme.shadows[1],
+                }}>
+                <Typography variant="body1" color="text.secondary">
+                    {emptyText}
+                </Typography>
+            </Paper>
+        );
+    }
+
+    return (
+        <Paper
+            sx={{
+                borderRadius: 3,
+                overflow: "hidden",
+                boxShadow: theme.shadows[2],
+            }}>
+            <Box
+                sx={{
+                    p: 2,
+                    bgcolor: theme.palette.grey[100],
+                    display: "flex",
+                    alignItems: "center",
+                }}>
+                {icon}
+                <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    sx={{ ml: 1 }}>
+                    {status.charAt(0).toUpperCase() + status.slice(1)} Events
+                </Typography>
+            </Box>
+            <List>
+                {events.map((event) => (
+                    <ListItem
+                        key={event._id}
+                        secondaryAction={onAction && onAction(event)}
+                        sx={{
+                            borderBottom: `1px solid ${theme.palette.divider}`,
+                            "&:last-child": { borderBottom: "none" },
+                        }}>
+                        <ListItemAvatar>
+                            <Avatar sx={{ bgcolor: statusColors[status] }}>
+                                <CalendarIcon />
+                            </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText
+                            primary={format(parseISO(event.start), "PPP")}
+                            secondary={`Created: ${format(
+                                parseISO(event.createdAt),
+                                "PP"
+                            )}`}
+                            primaryTypographyProps={{ fontWeight: "medium" }}
+                        />
+                    </ListItem>
+                ))}
+            </List>
+        </Paper>
     );
 };
 
