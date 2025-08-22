@@ -93,7 +93,7 @@ const SectionOne = () => {
                         mb: 2,
                         color: theme.palette.primary.dark,
                     }}>
-                    Why Join Our Platform?
+                    Why Join Skillbay?
                 </Typography>
 
                 <Typography

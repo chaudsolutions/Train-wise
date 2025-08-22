@@ -48,8 +48,8 @@ const Home = () => {
 
     return (
         <>
-            <SectionOne />
             <CoursesSection />
+            <SectionOne />
             {/* <Hero /> */}
             {/* <AboutSection /> */}
 

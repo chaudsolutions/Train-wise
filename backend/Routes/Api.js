@@ -32,7 +32,7 @@ router.get("/communities/random", async (req, res) => {
     try {
         //   get random communities
         const communities = await Community.aggregate([
-            { $sample: { size: 5 } },
+            { $sample: { size: 20 } },
         ]);
 
         if (!communities) return res.status(404).json("Community not found.");
