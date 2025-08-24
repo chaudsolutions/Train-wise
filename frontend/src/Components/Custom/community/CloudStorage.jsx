@@ -107,15 +107,15 @@ const CloudStorage = ({
 
     const formatStorageSize = (size) => {
         if (size < 1) {
-            return `${(size * 1024).toFixed(1)} MB`;
+            return `${(size * 1024).toFixed(1) || 0} MB`;
         } else {
-            return `${size.toFixed(1)} GB`;
+            return `${size.toFixed(1) || 0} GB`;
         }
     };
 
     return (
         <>
-            <Grid size={{ xs: 12, md: 4 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
                 {/* Storage Card */}
                 <Paper
                     sx={{
@@ -148,7 +148,7 @@ const CloudStorage = ({
                                 {formatStorageSize(cloudStorageLimit)} used
                             </Typography>
                             <Typography variant="body2" fontWeight="bold">
-                                {storagePercentage.toFixed(0)}%
+                                {storagePercentage?.toFixed(0)}%
                             </Typography>
                         </Box>
                         <LinearProgress

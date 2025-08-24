@@ -1,4 +1,3 @@
-const pdf = require("pdf-parse");
 const UsersModel = require("../Models/Users");
 const CommunityCourse = require("../Models/CommunityCourse");
 const Community = require("../Models/Community");
@@ -18,35 +17,35 @@ const createCourse = async (req, res) => {
             return res.status(403).json("Unauthorized to create course");
         }
 
-        // Parse PDF from buffer
-        const parsePDFBuffer = async (buffer) => {
-            try {
-                const data = await pdf(buffer);
-                return data.text;
-            } catch (error) {
-                console.error("PDF parsing failed:", error);
-                throw new Error("Failed to extract text from PDF");
-            }
-        };
+        // Process course summary - upload PDF to S3 if provided
+        let summary = body.summaryText || null;
+        let summaryPdfUrl = null;
 
-        // Process course summary
-        let summary;
         const summaryPdfFile = files.find((f) => f.fieldname === "summaryPdf");
         if (summaryPdfFile) {
-            summary = await parsePDFBuffer(summaryPdfFile.buffer);
-        } else if (body.summaryText) {
-            summary = body.summaryText;
+            // Upload summary PDF to S3
+            const summaryPdfResult = await uploadToS3(
+                summaryPdfFile.buffer,
+                summaryPdfFile.originalname,
+                summaryPdfFile.mimetype
+            );
+
+            summaryPdfUrl = summaryPdfResult.url;
         }
 
         // Process lessons
         const lessonCount = parseInt(body.lessonCount);
         let lessons = [];
         let videoFiles = [];
+        let pdfFiles = []; // Track PDF files for cleanup
         let totalVideoSizeGB = 0;
+        let totalPdfSizeGB = 0;
 
-        // Step 1: Calculate total video size
+        // Step 1: Calculate total file sizes
         for (let i = 0; i < lessonCount; i++) {
-            if (body[`lessonType_${i}`] === "video") {
+            const lessonType = body[`lessonType_${i}`];
+
+            if (lessonType === "video") {
                 const videoFile = files.find(
                     (f) => f.fieldname === `lessonVideo_${i}`
                 );
@@ -62,21 +61,40 @@ const createCourse = async (req, res) => {
                     file: videoFile,
                     sizeGB: videoSizeGB,
                 });
+            } else if (lessonType === "pdf") {
+                const pdfFile = files.find(
+                    (f) => f.fieldname === `lessonPdf_${i}`
+                );
+
+                if (!pdfFile) {
+                    throw new Error(`Missing PDF for lesson ${i + 1}`);
+                }
+
+                const pdfSizeGB = pdfFile.size / 1024 ** 3;
+                totalPdfSizeGB += pdfSizeGB;
+                pdfFiles.push({
+                    index: i,
+                    file: pdfFile,
+                    sizeGB: pdfSizeGB,
+                });
             }
         }
 
-        // Step 2: Check storage against total video size
+        // Step 2: Check storage against total file size (videos + PDFs)
+        const totalFileSizeGB = totalVideoSizeGB + totalPdfSizeGB;
         const remainingStorage =
             community.cloudStorageLimit - community.cloudStorageUsed;
-        if (totalVideoSizeGB > remainingStorage) {
+        if (totalFileSizeGB > remainingStorage) {
             return res.status(400).json(`Insufficient storage`);
         }
 
-        // Step 3: Upload all videos if storage is sufficient
+        // Step 3: Upload all videos and PDFs to S3
         const uploadedVideos = [];
+        const uploadedPdfs = [];
+
         try {
             // Upload all videos in parallel
-            const uploadPromises = videoFiles.map((video) =>
+            const videoUploadPromises = videoFiles.map((video) =>
                 uploadToS3(
                     video.file.buffer,
                     video.file.originalname,
@@ -86,24 +104,47 @@ const createCourse = async (req, res) => {
                     public_id: result.public_id,
                     url: result.url,
                     sizeGB: video.sizeGB,
+                    key: result.key, // Assuming your uploadToS3 returns a key
                 }))
             );
 
-            const uploadResults = await Promise.all(uploadPromises);
-            uploadedVideos.push(...uploadResults);
-        } catch (uploadError) {
-            // Cleanup any partially uploaded videos
-            await Promise.all(
-                uploadedVideos.map((video) => deleteFromS3(video.key))
+            // Upload all PDFs in parallel
+            const pdfUploadPromises = pdfFiles.map((pdf) =>
+                uploadToS3(
+                    pdf.file.buffer,
+                    pdf.file.originalname,
+                    pdf.file.mimetype
+                ).then((result) => ({
+                    index: pdf.index,
+                    public_id: result.public_id,
+                    url: result.url,
+                    sizeGB: pdf.sizeGB,
+                    key: result.key,
+                }))
             );
-            throw new Error(`Video upload failed: ${uploadError.message}`);
+
+            const [videoResults, pdfResults] = await Promise.all([
+                Promise.all(videoUploadPromises),
+                Promise.all(pdfUploadPromises),
+            ]);
+
+            uploadedVideos.push(...videoResults);
+            uploadedPdfs.push(...pdfResults);
+        } catch (uploadError) {
+            // Cleanup any partially uploaded files
+            const cleanupPromises = [
+                ...uploadedVideos.map((video) => deleteFromS3(video.key)),
+                ...uploadedPdfs.map((pdf) => deleteFromS3(pdf.key)),
+            ];
+            await Promise.all(cleanupPromises);
+            throw new Error(`File upload failed: ${uploadError.message}`);
         }
 
         // Step 4: Update storage usage
-        community.cloudStorageUsed += totalVideoSizeGB;
+        community.cloudStorageUsed += totalFileSizeGB;
         await community.save();
 
-        // Step 5: Process all lessons with video URLs
+        // Step 5: Process all lessons with file URLs
         try {
             for (let i = 0; i < lessonCount; i++) {
                 const lessonType = body[`lessonType_${i}`];
@@ -128,12 +169,12 @@ const createCourse = async (req, res) => {
                             );
                         break;
                     case "pdf": {
-                        const pdfFile = files.find(
-                            (f) => f.fieldname === `lessonPdf_${i}`
-                        );
-                        if (!pdfFile)
-                            throw new Error(`Missing PDF for lesson ${i + 1}`);
-                        content = await parsePDFBuffer(pdfFile.buffer);
+                        const pdf = uploadedPdfs.find((p) => p.index === i);
+                        if (!pdf)
+                            throw new Error(
+                                `Missing uploaded PDF for lesson ${i + 1}`
+                            );
+                        content = pdf.url; // Store S3 URL instead of parsed text
                         break;
                     }
                     default:
@@ -142,25 +183,30 @@ const createCourse = async (req, res) => {
                         );
                 }
 
-                // Process lesson summary (now optional)
-                let lessonSummary = null;
+                // Process lesson summary - upload PDF to S3 if provided
+                let lessonSummary = body[`lessonSummaryText_${i}`] || null;
+                let lessonSummaryPdfUrl = null;
+
                 if (summaryMode === "pdf") {
                     const summaryFile = files.find(
                         (f) => f.fieldname === `lessonSummaryPdf_${i}`
                     );
                     if (summaryFile) {
-                        lessonSummary = await parsePDFBuffer(
-                            summaryFile.buffer
+                        // Upload lesson summary PDF to S3
+                        const summaryResult = await uploadToS3(
+                            summaryFile.buffer,
+                            summaryFile.originalname,
+                            summaryFile.mimetype
                         );
+                        lessonSummaryPdfUrl = summaryResult.url;
                     }
-                } else {
-                    lessonSummary = body[`lessonSummaryText_${i}`] || null;
                 }
 
                 lessons.push({
                     type: lessonType,
                     content,
                     summary: lessonSummary,
+                    summaryPdfUrl: lessonSummaryPdfUrl, // Store S3 URL for PDF summary
                 });
             }
 
@@ -169,6 +215,7 @@ const createCourse = async (req, res) => {
                 name: body.name,
                 duration: body.duration,
                 summary,
+                summaryPdfUrl, // Store S3 URL for course summary PDF
                 lessons,
             };
 
@@ -181,13 +228,20 @@ const createCourse = async (req, res) => {
 
             res.status(201).json("Course created successfully");
         } catch (processingError) {
-            // Cleanup videos if lesson processing fails
-            await Promise.all(
-                uploadedVideos.map((video) => deleteFromS3(video.key))
-            );
+            // Cleanup all uploaded files if lesson processing fails
+            const cleanupPromises = [
+                ...uploadedVideos.map((video) => deleteFromS3(video.key)),
+                ...uploadedPdfs.map((pdf) => deleteFromS3(pdf.key)),
+            ];
+
+            if (summaryPdfUrl) {
+                cleanupPromises.push(deleteFromS3(summaryPdfUrl));
+            }
+
+            await Promise.all(cleanupPromises);
 
             // Revert storage usage
-            community.cloudStorageUsed -= totalVideoSizeGB;
+            community.cloudStorageUsed -= totalFileSizeGB;
             await community.save();
 
             throw processingError;

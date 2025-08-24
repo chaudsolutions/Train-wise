@@ -1,17 +1,22 @@
 const mongoose = require("mongoose");
 
-const coursesSchema = new mongoose.Schema(
+const lessonSchema = new mongoose.Schema(
+    {
+        type: { type: String },
+        content: { type: String },
+        summary: { type: String },
+        summaryPdfUrl: { type: String }, // Add this field for lesson PDF summaries
+    },
+    { timestamps: true }
+);
+
+const courseSchema = new mongoose.Schema(
     {
         name: { type: String },
         duration: { type: Number },
         summary: { type: String },
-        lessons: [
-            {
-                type: { type: String },
-                content: { type: String },
-                summary: { type: String },
-            },
-        ],
+        summaryPdfUrl: { type: String }, // Add this field for course PDF summary
+        lessons: [lessonSchema],
     },
     { timestamps: true }
 );
@@ -19,7 +24,7 @@ const coursesSchema = new mongoose.Schema(
 const communityCourseSchema = new mongoose.Schema(
     {
         communityId: { type: mongoose.Schema.Types.ObjectId, ref: "Community" },
-        courses: [coursesSchema],
+        courses: [courseSchema],
     },
     { timestamps: true }
 );

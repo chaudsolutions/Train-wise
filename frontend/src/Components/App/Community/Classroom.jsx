@@ -16,6 +16,7 @@ import {
     Button,
     Icon,
     Grid,
+    CircularProgress,
 } from "@mui/material";
 import Info from "@mui/icons-material/Info";
 import PlayCircle from "@mui/icons-material/PlayCircle";
@@ -28,6 +29,7 @@ import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUp from "@mui/icons-material/KeyboardArrowUp";
 import LockIcon from "@mui/icons-material/Lock";
 import CheckCircle from "@mui/icons-material/CheckCircle";
+import Download from "@mui/icons-material/Download";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useReactRouter } from "../../Hooks/useReactRouter";
@@ -38,16 +40,105 @@ import {
 import { serVer, useToken } from "../../Hooks/useVariable";
 import PageLoader from "../../Animations/PageLoader";
 import useResponsive from "../../Hooks/useResponsive";
-import { jsPDF } from "jspdf";
 import { useSearchParams } from "react-router-dom";
 import ReactConfetti from "react-confetti";
 import { useWindowSize } from "react-use";
 import GoBack from "../../Custom/Buttons/GoBack";
 
+// PDF Viewer Component
+const PDFViewer = ({ pdfUrl, title, height = "100%" }) => {
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+
+    if (error) {
+        return (
+            <Box
+                sx={{
+                    p: 3,
+                    textAlign: "center",
+                    bgcolor: "background.paper",
+                    height,
+                }}>
+                <Typography color="error" gutterBottom>
+                    Failed to load PDF
+                </Typography>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => window.open(pdfUrl, "_blank")}
+                    startIcon={<Download />}>
+                    Download PDF
+                </Button>
+            </Box>
+        );
+    }
+
+    return (
+        <Box sx={{ height, display: "flex", flexDirection: "column" }}>
+            {/* PDF Header */}
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    p: 2,
+                    borderBottom: "1px solid",
+                    borderColor: "divider",
+                    bgcolor: "background.paper",
+                }}>
+                <Typography variant="h6">{title || "PDF Document"}</Typography>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => window.open(pdfUrl, "_blank")}
+                    startIcon={<Download />}>
+                    Download
+                </Button>
+            </Box>
+
+            {/* PDF Content */}
+            <Box sx={{ flex: 1, bgcolor: "grey.100", position: "relative" }}>
+                {loading && (
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            bgcolor: "rgba(255, 255, 255, 0.8)",
+                            zIndex: 1,
+                        }}>
+                        <CircularProgress />
+                        <Typography sx={{ ml: 2 }}>Loading PDF...</Typography>
+                    </Box>
+                )}
+
+                <iframe
+                    src={pdfUrl}
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                        border: "none",
+                    }}
+                    onLoad={() => setLoading(false)}
+                    onError={() => {
+                        setLoading(false);
+                        setError(true);
+                    }}
+                    title={title || "PDF Document"}
+                />
+            </Box>
+        </Box>
+    );
+};
+
 const Classroom = () => {
     const { width, height } = useWindowSize();
     const [hasCelebrated, setHasCelebrated] = useState(false);
-
     const { token } = useToken();
     const { isMobile } = useResponsive();
     const { useParams } = useReactRouter();
@@ -57,7 +148,8 @@ const Classroom = () => {
         useCommunitySingleCourseData({ communityId, courseId });
 
     const { userData, isUserDataLoading, refetchUserData } = useUserData();
-    const { lessons, duration, name, summary } = singleCourseData || {};
+    const { lessons, duration, name, summary, summaryPdfUrl } =
+        singleCourseData || {};
     const { coursesWatched } = userData || {};
     const currentCourse = coursesWatched?.find(
         (course) => course?.courseId === courseId
@@ -70,7 +162,12 @@ const Classroom = () => {
 
     // Create display lessons array with summary first
     const displayLessons = [
-        { type: "summary", content: summary, summary },
+        {
+            type: "summary",
+            content: summary,
+            summary,
+            summaryPdfUrl: summaryPdfUrl,
+        },
         ...(lessons || []),
     ];
 
@@ -273,26 +370,45 @@ const Classroom = () => {
                                 height:
                                     currentLesson?.type === "pdf" ||
                                     currentLesson?.type === "summary"
-                                        ? 400
+                                        ? 600
                                         : "auto",
                             }}>
                             {currentLesson?.type === "summary" && (
                                 <Box
                                     sx={{
-                                        p: 4,
                                         height: "100%",
-                                        overflowY: "auto",
+                                        display: "flex",
+                                        flexDirection: "column",
                                         bgcolor: "background.paper",
                                     }}>
-                                    <Typography variant="h4" gutterBottom>
-                                        Course Overview
-                                    </Typography>
-                                    <Typography
-                                        variant="body1"
-                                        whiteSpace="pre-wrap"
-                                        sx={{ color: "text.secondary" }}>
-                                        {currentLesson?.summary}
-                                    </Typography>
+                                    {currentLesson?.summaryPdfUrl ? (
+                                        <PDFViewer
+                                            pdfUrl={currentLesson.summaryPdfUrl}
+                                            title="Course Overview PDF"
+                                        />
+                                    ) : (
+                                        <Box
+                                            sx={{
+                                                p: 4,
+                                                height: "100%",
+                                                overflowY: "auto",
+                                            }}>
+                                            <Typography
+                                                variant="h4"
+                                                gutterBottom>
+                                                Course Overview
+                                            </Typography>
+                                            <Typography
+                                                variant="body1"
+                                                whiteSpace="pre-wrap"
+                                                sx={{
+                                                    color: "text.secondary",
+                                                }}>
+                                                {currentLesson?.summary ||
+                                                    "No course overview available"}
+                                            </Typography>
+                                        </Box>
+                                    )}
                                 </Box>
                             )}
 
@@ -337,106 +453,18 @@ const Classroom = () => {
                             )}
 
                             {currentLesson?.type === "pdf" && (
-                                <Box
-                                    sx={{
-                                        height: "100%",
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        bgcolor: "background.paper",
-                                    }}>
-                                    {/* PDF Header and Download Button */}
-                                    <Box
-                                        sx={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            alignItems: "center",
-                                            p: 2,
-                                            borderBottom: "1px solid",
-                                            borderColor: "divider",
-                                        }}>
-                                        <Typography variant="h6">
-                                            PDF Document
-                                        </Typography>
-                                        <Button
-                                            variant="contained"
-                                            color="primary"
-                                            onClick={() => {
-                                                const pdf = new jsPDF();
-                                                const content =
-                                                    currentLesson?.content ||
-                                                    "";
-                                                const lines =
-                                                    pdf.splitTextToSize(
-                                                        content,
-                                                        180
-                                                    );
-                                                pdf.text(15, 20, lines);
-                                                pdf.save(
-                                                    `${
-                                                        currentLesson?.title ||
-                                                        "document"
-                                                    }.pdf`
-                                                );
-                                            }}
-                                            startIcon={<PictureAsPdf />}>
-                                            Download PDF
-                                        </Button>
-                                    </Box>
-
-                                    {/* PDF Content */}
-                                    <Box
-                                        sx={{
-                                            flex: 1,
-                                            p: 3,
-                                            overflowY: "auto",
-                                            bgcolor: "grey.100",
-                                        }}>
-                                        <Box
-                                            sx={{
-                                                maxWidth: 800,
-                                                mx: "auto",
-                                                bgcolor: "background.paper",
-                                                boxShadow: 3,
-                                                minHeight: "100%",
-                                            }}>
-                                            <pre
-                                                style={{
-                                                    whiteSpace: "pre-wrap",
-                                                    fontFamily: "inherit",
-                                                    margin: 0,
-                                                    padding: "1rem",
-                                                }}>
-                                                {currentLesson?.content
-                                                    ?.split("\f")
-                                                    .map((page, index) => (
-                                                        <Box
-                                                            key={index}
-                                                            sx={{
-                                                                minHeight:
-                                                                    "29.7cm", // A4 height
-                                                                pageBreakAfter:
-                                                                    "always",
-                                                                "&:last-child":
-                                                                    {
-                                                                        pageBreakAfter:
-                                                                            "avoid",
-                                                                    },
-                                                                p: 3,
-                                                            }}>
-                                                            {page}
-                                                        </Box>
-                                                    ))}
-                                            </pre>
-                                        </Box>
-                                    </Box>
-                                </Box>
+                                <PDFViewer
+                                    pdfUrl={currentLesson?.content}
+                                    title={`Lesson ${selectedLesson} PDF`}
+                                />
                             )}
                         </Box>
 
                         <Box m={2}>
-                            {/* Summary Toggle Button */}
+                            {/* Summary Toggle Button - Show if there's any summary content */}
                             {currentLesson?.type !== "summary" &&
-                                currentLesson?.summary && (
+                                (currentLesson?.summary ||
+                                    currentLesson?.summaryPdfUrl) && (
                                     <Button
                                         variant="contained"
                                         onClick={toggleSummary}
@@ -462,33 +490,46 @@ const Classroom = () => {
                                     </Button>
                                 )}
 
-                            {/* Summary Panel - Only show if summary exists */}
-                            {currentLesson?.summary && (
-                                <Collapse
-                                    in={
-                                        showLessonSummary &&
-                                        currentLesson?.summary
-                                    }>
+                            {/* Summary Panel - Show PDF or text summary */}
+                            {(currentLesson?.summary ||
+                                currentLesson?.summaryPdfUrl) && (
+                                <Collapse in={showLessonSummary}>
                                     <Box
                                         sx={{
                                             bgcolor: "background.paper",
                                             boxShadow: 3,
                                             maxHeight: "40vh",
-                                            overflowY: "auto",
-                                            p: 2,
+                                            overflow: "hidden",
                                         }}>
-                                        <Typography variant="h6">
-                                            Lesson Summary
-                                        </Typography>
-                                        <Typography
-                                            variant="body2"
-                                            whiteSpace="pre-wrap"
-                                            sx={{
-                                                color: "text.secondary",
-                                                mt: 1,
-                                            }}>
-                                            {currentLesson?.summary}
-                                        </Typography>
+                                        {currentLesson?.summaryPdfUrl ? (
+                                            <PDFViewer
+                                                pdfUrl={
+                                                    currentLesson.summaryPdfUrl
+                                                }
+                                                title="Lesson Summary PDF"
+                                                height="300px"
+                                            />
+                                        ) : (
+                                            <Box
+                                                sx={{
+                                                    p: 2,
+                                                    maxHeight: "300px",
+                                                    overflowY: "auto",
+                                                }}>
+                                                <Typography variant="h6">
+                                                    Lesson Summary
+                                                </Typography>
+                                                <Typography
+                                                    variant="body2"
+                                                    whiteSpace="pre-wrap"
+                                                    sx={{
+                                                        color: "text.secondary",
+                                                        mt: 1,
+                                                    }}>
+                                                    {currentLesson?.summary}
+                                                </Typography>
+                                            </Box>
+                                        )}
                                     </Box>
                                 </Collapse>
                             )}
@@ -708,10 +749,9 @@ const Classroom = () => {
                                                             {displayIndex === 0
                                                                 ? "Course Overview"
                                                                 : // Handle lessons without summaries
-                                                                lesson.summary
-                                                                ? lesson.summary.split(
-                                                                      "\n"
-                                                                  )[0]
+                                                                lesson.summary ||
+                                                                  lesson.summaryPdfUrl
+                                                                ? "Has summary content"
                                                                 : "No summary available"}
                                                         </Typography>
                                                     )

@@ -70,7 +70,7 @@ const Communities = () => {
                 <Typography variant="subtitle1" color="text.secondary">
                     or{" "}
                     <Link component={NavLink} to="/create-a-community">
-                        create your community
+                        create your own Community
                     </Link>
                 </Typography>
             </Box>

@@ -102,7 +102,7 @@ const CoursesSection = () => {
                     }}>
                     or{" "}
                     <Link component={NavLink} to="/create-a-community">
-                        Create Your Own
+                        Create Your Own Community
                     </Link>
                 </Typography>
 

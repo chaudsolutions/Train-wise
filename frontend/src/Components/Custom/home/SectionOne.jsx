@@ -16,7 +16,7 @@ const benefits = [
     },
     {
         icon: <GroupAdd fontSize="medium" />,
-        title: "Create Your Community",
+        title: "Create Your Own Community",
         description:
             "Start your own community space with custom branding, rules, and subscription options. Build your tribe around shared interests.",
     },

@@ -88,9 +88,13 @@ const CommunityView = () => {
     const { _id, role } = userData || {};
 
     // check if user is part of community
-    const isUserMember =
-        members?.some((member) => member.userId._id === _id) ||
-        createdBy === _id;
+    const isUserMember = Boolean(
+        _id &&
+            (members?.some(
+                (member) => member?.userId?._id && member.userId._id === _id
+            ) ||
+                createdBy === _id)
+    );
     const isCreator = createdBy?._id === _id;
     const isAdmin = role === "admin";
 

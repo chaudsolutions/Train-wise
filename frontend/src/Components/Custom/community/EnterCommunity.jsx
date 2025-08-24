@@ -239,25 +239,25 @@ export const CommunityClassroom = ({
             }
 
             // Handle video file thumbnail
-            if (videoLesson.type === "video") {
-                const videoExtensions = [
-                    ".mp4",
-                    ".mov",
-                    ".avi",
-                    ".mkv",
-                    ".webm",
-                    ".flv",
-                    ".wmv",
-                    ".mpeg",
-                    ".mpg",
-                    ".3gp",
-                ];
-                const videoPattern = new RegExp(
-                    `(${videoExtensions.join("|")})$`,
-                    "i"
-                );
-                return videoLesson.content.replace(videoPattern, ".jpg");
-            }
+            // if (videoLesson.type === "video") {
+            //     const videoExtensions = [
+            //         ".mp4",
+            //         ".mov",
+            //         ".avi",
+            //         ".mkv",
+            //         ".webm",
+            //         ".flv",
+            //         ".wmv",
+            //         ".mpeg",
+            //         ".mpg",
+            //         ".3gp",
+            //     ];
+            //     const videoPattern = new RegExp(
+            //         `(${videoExtensions.join("|")})$`,
+            //         "i"
+            //     );
+            //     return videoLesson.content.replace(videoPattern, ".jpg");
+            // }
         }
 
         // Fallback to PDF thumbnail or default image
