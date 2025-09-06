@@ -20,13 +20,13 @@ import "react-otp-kit/dist/index.css";
 import { useLogout } from "../../Hooks/useLogout";
 import { useQueryClient } from "@tanstack/react-query";
 
-const VerifyOTP = ({ email }) => {
+const VerifyOTP = () => {
     const { logout } = useLogout();
     const queryClient = useQueryClient(); // Get the query client
 
     const { userData, isUserDataLoading, refetchUserData } = useUserData();
 
-    const { isVerified } = userData || {};
+    const { isVerified, email } = userData || {};
 
     const { token } = useToken();
     const [loading, setLoading] = useState(false);

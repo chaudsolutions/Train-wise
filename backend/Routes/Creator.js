@@ -1,6 +1,5 @@
 const express = require("express");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-
 const Community = require("../Models/Community");
 const UsersModel = require("../Models/Users");
 const CommunityCourse = require("../Models/CommunityCourse");
