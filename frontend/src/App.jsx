@@ -41,7 +41,7 @@ import AdminNotFound from "./Components/App/admin/AdminNotFound";
 import AdminCreateCommunity from "./Components/App/admin/AdminCreateCommunity";
 import AdminErrorLogs from "./Components/App/admin/AdminErrorLogs";
 import TutorialPage from "./Components/App/Others/Tutorial";
-import VerifyOTP from "./Components/Custom/home/VerifyOTP";
+// import VerifyOTP from "./Components/Custom/home/VerifyOTP";
 
 function App() {
     const { user } = useAuthContext();
