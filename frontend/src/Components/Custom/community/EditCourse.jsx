@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
     Box,
     Card,
@@ -52,6 +52,11 @@ const EditCourse = ({ communityId, courseData, refetch }) => {
     const navigate = useNavigate();
     const { refetchCourses } = useCommunityCoursesData({ id: communityId });
 
+    // Refs for file inputs
+    const summaryPdfRef = useRef(null);
+    const lessonVideoRef = useRef(null);
+    const lessonPdfRef = useRef(null);
+
     // Form for adding new content
     const {
         control,
@@ -94,8 +99,6 @@ const EditCourse = ({ communityId, courseData, refetch }) => {
         summaryPdfUrl,
     } = courseData;
 
-    console.log(courseData);
-
     const handleDeleteCourse = async () => {
         setLoading(true);
         try {
@@ -134,16 +137,22 @@ const EditCourse = ({ communityId, courseData, refetch }) => {
     const handleAddContent = async (data) => {
         setLoading(true);
         try {
+            const formData = new FormData();
+
             if (data.contentType === "summary") {
                 // Handle summary update
-                const formData = new FormData();
+                formData.append("contentType", "summary");
+
                 if (data.summaryType === "text") {
                     formData.append("summaryText", data.summaryText);
-                } else if (data.summaryType === "pdf" && data.summaryPdf) {
-                    formData.append("summaryPdf", data.summaryPdf[0]);
+                } else if (data.summaryType === "pdf") {
+                    const pdfFile = summaryPdfRef.current?.files[0];
+                    if (pdfFile) {
+                        formData.append("summaryPdf", pdfFile);
+                    } else {
+                        throw new Error("Please select a PDF file");
+                    }
                 }
-
-                console.log({ formData });
 
                 await axios.put(
                     `${serVer}/creator/community-course/${communityId}/${courseId}/summary`,
@@ -158,16 +167,26 @@ const EditCourse = ({ communityId, courseData, refetch }) => {
                 toast.success("Course summary updated successfully");
             } else if (data.contentType === "lesson") {
                 // Handle lesson addition
-                const formData = new FormData();
+                formData.append("contentType", "lesson");
                 formData.append("lessonType", data.lessonType);
-                formData.append("lessonIndex", data.lessonIndex);
+                formData.append("lessonIndex", data.lessonIndex.toString());
 
                 if (data.lessonType === "youtube") {
                     formData.append("lessonUrl", data.lessonUrl);
-                } else if (data.lessonType === "video" && data.lessonVideo) {
-                    formData.append("lessonVideo", data.lessonVideo[0]);
-                } else if (data.lessonType === "pdf" && data.lessonPdf) {
-                    formData.append("lessonPdf", data.lessonPdf[0]);
+                } else if (data.lessonType === "video") {
+                    const videoFile = lessonVideoRef.current?.files[0];
+                    if (videoFile) {
+                        formData.append("lessonVideo", videoFile);
+                    } else {
+                        throw new Error("Please select a video file");
+                    }
+                } else if (data.lessonType === "pdf") {
+                    const pdfFile = lessonPdfRef.current?.files[0];
+                    if (pdfFile) {
+                        formData.append("lessonPdf", pdfFile);
+                    } else {
+                        throw new Error("Please select a PDF file");
+                    }
                 }
 
                 if (data.lessonSummary) {
@@ -187,10 +206,17 @@ const EditCourse = ({ communityId, courseData, refetch }) => {
                 toast.success("Lesson added successfully");
             }
 
+            // Reset form and file inputs
             reset();
+            if (summaryPdfRef.current) summaryPdfRef.current.value = "";
+            if (lessonVideoRef.current) lessonVideoRef.current.value = "";
+            if (lessonPdfRef.current) lessonPdfRef.current.value = "";
+
             refetch();
         } catch (error) {
-            toast.error(error.response?.data || "Failed to add content");
+            toast.error(
+                error.response?.data || error.message || "Failed to add content"
+            );
         } finally {
             setLoading(false);
         }
@@ -449,36 +475,24 @@ const EditCourse = ({ communityId, courseData, refetch }) => {
                                             )}
                                         />
                                     ) : (
-                                        <Controller
-                                            name="summaryPdf"
-                                            control={control}
-                                            rules={{
-                                                required:
-                                                    "PDF file is required",
-                                            }}
-                                            render={({
-                                                field: { onChange, ...field },
-                                            }) => (
-                                                <Button
-                                                    variant="outlined"
-                                                    component="label"
-                                                    fullWidth
-                                                    sx={{ mb: 3 }}>
-                                                    Upload PDF Summary
-                                                    <input
-                                                        {...field}
-                                                        type="file"
-                                                        accept=".pdf"
-                                                        onChange={(e) =>
-                                                            onChange(
-                                                                e.target.files
-                                                            )
-                                                        }
-                                                        hidden
-                                                    />
-                                                </Button>
-                                            )}
-                                        />
+                                        <Box sx={{ mb: 3 }}>
+                                            <Button
+                                                variant="outlined"
+                                                component="label"
+                                                fullWidth>
+                                                Upload PDF Summary
+                                                <input
+                                                    ref={summaryPdfRef}
+                                                    type="file"
+                                                    accept=".pdf"
+                                                    hidden
+                                                />
+                                            </Button>
+                                            <FormHelperText>
+                                                Select a PDF file for the course
+                                                summary
+                                            </FormHelperText>
+                                        </Box>
                                     )}
                                 </Box>
                             )}
@@ -582,47 +596,40 @@ const EditCourse = ({ communityId, courseData, refetch }) => {
 
                                     {(watchLessonType === "video" ||
                                         watchLessonType === "pdf") && (
-                                        <Controller
-                                            name={
-                                                watchLessonType === "video"
-                                                    ? "lessonVideo"
-                                                    : "lessonPdf"
-                                            }
-                                            control={control}
-                                            rules={{
-                                                required: "File is required",
-                                            }}
-                                            render={({
-                                                field: { onChange, ...field },
-                                            }) => (
-                                                <Button
-                                                    variant="outlined"
-                                                    component="label"
-                                                    fullWidth
-                                                    sx={{ mt: 3 }}>
-                                                    Upload{" "}
-                                                    {watchLessonType === "video"
-                                                        ? "Video File"
-                                                        : "PDF Document"}
-                                                    <input
-                                                        {...field}
-                                                        type="file"
-                                                        accept={
-                                                            watchLessonType ===
-                                                            "video"
-                                                                ? "video/*"
-                                                                : ".pdf"
-                                                        }
-                                                        onChange={(e) =>
-                                                            onChange(
-                                                                e.target.files
-                                                            )
-                                                        }
-                                                        hidden
-                                                    />
-                                                </Button>
-                                            )}
-                                        />
+                                        <Box sx={{ mt: 3 }}>
+                                            <Button
+                                                variant="outlined"
+                                                component="label"
+                                                fullWidth>
+                                                Upload{" "}
+                                                {watchLessonType === "video"
+                                                    ? "Video File"
+                                                    : "PDF Document"}
+                                                <input
+                                                    ref={
+                                                        watchLessonType ===
+                                                        "video"
+                                                            ? lessonVideoRef
+                                                            : lessonPdfRef
+                                                    }
+                                                    type="file"
+                                                    accept={
+                                                        watchLessonType ===
+                                                        "video"
+                                                            ? "video/*"
+                                                            : ".pdf"
+                                                    }
+                                                    hidden
+                                                />
+                                            </Button>
+                                            <FormHelperText>
+                                                Select a{" "}
+                                                {watchLessonType === "video"
+                                                    ? "video"
+                                                    : "PDF"}{" "}
+                                                file
+                                            </FormHelperText>
+                                        </Box>
                                     )}
 
                                     <Controller

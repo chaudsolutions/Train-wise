@@ -741,6 +741,10 @@ router.put(
 // Add new lesson at specific position
 router.post(
     "/community-course/:communityId/:courseId/lesson",
+    upload.fields([
+        { name: "lessonVideo", maxCount: 1 },
+        { name: "lessonPdf", maxCount: 1 },
+    ]),
     async (req, res) => {
         try {
             const { communityId, courseId } = req.params;
