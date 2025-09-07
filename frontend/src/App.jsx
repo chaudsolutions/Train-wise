@@ -55,7 +55,7 @@ function App() {
     return (
         <ErrorBoundary>
             <div className="App">
-                {user && <VerifyOTP />}
+                {/* {user && <VerifyOTP />} */}
                 <div className="app-div">
                     {showNavFooter && <Nav />}
 

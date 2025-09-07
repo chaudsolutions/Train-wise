@@ -676,4 +676,140 @@ router.delete(
     }
 );
 
+// Update course summary
+router.put(
+    "/community-course/:communityId/:courseId/summary",
+    upload.single("summaryPdf"),
+    async (req, res) => {
+        try {
+            const { communityId, courseId } = req.params;
+            const userId = req.userId;
+            const summaryPdf = req.file;
+            const body = req.body;
+
+            console.log(body);
+
+            const user = await UsersModel.findById(userId);
+            if (!user) {
+                return res.status(404).json("User not found");
+            }
+
+            // Verify user is the community creator
+            const community = await Community.findById(communityId);
+            if (!community || community.createdBy.toString() !== user.id) {
+                return res.status(403).json("Unauthorized to update course");
+            }
+
+            const communityCourse = await CommunityCourse.findOne({
+                communityId,
+            });
+            if (!communityCourse) {
+                return res.status(404).json("Course not found");
+            }
+
+            const course = communityCourse.courses.id(courseId);
+            if (!course) {
+                return res.status(404).json("Course not found");
+            }
+
+            // Handle text summary
+            if (body.summaryText) {
+                course.summary = body.summaryText;
+                course.summaryPdfUrl = null; // Remove PDF if switching to text
+            }
+
+            // Handle PDF summary
+            if (summaryPdf) {
+                const result = await uploadToS3(
+                    summaryPdf.buffer,
+                    summaryPdf.originalname,
+                    summaryPdf.mimetype
+                );
+                course.summaryPdfUrl = result.url;
+                course.summary = null; // Remove text if switching to PDF
+            }
+
+            await communityCourse.save();
+            res.status(200).json("Course summary updated successfully");
+        } catch (error) {
+            console.error("Error updating course summary", error);
+            res.status(500).json("Failed to update course summary");
+        }
+    }
+);
+
+// Add new lesson at specific position
+router.post(
+    "/community-course/:communityId/:courseId/lesson",
+    async (req, res) => {
+        try {
+            const { communityId, courseId } = req.params;
+            const userId = req.userId;
+            const files = req.files;
+            const body = req.body;
+
+            const user = await UsersModel.findById(userId);
+            if (!user) {
+                return res.status(404).json("User not found");
+            }
+
+            // Verify user is the community creator
+            const community = await Community.findById(communityId);
+            if (!community || community.createdBy.toString() !== user.id) {
+                return res.status(403).json("Unauthorized to add lesson");
+            }
+
+            const communityCourse = await CommunityCourse.findOne({
+                communityId,
+            });
+            if (!communityCourse) {
+                return res.status(404).json("Course not found");
+            }
+
+            const course = communityCourse.courses.id(courseId);
+            if (!course) {
+                return res.status(404).json("Course not found");
+            }
+
+            const lessonIndex = parseInt(body.lessonIndex);
+            const newLesson = {
+                type: body.lessonType,
+                summary: body.lessonSummary || null,
+            };
+
+            // Handle different lesson types
+            if (body.lessonType === "youtube") {
+                newLesson.content = body.lessonUrl;
+            } else if (body.lessonType === "video" && files.lessonVideo) {
+                const videoFile = files.lessonVideo[0];
+                const result = await uploadToS3(
+                    videoFile.buffer,
+                    videoFile.originalname,
+                    videoFile.mimetype
+                );
+                newLesson.content = result.url;
+            } else if (body.lessonType === "pdf" && files.lessonPdf) {
+                const pdfFile = files.lessonPdf[0];
+                const result = await uploadToS3(
+                    pdfFile.buffer,
+                    pdfFile.originalname,
+                    pdfFile.mimetype
+                );
+                newLesson.content = result.url;
+            } else {
+                return res.status(400).json("Invalid lesson data");
+            }
+
+            // Insert lesson at specified position
+            course.lessons.splice(lessonIndex, 0, newLesson);
+            await communityCourse.save();
+
+            res.status(201).json("Lesson added successfully");
+        } catch (error) {
+            console.error("Error adding lesson", error);
+            res.status(500).json("Failed to add lesson");
+        }
+    }
+);
+
 module.exports = { Creator: router };
