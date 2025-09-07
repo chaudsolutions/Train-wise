@@ -9,7 +9,12 @@ const { createNotification } = require("../utils/notifications");
 const { createCourse } = require("../controllers/course.controller");
 const Settings = require("../Models/Settings");
 const CommunityCalendar = require("../Models/CommunityCalendar");
-const { upload, uploadToS3 } = require("../utils/s3bucket");
+const {
+    upload,
+    uploadToS3,
+    deleteFromS3ByUrl,
+    getFileSizeFromS3,
+} = require("../utils/s3bucket");
 
 const router = express.Router();
 
@@ -474,5 +479,201 @@ router.put("/community-calendar/events/:eventId/status", async (req, res) => {
         res.status(500).json("Failed to update event status");
     }
 });
+
+// Delete entire course
+router.delete("/community-course/:communityId/:courseId", async (req, res) => {
+    try {
+        const { communityId, courseId } = req.params;
+        const userId = req.userId;
+
+        const user = await UsersModel.findById(userId);
+        if (!user) {
+            return res.status(404).json("User not found");
+        }
+
+        // Verify user is the community creator
+        const community = await Community.findById(communityId);
+
+        if (!community || community.createdBy.toString() !== user.id) {
+            return res.status(403).json("Unauthorized to delete course");
+        }
+
+        // Find the course to get file URLs before deletion
+        const communityCourse = await CommunityCourse.findOne({ communityId });
+        if (!communityCourse) {
+            return res.status(404).json("Course not found");
+        }
+
+        const course = communityCourse.courses.id(courseId);
+        if (!course) {
+            return res.status(404).json("Course not found");
+        }
+
+        // Collect all S3 files to delete
+        const filesToDelete = [];
+        let totalSizeToFree = 0;
+
+        // Add course summary PDF if exists
+        if (course.summaryPdfUrl) {
+            filesToDelete.push(course.summaryPdfUrl);
+            const size = await getFileSizeFromS3(course.summaryPdfUrl);
+            totalSizeToFree += size;
+        }
+
+        // Add lesson files
+        for (const lesson of course.lessons) {
+            if (lesson.type === "video" || lesson.type === "pdf") {
+                filesToDelete.push(lesson.content);
+                const size = await getFileSizeFromS3(lesson.content);
+                totalSizeToFree += size;
+            }
+            if (lesson.summaryPdfUrl) {
+                filesToDelete.push(lesson.summaryPdfUrl);
+                const size = await getFileSizeFromS3(lesson.summaryPdfUrl);
+                totalSizeToFree += size;
+            }
+        }
+
+        console.log(`Total storage to free: ${totalSizeToFree.toFixed(4)} GB`);
+
+        // Delete files from S3
+        try {
+            await Promise.all(
+                filesToDelete.map((url) => deleteFromS3ByUrl(url))
+            );
+            console.log(`Deleted ${filesToDelete.length} files from S3`);
+        } catch (s3Error) {
+            console.error("Error deleting files from S3:", s3Error);
+            // Continue with course deletion even if S3 deletion fails
+        }
+
+        // Remove the course from the database
+        await CommunityCourse.findOneAndUpdate(
+            { communityId },
+            { $pull: { courses: { _id: courseId } } }
+        );
+
+        // Update community storage usage
+        if (totalSizeToFree > 0) {
+            const newStorageUsed = Math.max(
+                0,
+                community.cloudStorageUsed - totalSizeToFree
+            );
+            await Community.findByIdAndUpdate(communityId, {
+                cloudStorageUsed: parseFloat(newStorageUsed.toFixed(4)),
+            });
+            console.log(
+                `Updated community storage: Freed ${totalSizeToFree.toFixed(
+                    4
+                )} GB`
+            );
+        }
+
+        res.status(200).json("Course deleted successfully");
+    } catch (error) {
+        console.error("Error deleting course", error);
+        res.status(500).json("Failed to delete course");
+    }
+});
+
+// Delete specific lesson from course
+router.delete(
+    "/community-course/:communityId/:courseId/lesson/:lessonIndex",
+    async (req, res) => {
+        try {
+            const { communityId, courseId, lessonIndex } = req.params;
+            const userId = req.userId;
+            const index = parseInt(lessonIndex);
+
+            const user = await UsersModel.findById(userId);
+            if (!user) {
+                return res.status(404).json("User not found");
+            }
+            // Verify user is the community creator
+            const community = await Community.findById(communityId);
+
+            if (!community || community.createdBy.toString() !== user.id) {
+                return res.status(403).json("Unauthorized to delete lesson");
+            }
+
+            // Find the course
+            const communityCourse = await CommunityCourse.findOne({
+                communityId,
+            });
+            if (!communityCourse) {
+                return res.status(404).json("Course not found");
+            }
+
+            const course = communityCourse.courses.id(courseId);
+            if (!course) {
+                return res.status(404).json("Course not found");
+            }
+
+            if (index < 0 || index >= course.lessons.length) {
+                return res.status(400).json("Invalid lesson index");
+            }
+
+            const lesson = course.lessons[index];
+
+            // Collect S3 files to delete for this lesson
+            const filesToDelete = [];
+            let totalSizeToFree = 0;
+
+            if (lesson.type === "video" || lesson.type === "pdf") {
+                filesToDelete.push(lesson.content);
+                const size = await getFileSizeFromS3(lesson.content);
+                totalSizeToFree += size;
+            }
+            if (lesson.summaryPdfUrl) {
+                filesToDelete.push(lesson.summaryPdfUrl);
+                const size = await getFileSizeFromS3(lesson.summaryPdfUrl);
+                totalSizeToFree += size;
+            }
+
+            console.log(
+                `Storage to free from lesson: ${totalSizeToFree.toFixed(4)} GB`
+            );
+
+            // Delete files from S3
+            try {
+                await Promise.all(
+                    filesToDelete.map((url) => deleteFromS3ByUrl(url))
+                );
+                console.log(
+                    `Deleted ${filesToDelete.length} lesson files from S3`
+                );
+            } catch (s3Error) {
+                console.error("Error deleting lesson files from S3:", s3Error);
+                // Continue with lesson deletion even if S3 deletion fails
+            }
+
+            // Remove the lesson from the array
+            course.lessons.splice(index, 1);
+
+            await communityCourse.save();
+
+            // Update community storage usage
+            if (totalSizeToFree > 0) {
+                const newStorageUsed = Math.max(
+                    0,
+                    community.cloudStorageUsed - totalSizeToFree
+                );
+                await Community.findByIdAndUpdate(communityId, {
+                    cloudStorageUsed: parseFloat(newStorageUsed.toFixed(4)),
+                });
+                console.log(
+                    `Updated community storage: Freed ${totalSizeToFree.toFixed(
+                        4
+                    )} GB`
+                );
+            }
+
+            res.status(200).json("Lesson deleted successfully");
+        } catch (error) {
+            console.error("Error deleting lesson", error);
+            res.status(500).json("Failed to delete lesson");
+        }
+    }
+);
 
 module.exports = { Creator: router };

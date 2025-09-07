@@ -2,6 +2,7 @@ const {
     S3Client,
     PutObjectCommand,
     DeleteObjectCommand,
+    HeadObjectCommand,
 } = require("@aws-sdk/client-s3");
 const multer = require("multer");
 const { v4: uuidv4 } = require("uuid");
@@ -89,10 +90,34 @@ const deleteFromS3ByUrl = async (url) => {
     return deleteFromS3(key);
 };
 
+const getFileSizeFromS3 = async (url) => {
+    try {
+        const key = extractS3Key(url);
+        if (!key) {
+            console.error("Invalid S3 URL provided for size check");
+            return 0;
+        }
+
+        const command = new HeadObjectCommand({
+            Bucket: bucketName,
+            Key: key,
+        });
+
+        const response = await s3Client.send(command);
+        const sizeInBytes = response.ContentLength;
+        const sizeInGB = sizeInBytes / (1024 * 1024 * 1024); // Convert to GB
+        return sizeInGB;
+    } catch (error) {
+        console.error("Error getting file size from S3:", error);
+        return 0; // Return 0 if we can't get the size
+    }
+};
+
 module.exports = {
     uploadToS3,
     deleteFromS3,
     extractS3Key,
     deleteFromS3ByUrl,
+    getFileSizeFromS3,
     upload, // keeping the same multer middleware
 };
